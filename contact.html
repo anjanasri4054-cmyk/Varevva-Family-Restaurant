@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us & Location Map | Varevva Family Restaurant Yadagirigutta</title>
+  <meta name="description" content="Get directions to Varevva Family Restaurant in Yadagirigutta, Telangana. Contact us at +91 63020 19925 or visit our location right on the temple highway.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo" id="nav-logo">
+        <img id="restaurant-logo" src="/public/assets/logo.png" alt="Varevva Logo">
+        <div class="brand-text-container">
+          <span class="brand-v">Varevva</span>
+          <span class="sub-brand">Telangana Ruchulu</span>
+        </div>
+      </a>
+      
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/about.html" class="nav-link">About Us</a></li>
+        <li><a href="/specials.html" class="nav-link">Specials</a></li>
+        <li><a href="/menu.html" class="nav-link">Menu</a></li>
+        <li><a href="/ambience.html" class="nav-link">Ambience</a></li>
+        <li><a href="/contact.html" class="nav-link active">Contact & Map</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="tel:+916302019925" class="btn-nav-call" id="btn-nav-call">
+          <i class="fa-solid fa-phone"></i>
+          <span>+91 63020 19925</span>
+        </a>
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contact Banner -->
+  <header style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/public/assets/restaurant_interior.png') center/cover; padding: 120px 0 60px; text-align: center; color: white;">
+    <div class="container">
+      <h1 style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Contact & Location</h1>
+      <p style="font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; color: var(--primary-color);">Find our location pin or call to place a takeaway order</p>
+    </div>
+  </header>
+
+  <!-- Contact & Map Section -->
+  <section class="contact-section" id="contact" style="padding: 80px 0;">
+    <div class="container">
+      <div class="contact-grid">
+        <!-- Contact details column -->
+        <div class="contact-info-panel">
+          <div class="info-card">
+            <h3>Varevva Family Restaurant</h3>
+            <p class="tagline">Telangana Ruchulu - Veg & Non-Veg Special</p>
+            
+            <div class="info-list">
+              <div class="info-item">
+                <i class="fa-solid fa-location-dot"></i>
+                <div>
+                  <h4>Address</h4>
+                  <p>Shop No. 1, Plot No. 11, Yadagirigutta Highway Road, Yadagirigutta, Telangana - 508115</p>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <i class="fa-solid fa-phone-volume"></i>
+                <div>
+                  <h4>Phone Number</h4>
+                  <p><a href="tel:+916302019925" class="contact-link">+91 63020 19925</a></p>
+                  <p class="note">Call us for takeaway orders, dining queries, or party catering.</p>
+                </div>
+              </div>
+
+              <div class="info-item">
+                <i class="fa-solid fa-clock"></i>
+                <div>
+                  <h4>Operating Hours</h4>
+                  <p>Open Daily: <strong>11:00 AM – 01:00 AM</strong></p>
+                  <p class="note">Dine-in and takeaway available all days.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom CTA actions -->
+            <div class="contact-actions">
+              <a href="tel:+916302019925" class="btn-primary">
+                <i class="fa-solid fa-phone"></i> Call to Order
+              </a>
+              <a href="https://wa.me/916302019925?text=Hi%20Varevva%20Restaurant,%20I%20would%20like%20to%20inquire%20about%20ordering/table%20booking" target="_blank" class="btn-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Google Maps iframe integration -->
+        <div class="contact-map-panel">
+          <div class="map-container">
+            <!-- Embed actual Google Map pointing to Varevva Restaurant exactly -->
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3801.3533810141673!2d78.94147787517175!3d17.570091398031548!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb67d4faca5371%3A0xdab4327a955a0c5f!2sVarevva%20Restaurant!5e0!3m2!1sen!2sin!4v1717424600000!5m2!1sen!2sin" 
+              width="100%" 
+              height="100%" 
+              style="border:0;" 
+              allowfullscreen="" 
+              loading="lazy" 
+              referrerpolicy="no-referrer-when-downgrade"
+              title="Varevva Restaurant Location in Yadagirigutta"
+              id="gmap-iframe">
+            </iframe>
+          </div>
+          <a href="https://maps.app.goo.gl/M5MYdeGL8intHNGd9" target="_blank" class="map-helper">
+            <i class="fa-solid fa-diamond-turn-right"></i>
+            <span>Located right on the main Yadagirigutta road. Click here to navigate directly on Google Maps.</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Fixed Bottom Navigation Dock for Mobile (Thumb-Friendly) -->
+  <div class="mobile-bottom-dock">
+    <a href="/index.html" class="dock-item">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="/menu.html" class="dock-item">
+      <i class="fa-solid fa-utensils"></i>
+      <span>Menu</span>
+    </a>
+    <a href="/specials.html" class="dock-item">
+      <i class="fa-solid fa-fire"></i>
+      <span>Specials</span>
+    </a>
+    <a href="/ambience.html" class="dock-item">
+      <i class="fa-solid fa-images"></i>
+      <span>Ambience</span>
+    </a>
+    <a href="/contact.html" class="dock-item active">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Contact</span>
+    </a>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

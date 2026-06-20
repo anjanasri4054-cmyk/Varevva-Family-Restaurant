@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Verification | Varevva Family Restaurant</title>
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body style="background-color: var(--light-bg); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo" id="nav-logo">
+        <img id="restaurant-logo" src="/public/assets/logo.png" alt="Varevva Logo">
+        <div class="brand-text-container">
+          <span class="brand-v">Varevva</span>
+          <span class="sub-brand">Telangana Ruchulu</span>
+        </div>
+      </a>
+      <ul class="nav-menu">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/menu.html" class="nav-link">Menu</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Verification Main Panel -->
+  <main style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 120px 16px 60px;">
+    <div class="verify-card" id="verify-card">
+      <div class="verify-loading">
+        <i class="fa-solid fa-circle-notch fa-spin"></i>
+        <p>Loading Verification Data...</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/verify.js"></script>
+</body>
+</html>

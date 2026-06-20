@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dish Details | Varevva Family Restaurant Yadagirigutta</title>
+  <meta name="description" content="View dish details, ingredients, and pricing at Varevva Family Restaurant. Order directly on WhatsApp or add to your menu cart.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body style="background-color: var(--light-bg); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo" id="nav-logo">
+        <img id="restaurant-logo" src="/public/assets/logo.png" alt="Varevva Logo">
+        <div class="brand-text-container">
+          <span class="brand-v">Varevva</span>
+          <span class="sub-brand">Telangana Ruchulu</span>
+        </div>
+      </a>
+      
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/about.html" class="nav-link">About Us</a></li>
+        <li><a href="/specials.html" class="nav-link">Specials</a></li>
+        <li><a href="/menu.html" class="nav-link">Menu</a></li>
+        <li><a href="/ambience.html" class="nav-link">Ambience</a></li>
+        <li><a href="/contact.html" class="nav-link">Contact & Map</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="tel:+916302019925" class="btn-nav-call" id="btn-nav-call">
+          <i class="fa-solid fa-phone"></i>
+          <span>+91 63020 19925</span>
+        </a>
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Details Main Panel -->
+  <main style="flex: 1; padding: 120px 0 60px;">
+    <div class="container" style="max-width: 1000px; margin: 0 auto; padding: 0 16px;">
+      
+      <!-- Back Link -->
+      <div style="margin-bottom: 24px;">
+        <a href="/menu.html" class="btn-back-menu" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-muted); font-weight: 500; font-family: var(--font-header); transition: var(--transition-smooth);">
+          <i class="fa-solid fa-arrow-left"></i> Back to Full Menu
+        </a>
+      </div>
+
+      <!-- Item Details Dynamic Mount -->
+      <div id="item-details-container">
+        <div style="text-align: center; padding: 60px; color: var(--text-muted); font-family: var(--font-header);">
+          <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary-color); margin-bottom: 15px;"></i>
+          <p style="font-size: 1.1rem;">Loading delicious details...</p>
+        </div>
+      </div>
+
+      <!-- Related Items Section -->
+      <div id="related-items-section" style="margin-top: 60px; display: none;">
+        <h3 style="font-family: var(--font-header); font-size: 1.8rem; font-weight: 700; color: var(--secondary-color); margin-bottom: 24px; position: relative; padding-bottom: 10px; border-bottom: 2px solid rgba(0,0,0,0.05);">
+          You Might Also Like
+        </h3>
+        <div class="related-grid" id="related-items-grid">
+          <!-- Recommended cards will be mounted here -->
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Fixed Bottom Navigation Dock for Mobile (Thumb-Friendly) -->
+  <div class="mobile-bottom-dock">
+    <a href="/index.html" class="dock-item">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="/menu.html" class="dock-item active">
+      <i class="fa-solid fa-utensils"></i>
+      <span>Menu</span>
+    </a>
+    <a href="/specials.html" class="dock-item">
+      <i class="fa-solid fa-fire"></i>
+      <span>Specials</span>
+    </a>
+    <a href="/ambience.html" class="dock-item">
+      <i class="fa-solid fa-images"></i>
+      <span>Ambience</span>
+    </a>
+    <a href="/contact.html" class="dock-item">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Contact</span>
+    </a>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script type="module" src="/src/item.js"></script>
+</body>
+</html>

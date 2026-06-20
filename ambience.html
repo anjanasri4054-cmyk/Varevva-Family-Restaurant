@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ambience & Gallery | Varevva Family Restaurant Yadagirigutta</title>
+  <meta name="description" content="View the seating facilities and interior gallery of Varevva Family Restaurant in Yadagirigutta. Comfortable A/C dining tables for family gatherings.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo" id="nav-logo">
+        <img id="restaurant-logo" src="/public/assets/logo.png" alt="Varevva Logo">
+        <div class="brand-text-container">
+          <span class="brand-v">Varevva</span>
+          <span class="sub-brand">Telangana Ruchulu</span>
+        </div>
+      </a>
+      
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/about.html" class="nav-link">About Us</a></li>
+        <li><a href="/specials.html" class="nav-link">Specials</a></li>
+        <li><a href="/menu.html" class="nav-link">Menu</a></li>
+        <li><a href="/ambience.html" class="nav-link active">Ambience</a></li>
+        <li><a href="/contact.html" class="nav-link">Contact & Map</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="tel:+916302019925" class="btn-nav-call" id="btn-nav-call">
+          <i class="fa-solid fa-phone"></i>
+          <span>+91 63020 19925</span>
+        </a>
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Ambience Banner -->
+  <header style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/public/assets/restaurant_interior.png') center/cover; padding: 120px 0 60px; text-align: center; color: white;">
+    <div class="container">
+      <h1 style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Restaurant Ambience</h1>
+      <p style="font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; color: var(--primary-color);">Cozy settings, A/C comforts, and a welcoming family atmosphere</p>
+    </div>
+  </header>
+
+  <!-- Gallery Section -->
+  <section class="gallery-section" id="gallery" style="padding: 80px 0;">
+    <div class="container">
+      <div class="gallery-grid">
+        <div class="gallery-item wide" title="Welcoming night view of our Yadagirigutta Highway location">
+          <img src="/public/assets/ambience_1.png" alt="Main Restaurant Frontage">
+          <div class="gallery-overlay">
+            <h4>Main Restaurant Frontage</h4>
+            <p>Welcoming night view of our Yadagirigutta Highway location.</p>
+          </div>
+        </div>
+        <div class="gallery-item wide" title="Easy to spot for pilgrims and travelers visiting Yadadri Temple">
+          <img src="/public/assets/ambience_2.jpg" alt="Highway Landmark Banner">
+          <div class="gallery-overlay">
+            <h4>Highway Landmark Banner</h4>
+            <p>Easy to spot for pilgrims and travelers visiting Yadadri Temple.</p>
+          </div>
+        </div>
+        <div class="gallery-item large" title="Comfortable settings perfect for families and large dining groups">
+          <img src="/public/assets/ambience_4.png" alt="Premium A/C Family Seating">
+          <div class="gallery-overlay">
+            <h4>Premium A/C Family Seating</h4>
+            <p>Comfortable settings perfect for families and large dining groups.</p>
+          </div>
+        </div>
+        <div class="gallery-item wide" title="Clean, hygienic, and well-designed entrance leading to the dining area">
+          <img src="/public/assets/ambience_3.png" alt="Restaurant Entrance">
+          <div class="gallery-overlay">
+            <h4>Restaurant Entrance</h4>
+            <p>Clean, hygienic, and well-designed entrance leading to the dining area.</p>
+          </div>
+        </div>
+        <div class="gallery-item wide" title="Bright, welcoming interior with plenty of seating capacity">
+          <img src="/public/assets/ambience_5.jpg" alt="Spacious AC Dining Hall">
+          <div class="gallery-overlay">
+            <h4>Spacious AC Dining Hall</h4>
+            <p>Bright, welcoming interior with plenty of seating capacity.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Fixed Bottom Navigation Dock for Mobile (Thumb-Friendly) -->
+  <div class="mobile-bottom-dock">
+    <a href="/index.html" class="dock-item">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="/menu.html" class="dock-item">
+      <i class="fa-solid fa-utensils"></i>
+      <span>Menu</span>
+    </a>
+    <a href="/specials.html" class="dock-item">
+      <i class="fa-solid fa-fire"></i>
+      <span>Specials</span>
+    </a>
+    <a href="/ambience.html" class="dock-item active">
+      <i class="fa-solid fa-images"></i>
+      <span>Ambience</span>
+    </a>
+    <a href="/contact.html" class="dock-item">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Contact</span>
+    </a>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

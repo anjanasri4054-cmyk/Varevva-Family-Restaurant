@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Food Menu | Varevva Family Restaurant Yadagirigutta</title>
+  <meta name="description" content="Explore Varevva Family Restaurant's digital menu. Savor authentic Telangana Dum Biryani, starters, curries, and rotis. Fully searchable and filterable.">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo" id="nav-logo">
+        <img id="restaurant-logo" src="/public/assets/logo.png" alt="Varevva Logo">
+        <div class="brand-text-container">
+          <span class="brand-v">Varevva</span>
+          <span class="sub-brand">Telangana Ruchulu</span>
+        </div>
+      </a>
+      
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/about.html" class="nav-link">About Us</a></li>
+        <li><a href="/specials.html" class="nav-link">Specials</a></li>
+        <li><a href="/menu.html" class="nav-link active">Menu</a></li>
+        <li><a href="/ambience.html" class="nav-link">Ambience</a></li>
+        <li><a href="/contact.html" class="nav-link">Contact & Map</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="tel:+916302019925" class="btn-nav-call" id="btn-nav-call">
+          <i class="fa-solid fa-phone"></i>
+          <span>+91 63020 19925</span>
+        </a>
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Menu Banner -->
+  <header style="background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/public/assets/spicy_chicken_fry.png') center/cover; padding: 120px 0 60px; text-align: center; color: white;">
+    <div class="container">
+      <h1 style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">Our Food Menu</h1>
+      <p style="font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; color: var(--primary-color);">Filter by category, search by name, and order directly on WhatsApp</p>
+    </div>
+  </header>
+
+  <!-- Interactive Menu Section -->
+  <section class="menu-section" id="menu" style="padding: 60px 0;">
+    <div class="container">
+      <!-- Menu Controls -->
+      <div class="menu-controls" style="margin-bottom: 30px;">
+        <!-- Search bar -->
+        <div class="menu-search-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="menu-search" placeholder="Search dishes (e.g. Biryani, Paneer, Curry...)" aria-label="Search dishes">
+          <button id="search-clear-btn" class="search-clear" style="display: none;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Filters Grid -->
+        <div class="menu-filters-wrapper">
+          <!-- Veg / Non-Veg Toggle Buttons -->
+          <div class="diet-filter-buttons">
+            <button class="btn-filter-diet active" data-diet="all">All</button>
+            <button class="btn-filter-diet" data-diet="veg"><i class="fa-solid fa-circle-stop text-veg"></i> Veg Only</button>
+            <button class="btn-filter-diet" data-diet="non-veg"><i class="fa-solid fa-caret-up text-nonveg"></i> Non-Veg Only</button>
+          </div>
+          <button id="btn-admin-login-trigger" class="btn-admin-portal">
+            <i class="fa-solid fa-user-lock"></i> <span>Owner Login</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Tabs (Horizontal Scrollable on Mobile) -->
+      <div class="menu-tabs-container" style="margin-bottom: 30px;">
+        <div class="menu-tabs">
+          <button class="menu-tab-btn active" data-category="all">
+            <i class="fa-solid fa-border-all"></i> All Categories
+          </button>
+          <button class="menu-tab-btn" data-category="biryani">
+            <i class="fa-solid fa-bowl-rice"></i> Biryani Specials
+          </button>
+          <button class="menu-tab-btn" data-category="starters">
+            <i class="fa-solid fa-fire-burner"></i> Starters
+          </button>
+          <button class="menu-tab-btn" data-category="curries">
+            <i class="fa-solid fa-stroopwafel"></i> Rich Curries
+          </button>
+          <button class="menu-tab-btn" data-category="chinese-rice">
+            <i class="fa-solid fa-plate-wheat"></i> Chinese & Rice
+          </button>
+          <button class="menu-tab-btn" data-category="rotis">
+            <i class="fa-solid fa-bread-slice"></i> Rotis & Breads
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Menu Grid -->
+      <div class="menu-grid" id="live-menu-grid">
+        <div class="menu-loading">
+          <i class="fa-solid fa-spinner fa-spin"></i> Preparing Varevva Menu...
+        </div>
+      </div>
+
+      <!-- Menu Helper Disclaimer -->
+      <div class="menu-disclaimer" style="margin-top: 50px;">
+        <p><i class="fa-solid fa-clock"></i> Note: Freshly prepared dishes take about <strong>15 to 20 minutes</strong> to serve. Good food is worth the wait!</p>
+        <p><i class="fa-solid fa-shield-halved"></i> We maintain top kitchen hygiene. All our ingredients are sourced fresh daily.</p>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Fixed Bottom Navigation Dock for Mobile (Thumb-Friendly) -->
+  <div class="mobile-bottom-dock">
+    <a href="/index.html" class="dock-item">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="/menu.html" class="dock-item active">
+      <i class="fa-solid fa-utensils"></i>
+      <span>Menu</span>
+    </a>
+    <a href="/specials.html" class="dock-item">
+      <i class="fa-solid fa-fire"></i>
+      <span>Specials</span>
+    </a>
+    <a href="/ambience.html" class="dock-item">
+      <i class="fa-solid fa-images"></i>
+      <span>Ambience</span>
+    </a>
+    <a href="/contact.html" class="dock-item">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Contact</span>
+    </a>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

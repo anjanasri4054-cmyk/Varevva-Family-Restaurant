@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About Us | Varevva Family Restaurant Yadagirigutta</title>
+  <meta name="description" content="Discover Varevva Family Restaurant's culinary journey in Yadagirigutta. We offer authentic Telangana Ruchulu with No artificial colors and No tasting salt (MSG).">
+  
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/index.html" class="nav-logo" id="nav-logo">
+        <img id="restaurant-logo" src="/public/assets/logo.png" alt="Varevva Logo">
+        <div class="brand-text-container">
+          <span class="brand-v">Varevva</span>
+          <span class="sub-brand">Telangana Ruchulu</span>
+        </div>
+      </a>
+      
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="/index.html" class="nav-link">Home</a></li>
+        <li><a href="/about.html" class="nav-link active">About Us</a></li>
+        <li><a href="/specials.html" class="nav-link">Specials</a></li>
+        <li><a href="/menu.html" class="nav-link">Menu</a></li>
+        <li><a href="/ambience.html" class="nav-link">Ambience</a></li>
+        <li><a href="/contact.html" class="nav-link">Contact & Map</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <a href="tel:+916302019925" class="btn-nav-call" id="btn-nav-call">
+          <i class="fa-solid fa-phone"></i>
+          <span>+91 63020 19925</span>
+        </a>
+        <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- About Header Page Banner -->
+  <header style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/public/assets/about_restaurant.jpg') center/cover; padding: 120px 0 60px; text-align: center; color: white;">
+    <div class="container">
+      <h1 style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">About Us</h1>
+      <p style="font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; color: var(--primary-color);">Discover Varevva's Culinary Legacy</p>
+    </div>
+  </header>
+
+  <!-- About Section -->
+  <section class="about-section" id="about" style="padding: 80px 0;">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-visual">
+          <div class="visual-stack">
+            <img src="/public/assets/about_restaurant.jpg" alt="Dining Hall Filled with Customers" class="about-img-main">
+            <div class="experience-badge">
+              <h3>Authentic</h3>
+              <p>Telangana Ruchulu</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="about-content">
+          <h3>Best Family Restaurant in Yadagirigutta | Authentic Telangana Ruchulu</h3>
+          <p>
+            Conveniently located right on the main temple highway, <strong>Varevva Family Restaurant</strong> is widely recognized as one of the <strong>best restaurants in Yadagirigutta</strong> for travelers, pilgrims, and local families. If you are searching for the <strong>top places to eat near Yadadri Temple</strong>, Varevva offers the perfect stopover for authentic, high-quality, and delicious meals.
+          </p>
+          <p>
+            At Varevva, we believe that food should not only taste incredible but also nourish your body. That's why we enforce a strict policy: <strong>No artificial food colors and no MSG / tasting salt</strong> are used in our kitchen. We spice our dishes using freshly ground, handpicked local spices to ensure authentic taste and excellent health, making us the premier healthy food destination among all <strong>yadagirigutta restaurants</strong>.
+          </p>
+          
+          <div class="about-highlights">
+            <div class="highlight-box">
+              <i class="fa-solid fa-kitchen-set"></i>
+              <div>
+                <h4>Authentic Local Spices</h4>
+                <p>No packaged mixtures, only authentic spices ground daily for pure Telangana Ruchulu.</p>
+              </div>
+            </div>
+            <div class="highlight-box">
+              <i class="fa-solid fa-users"></i>
+              <div>
+                <h4>Best Family Dining in Yadagirigutta</h4>
+                <p>Comfortable indoor A/C seating designed for families and group travelers.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-cta" style="margin-top: 30px;">
+            <a href="/menu.html" class="btn-primary">View Full Menu <i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+
+  <!-- Fixed Bottom Navigation Dock for Mobile (Thumb-Friendly) -->
+  <div class="mobile-bottom-dock">
+    <a href="/index.html" class="dock-item">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </a>
+    <a href="/menu.html" class="dock-item">
+      <i class="fa-solid fa-utensils"></i>
+      <span>Menu</span>
+    </a>
+    <a href="/specials.html" class="dock-item">
+      <i class="fa-solid fa-fire"></i>
+      <span>Specials</span>
+    </a>
+    <a href="/ambience.html" class="dock-item">
+      <i class="fa-solid fa-images"></i>
+      <span>Ambience</span>
+    </a>
+    <a href="/contact.html" class="dock-item">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Contact</span>
+    </a>
+  </div>
+
+  <!-- Main JavaScript File -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
