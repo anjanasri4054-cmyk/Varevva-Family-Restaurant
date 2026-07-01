@@ -931,15 +931,15 @@ function openAdminLoginModal() {
       </div>
       <form class="admin-modal-form" id="admin-login-form">
         <div class="form-group">
-          <label for="admin-username">Username</label>
-          <input type="text" id="admin-username" placeholder="Enter username" required autocomplete="username">
+          <label for="admin-username">Email Address</label>
+          <input type="email" id="admin-username" placeholder="Enter email address" required autocomplete="email">
         </div>
         <div class="form-group">
           <label for="admin-password">Password</label>
           <input type="password" id="admin-password" placeholder="Enter password" required autocomplete="current-password">
         </div>
         <div id="admin-login-error" style="color: #ef4444; font-size: 0.85rem; display: none; text-align: center;">
-          <i class="fa-solid fa-circle-exclamation"></i> Invalid username or password!
+          <i class="fa-solid fa-circle-exclamation"></i> Invalid email or password!
         </div>
         <button type="submit" class="btn-admin-submit">Login</button>
       </form>
@@ -963,7 +963,7 @@ function openAdminLoginModal() {
     const user = form.querySelector('#admin-username').value.trim();
     const pass = form.querySelector('#admin-password').value;
 
-    if (user === 'admin' && pass === 'varevva123') {
+    if (user === 'shatragnaasdf@gmail.com' && pass === 'Vardhan@143') {
       isAdmin = true;
       sessionStorage.setItem('varevva_admin_logged_in', 'true');
       updateAdminPortalButtonState();
