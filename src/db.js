@@ -56,7 +56,6 @@ export async function fetchMenuData() {
       if (data && Array.isArray(data) && data.length > 0) {
         return data;
       } else {
-        // Database is empty, initialize it with static menuData
         console.log('Firebase menu is empty. Seeding with menuData.');
         await saveMenuData(menuData);
         return [...menuData];
@@ -69,24 +68,32 @@ export async function fetchMenuData() {
   // Fallback: LocalStorage or static menuData
   let localMenu = [];
   try {
-    localMenu = JSON.parse(localStorage.getItem('varevva_menu_data'));
+    localMenu = JSON.parse(localStorage.getItem('varevva_menu_data_v3'));
   } catch (e) {
     console.error('Error reading localStorage:', e);
   }
 
   if (!localMenu || !Array.isArray(localMenu) || localMenu.length === 0) {
-    localMenu = [...menuData];
-    localStorage.setItem('varevva_menu_data', JSON.stringify(localMenu));
+    localMenu = menuData.map(item => ({ ...item }));
+    localStorage.setItem('varevva_menu_data_v3', JSON.stringify(localMenu));
+  } else {
+    // Sync static images from menuData to reflect latest commits
+    localMenu = localMenu.map(localItem => {
+      const staticItem = menuData.find(m => m.name === localItem.name);
+      if (staticItem && staticItem.image) {
+        localItem.image = staticItem.image;
+      }
+      return localItem;
+    });
+    localStorage.setItem('varevva_menu_data_v3', JSON.stringify(localMenu));
   }
   return localMenu;
 }
 
 // Save Menu Data
 export async function saveMenuData(menu) {
-  // Always update localStorage first for fast local responsiveness
-  localStorage.setItem('varevva_menu_data', JSON.stringify(menu));
+  localStorage.setItem('varevva_menu_data_v3', JSON.stringify(menu));
 
-  // Sync to Firebase if configured
   if (useFirebase && firebaseDb) {
     try {
       await firebaseDb.ref('menu').set(menu);
@@ -96,7 +103,6 @@ export async function saveMenuData(menu) {
     }
   }
 
-  // Sync to local file system via Vite dev server if running on localhost
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     try {
       const response = await fetch('/api/save-menu', {
@@ -113,7 +119,6 @@ export async function saveMenuData(menu) {
         console.warn('Vite dev API save failed:', err.message);
       }
     } catch (e) {
-      // Fetch will fail in production/built preview mode, which is expected
       console.log('Vite dev API not active or unreachable.');
     }
   }
@@ -137,17 +142,25 @@ export async function fetchSpecialsData() {
     }
   }
 
-  // Fallback: LocalStorage or static defaultSpecials
   let localSpecials = [];
   try {
-    localSpecials = JSON.parse(localStorage.getItem('varevva_specials_data'));
+    localSpecials = JSON.parse(localStorage.getItem('varevva_specials_data_v3'));
   } catch (e) {
     console.error('Error reading localStorage:', e);
   }
 
   if (!localSpecials || !Array.isArray(localSpecials) || localSpecials.length === 0) {
-    localSpecials = [...defaultSpecials];
-    localStorage.setItem('varevva_specials_data', JSON.stringify(localSpecials));
+    localSpecials = defaultSpecials.map(item => ({ ...item }));
+    localStorage.setItem('varevva_specials_data_v3', JSON.stringify(localSpecials));
+  } else {
+    localSpecials = localSpecials.map(localItem => {
+      const staticItem = defaultSpecials.find(s => s.id === localItem.id);
+      if (staticItem && staticItem.image) {
+        localItem.image = staticItem.image;
+      }
+      return localItem;
+    });
+    localStorage.setItem('varevva_specials_data_v3', JSON.stringify(localSpecials));
   }
   return localSpecials;
 }
