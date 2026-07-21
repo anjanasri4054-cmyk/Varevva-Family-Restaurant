@@ -661,13 +661,17 @@ ul {
 .special-img-wrapper {
   position: relative;
   overflow: hidden;
-  height: 230px;
+  height: 220px;
+  width: 100%;
+  aspect-ratio: 16 / 10;
 }
 
 .special-img-wrapper img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
+  display: block;
   transition: var(--transition-smooth);
 }
 
@@ -3133,6 +3137,8 @@ ul {
   position: relative;
   width: 120px;
   height: 120px;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
   margin-bottom: 12px;
   display: flex;
   align-items: center;
@@ -3143,10 +3149,12 @@ ul {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
   background-color: var(--light-bg);
+  display: block;
 }
 
 .menu-item-action-button-container {
@@ -3168,10 +3176,21 @@ ul {
   .menu-item-image-wrapper {
     width: 96px;
     height: 96px;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
     margin-bottom: 8px;
   }
   .menu-item-action-button-container {
     bottom: -6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-item-image-wrapper {
+    width: 84px;
+    height: 84px;
+    aspect-ratio: 1 / 1;
+    flex-shrink: 0;
   }
 }
 
@@ -3549,15 +3568,20 @@ ul {
   object-fit: cover;
 }
 
-/* Mobile responsive fixes for item detail container */
+/* Mobile responsive fixes for item detail container and image wrappers */
 @media (max-width: 768px) {
+  .special-img-wrapper {
+    height: 180px !important;
+    aspect-ratio: 16 / 9 !important;
+  }
   .item-detail-card {
     grid-template-columns: 1fr !important;
     padding: 20px !important;
     gap: 24px !important;
   }
   .item-detail-img-wrapper {
-    height: 280px !important;
+    height: 260px !important;
+    aspect-ratio: 16 / 10 !important;
   }
   .item-detail-title {
     font-size: 1.8rem !important;
@@ -3582,6 +3606,21 @@ ul {
     margin: 10px auto 0 !important;
     width: 100% !important;
     justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .special-img-wrapper {
+    height: 150px !important;
+    aspect-ratio: 16 / 9 !important;
+  }
+  .item-detail-img-wrapper {
+    height: 210px !important;
+    aspect-ratio: 16 / 10 !important;
+  }
+  .related-item-img-box {
+    width: 68px !important;
+    height: 68px !important;
   }
 }
 

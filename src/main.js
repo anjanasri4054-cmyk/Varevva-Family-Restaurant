@@ -154,9 +154,23 @@ function initSearch() {
 }
 
 // --- Dynamic Image Mapping Helper ---
+export function sanitizeImageUrl(url, type = 'non-veg') {
+  const defaultFallback = type === 'veg' ? '/assets/paneer_butter_masala.png' : '/assets/chicken_dum_biryani.png';
+  if (!url || typeof url !== 'string') return defaultFallback;
+  let clean = url.trim();
+  if (!clean) return defaultFallback;
+  if (clean.startsWith('/public/assets/')) {
+    clean = clean.replace('/public/assets/', '/assets/');
+  } else if (clean.startsWith('public/assets/')) {
+    clean = clean.replace('public/assets/', '/assets/');
+  } else if (clean.startsWith('assets/')) {
+    clean = '/' + clean;
+  }
+  return clean;
+}
+
 function getItemImage(item) {
-  if (item.image) return item.image;
-  return item.type === 'veg' ? '/assets/paneer_butter_masala.png' : '/assets/chicken_dum_biryani.png';
+  return sanitizeImageUrl(item.image, item.type);
 }
 
 // --- Cart State Management (localStorage persisted) ---
@@ -1449,10 +1463,13 @@ function openAdminEditImageModal(identifier, isSpecial) {
 
   if (document.querySelector('.admin-edit-image-overlay')) return;
 
+  const initialPath = sanitizeImageUrl(item.image, item.type);
+  const fallbackImg = item.type === 'veg' ? '/assets/paneer_butter_masala.png' : '/assets/chicken_dum_biryani.png';
+
   const overlay = document.createElement('div');
   overlay.className = 'order-modal-overlay admin-edit-image-overlay';
   overlay.innerHTML = `
-    <div class="order-modal-card" style="max-width: 500px;">
+    <div class="order-modal-card" style="max-width: 520px;">
       <div class="order-modal-header">
         <h3>Edit Image: ${item.name}</h3>
         <button class="btn-close-modal" id="btn-close-admin-edit-image">&times;</button>
@@ -1460,12 +1477,24 @@ function openAdminEditImageModal(identifier, isSpecial) {
       <form class="admin-modal-form" id="admin-edit-image-form">
         <div class="form-group">
           <label for="edit-image-url">Image URL or Local Path</label>
-          <input type="text" id="edit-image-url" placeholder="e.g. /assets/dish.png or online URL" value="${item.image || ''}" required>
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 8px; line-height: 1.4;">
-            <i class="fa-solid fa-info-circle"></i> Enter an online link (e.g. <code>https://images.unsplash.com/...</code>) or a local static path (e.g. <code>/assets/my_dish.png</code>). This will be saved permanently.
+          <input type="text" id="edit-image-url" placeholder="e.g. /assets/dish.png or online https://... URL" value="${initialPath}" required autocomplete="off">
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
+            <i class="fa-solid fa-info-circle"></i> Enter an online link (e.g. <code>https://images.unsplash.com/...</code>) or local path (e.g. <code>/assets/naan.jpg</code>).
           </p>
         </div>
-        <button type="submit" class="btn-admin-submit" style="background-color: #8b5cf6;">Save Image</button>
+
+        <div class="image-preview-box" style="margin-bottom: 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px; text-align: center;">
+          <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="fa-solid fa-eye"></i> Live Image Preview
+          </div>
+          <div style="width: 100%; height: 180px; border-radius: 8px; overflow: hidden; background: #e2e8f0; position: relative;">
+            <img id="edit-image-preview-img" src="${initialPath}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.onerror=null; this.src='${fallbackImg}';">
+          </div>
+        </div>
+
+        <button type="submit" class="btn-admin-submit" style="background-color: #8b5cf6;">
+          <i class="fa-solid fa-floppy-disk"></i> Save Image
+        </button>
       </form>
     </div>
   `;
@@ -1474,6 +1503,16 @@ function openAdminEditImageModal(identifier, isSpecial) {
 
   const closeBtn = overlay.querySelector('#btn-close-admin-edit-image');
   const form = overlay.querySelector('#admin-edit-image-form');
+  const inputEl = overlay.querySelector('#edit-image-url');
+  const previewImgEl = overlay.querySelector('#edit-image-preview-img');
+
+  const updatePreview = () => {
+    const rawVal = inputEl.value;
+    const cleanVal = sanitizeImageUrl(rawVal, item.type);
+    previewImgEl.src = cleanVal;
+  };
+
+  inputEl.addEventListener('input', updatePreview);
 
   const closeModal = () => overlay.remove();
 
@@ -1484,7 +1523,7 @@ function openAdminEditImageModal(identifier, isSpecial) {
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const newImageUrl = form.querySelector('#edit-image-url').value.trim();
+    const newImageUrl = sanitizeImageUrl(inputEl.value, item.type);
     item.image = newImageUrl;
 
     if (isSpecial) {

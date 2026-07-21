@@ -145,12 +145,27 @@ function renderItemDetails(item) {
   // Pre-fill direct WhatsApp Order link
   const directWhatsAppUrl = `https://wa.me/916302019925?text=Hi%20Varevva%20Restaurant,%20I%20would%20like%20to%20order%20${encodeURIComponent(item.name)}%20(Price:%20₹${item.price})%20from%20your%20website.`;
 
+function cleanPath(url, fallback) {
+  if (!url || typeof url !== 'string') return fallback;
+  let clean = url.trim();
+  if (clean.startsWith('/public/assets/')) {
+    clean = clean.replace('/public/assets/', '/assets/');
+  } else if (clean.startsWith('public/assets/')) {
+    clean = clean.replace('public/assets/', '/assets/');
+  } else if (clean.startsWith('assets/')) {
+    clean = '/' + clean;
+  }
+  return clean || fallback;
+}
+
+  const mainImgUrl = cleanPath(item.image, fallbackImage);
+
   detailsContainer.innerHTML = `
     <div class="item-detail-card">
       
       <!-- Left Column: Product Photo -->
       <div class="item-detail-img-wrapper">
-        <img class="item-detail-img" src="${item.image || fallbackImage}" alt="${item.name}" onerror="this.onerror=null; this.src='${fallbackImage}';">
+        <img class="item-detail-img" src="${mainImgUrl}" alt="${item.name}" onerror="this.onerror=null; this.src='${fallbackImage}';">
         <span class="detail-diet-badge ${dietBadgeClass}" title="${isVeg ? 'Vegetarian' : 'Non-Vegetarian'}">
           <span class="diet-dot"></span>
           ${isVeg ? 'Veg' : 'Non-Veg'}
@@ -259,7 +274,7 @@ function renderRelatedItems(activeItem) {
       </div>
       <div class="related-item-img-box">
         <a href="/item.html?id=${item.id}">
-          <img class="related-item-img" src="${item.image || fallbackImage}" alt="${item.name}" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImage}';">
+          <img class="related-item-img" src="${cleanPath(item.image, fallbackImage)}" alt="${item.name}" loading="lazy" onerror="this.onerror=null; this.src='${fallbackImage}';">
         </a>
       </div>
     `;

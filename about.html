@@ -21,7 +21,7 @@
   <nav class="navbar" id="navbar">
     <div class="nav-container">
       <a href="/index.html" class="nav-logo" id="nav-logo">
-        <img id="restaurant-logo" src="/public/assets/logo.png" alt="Varevva Logo">
+        <img id="restaurant-logo" src="/assets/logo.png" alt="Varevva Logo">
         <div class="brand-text-container">
           <span class="brand-v">Varevva</span>
           <span class="sub-brand">Telangana Ruchulu</span>
@@ -50,26 +50,27 @@
   </nav>
 
   <!-- About Header Page Banner -->
-  <header style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/public/assets/about_restaurant.jpg') center/cover; padding: 120px 0 60px; text-align: center; color: white;">
+  <header style="background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/assets/about_restaurant.jpg') center/cover; padding: 120px 0 60px; text-align: center; color: white;">
     <div class="container">
-      <h1 style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">About Us</h1>
-      <p style="font-family: var(--font-accent); font-style: italic; font-size: 1.2rem; color: var(--primary-color);">Discover Varevva's Culinary Legacy</p>
+      <span class="sub-heading" style="color: var(--accent-color);">Telangana Ruchulu</span>
+      <h1 class="main-heading" style="color: white;">Our Culinary Story</h1>
+      <p style="max-width: 600px; margin: 12px auto 0; color: rgba(255, 255, 255, 0.9); font-size: 1.05rem;">
+        Serving genuine homemade flavours cooked with passion, uncompromised quality, and pure spices.
+      </p>
     </div>
   </header>
 
-  <!-- About Section -->
-  <section class="about-section" id="about" style="padding: 80px 0;">
+  <section style="padding: 80px 0; background-color: var(--light-bg);">
     <div class="container">
-      <div class="about-grid">
-        <div class="about-visual">
-          <div class="visual-stack">
-            <img src="/public/assets/about_restaurant.jpg" alt="Dining Hall Filled with Customers" class="about-img-main">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 50px; align-items: center;">
+        <div style="position: relative;">
+          <div style="border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-lg);">
+            <img src="/assets/about_restaurant.jpg" alt="Dining Hall Filled with Customers" class="about-img-main">
             <div class="experience-badge">
               <h3>Authentic</h3>
               <p>Telangana Ruchulu</p>
             </div>
           </div>
-        </div>
         
         <div class="about-content">
           <h3>Best Family Restaurant in Yadagirigutta | Authentic Telangana Ruchulu</h3>
