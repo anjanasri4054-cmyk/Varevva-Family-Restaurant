@@ -977,7 +977,7 @@ function openAdminLoginModal() {
     const user = form.querySelector('#admin-username').value.trim();
     const pass = form.querySelector('#admin-password').value;
 
-    if (user === 'shatragnaasdf@gmail.com' && pass === 'Vardhan@143') {
+    if (user === 'shatragnaasdf@gmail.com' && pass === 'Vishnu@143') {
       isAdmin = true;
       sessionStorage.setItem('varevva_admin_logged_in', 'true');
       updateAdminPortalButtonState();
