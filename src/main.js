@@ -972,20 +972,35 @@ function openAdminLoginModal() {
     if (e.target === overlay) closeModal();
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const user = form.querySelector('#admin-username').value.trim();
     const pass = form.querySelector('#admin-password').value;
+    const errorDiv = form.querySelector('#admin-login-error');
 
-    if (user === 'shatragnaasdf@gmail.com' && pass === 'Vishnu@143') {
-      isAdmin = true;
-      sessionStorage.setItem('varevva_admin_logged_in', 'true');
-      updateAdminPortalButtonState();
-      closeModal();
-      if (menuGrid) renderMenu();
-      if (specialsGrid) renderSpecials();
-    } else {
-      const errorDiv = form.querySelector('#admin-login-error');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: user, password: pass })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        isAdmin = true;
+        sessionStorage.setItem('varevva_admin_logged_in', 'true');
+        sessionStorage.setItem('varevva_admin_token', data.token);
+        updateAdminPortalButtonState();
+        closeModal();
+        if (menuGrid) renderMenu();
+        if (specialsGrid) renderSpecials();
+      } else {
+        errorDiv.textContent = data.message || 'Invalid email or password!';
+        errorDiv.style.display = 'block';
+        form.querySelector('#admin-password').value = '';
+        form.querySelector('#admin-password').focus();
+      }
+    } catch (err) {
+      errorDiv.textContent = 'Failed to connect to authentication server.';
       errorDiv.style.display = 'block';
       form.querySelector('#admin-password').value = '';
       form.querySelector('#admin-password').focus();
@@ -1045,8 +1060,27 @@ function openAdminAddItemModal() {
         </div>
 
         <div class="form-group">
-          <label for="dish-image">Dish Image URL / Path (Optional)</label>
-          <input type="text" id="dish-image" placeholder="e.g. /assets/spicy_chicken_fry.png or any online URL">
+          <label>Dish Image</label>
+          <input type="file" id="dish-image-file" accept="image/png, image/jpeg, image/webp" style="margin-bottom: 8px;" required>
+          <input type="hidden" id="dish-image-url">
+          <input type="hidden" id="dish-image-public-id">
+          
+          <div id="dish-upload-progress-container" style="display: none; margin-bottom: 10px;">
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>Uploading image...</span>
+              <span id="dish-upload-percent">0%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
+              <div id="dish-upload-progress-bar" style="width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.1s ease;"></div>
+            </div>
+          </div>
+
+          <div id="dish-image-preview" style="width: 100%; height: 160px; border: 2px dashed #ccc; border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; background-color: #f9fafb;">
+            <span style="color: #9ca3af; font-size: 0.9rem;">No image selected (WEBP, PNG, JPG up to 5MB)</span>
+          </div>
+          <div id="dish-image-type-error" style="color: #ef4444; font-size: 0.8rem; display: none; margin-top: 4px;">
+            <i class="fa-solid fa-circle-exclamation"></i> Only JPG, PNG, or WEBP up to 5MB allowed!
+          </div>
         </div>
 
         <div class="form-group">
@@ -1066,6 +1100,16 @@ function openAdminAddItemModal() {
   const dishNameInput = overlay.querySelector('#dish-name');
   const nameError = overlay.querySelector('#dish-name-error');
 
+  const fileInput = overlay.querySelector('#dish-image-file');
+  const imageUrlInput = overlay.querySelector('#dish-image-url');
+  const imagePublicIdInput = overlay.querySelector('#dish-image-public-id');
+  const uploadProgressContainer = overlay.querySelector('#dish-upload-progress-container');
+  const uploadProgressBar = overlay.querySelector('#dish-upload-progress-bar');
+  const uploadPercent = overlay.querySelector('#dish-upload-percent');
+  const previewDiv = overlay.querySelector('#dish-image-preview');
+  const imageError = overlay.querySelector('#dish-image-type-error');
+  const submitButton = form.querySelector('button[type="submit"]');
+
   const closeModal = () => overlay.remove();
 
   closeBtn.addEventListener('click', closeModal);
@@ -1073,7 +1117,83 @@ function openAdminAddItemModal() {
     if (e.target === overlay) closeModal();
   });
 
-  form.addEventListener('submit', (e) => {
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
+    }
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
+    }
+
+    imageError.style.display = 'none';
+
+    // Show preview immediately using FileReader
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      previewDiv.innerHTML = `<img src="${event.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    };
+    reader.readAsDataURL(file);
+
+    // Disable Save button while uploading
+    submitButton.disabled = true;
+    submitButton.textContent = 'Uploading Image...';
+    uploadProgressContainer.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = sessionStorage.getItem('varevva_admin_token');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload', true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        uploadProgressBar.style.width = `${percentComplete}%`;
+        uploadPercent.textContent = `${percentComplete}%`;
+      }
+    };
+
+    xhr.onload = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Add to Menu';
+      
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        imageUrlInput.value = response.image;
+        imagePublicIdInput.value = response.imagePublicId;
+        uploadPercent.textContent = 'Upload complete!';
+      } else {
+        alert('Image upload failed. Please try again.');
+        uploadProgressContainer.style.display = 'none';
+        previewDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.9rem;">Upload failed!</span>';
+      }
+    };
+
+    xhr.onerror = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Add to Menu';
+      alert('Network error occurred during upload.');
+      uploadProgressContainer.style.display = 'none';
+    };
+
+    xhr.send(formData);
+  });
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = dishNameInput.value.trim();
     const price = Number(form.querySelector('#dish-price').value);
@@ -1081,7 +1201,13 @@ function openAdminAddItemModal() {
     const type = form.querySelector('#dish-diet').value;
     const description = form.querySelector('#dish-description').value.trim();
     const popular = form.querySelector('#dish-popular').checked;
-    const image = form.querySelector('#dish-image').value.trim();
+    const image = imageUrlInput.value;
+    const imagePublicId = imagePublicIdInput.value;
+
+    if (!image || !imagePublicId) {
+      alert('Please select and upload a dish image first!');
+      return;
+    }
 
     // Uniqueness check (case-insensitive)
     const duplicate = currentMenu.find(item => item.name.toLowerCase() === name.toLowerCase());
@@ -1091,28 +1217,39 @@ function openAdminAddItemModal() {
       return;
     }
 
-    // Generate ID
-    const prefix = type === 'veg' ? 'v' : 'nv';
-    const catCode = category.substring(0, 3);
-    const customId = `cust-${prefix}-${catCode}-${Date.now()}`;
+    const token = sessionStorage.getItem('varevva_admin_token');
 
-    const newItem = {
-      id: customId,
-      name,
-      price,
-      category,
-      type,
-      description,
-      popular,
-      image: image || "",
-      outOfStock: false
-    };
+    try {
+      const res = await fetch('/api/menu', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name,
+          price,
+          category,
+          subCategory: type,
+          description,
+          image,
+          imagePublicId,
+          availability: true,
+          featured: popular
+        })
+      });
 
-    currentMenu.push(newItem);
-    saveMenuData(currentMenu);
-    
-    closeModal();
-    renderMenu();
+      if (res.ok) {
+        currentMenu = await fetchMenuData();
+        closeModal();
+        renderMenu();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to save menu item: ${errorData.message}`);
+      }
+    } catch (err) {
+      alert('Connection error occurred while saving menu item.');
+    }
   });
 
   dishNameInput.addEventListener('input', () => {
@@ -1120,41 +1257,61 @@ function openAdminAddItemModal() {
   });
 }
 
-function toggleStockStatus(name) {
+async function toggleStockStatus(name) {
   const item = currentMenu.find(i => i.name === name);
   if (!item) return;
 
-  item.outOfStock = !item.outOfStock;
-  
-  // Save currentMenu to localStorage/database
-  saveMenuData(currentMenu);
-  
-  // Sync cart (remove the item from cart if it's marked out of stock)
-  if (item.outOfStock) {
-    const cart = getCart();
-    if (cart[name]) {
-      delete cart[name];
-      saveCart(cart);
+  const newAvailability = item.outOfStock; // if it was out of stock, it will now be in stock
+  const token = sessionStorage.getItem('varevva_admin_token');
+
+  try {
+    const res = await fetch(`/api/menu/${item._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        availability: newAvailability
+      })
+    });
+
+    if (res.ok) {
+      currentMenu = await fetchMenuData();
+      renderMenu();
+    } else {
+      alert('Failed to update stock status on database.');
     }
+  } catch (err) {
+    alert('Connection error occurred while updating stock status.');
   }
-  
-  renderMenu();
 }
 
-function deleteMenuItem(name) {
+async function deleteMenuItem(name) {
+  const item = currentMenu.find(i => i.name === name);
+  if (!item) return;
+
   if (!confirm(`Are you sure you want to remove "${name}" from the menu?`)) return;
 
-  currentMenu = currentMenu.filter(i => i.name !== name);
-  saveMenuData(currentMenu);
+  const token = sessionStorage.getItem('varevva_admin_token');
 
-  // Also remove from cart if present
-  const cart = getCart();
-  if (cart[name]) {
-    delete cart[name];
-    saveCart(cart);
+  try {
+    const res = await fetch(`/api/menu/${item._id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (res.ok) {
+      currentMenu = await fetchMenuData();
+      renderMenu();
+    } else {
+      alert('Failed to delete menu item.');
+    }
+  } catch (err) {
+    alert('Connection error occurred while deleting item.');
   }
-
-  renderMenu();
 }
 
 function openAdminEditItemModal(name) {
@@ -1212,8 +1369,27 @@ function openAdminEditItemModal(name) {
         </div>
 
         <div class="form-group">
-          <label for="dish-image">Dish Image URL / Path (Optional)</label>
-          <input type="text" id="dish-image" placeholder="e.g. /assets/spicy_chicken_fry.png or any online URL" value="${item.image || ''}">
+          <label>Dish Image</label>
+          <input type="file" id="dish-image-file" accept="image/png, image/jpeg, image/webp" style="margin-bottom: 8px;">
+          <input type="hidden" id="dish-image-url" value="${item.image || ''}">
+          <input type="hidden" id="dish-image-public-id" value="${item.imagePublicId || ''}">
+          
+          <div id="dish-upload-progress-container" style="display: none; margin-bottom: 10px;">
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>Uploading image...</span>
+              <span id="dish-upload-percent">0%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
+              <div id="dish-upload-progress-bar" style="width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.1s ease;"></div>
+            </div>
+          </div>
+
+          <div id="dish-image-preview" style="width: 100%; height: 160px; border: 2px dashed #ccc; border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; background-color: #f9fafb;">
+            ${item.image ? `<img src="${item.image}" style="width: 100%; height: 100%; object-fit: cover;">` : '<span style="color: #9ca3af; font-size: 0.9rem;">No image selected (WEBP, PNG, JPG up to 5MB)</span>'}
+          </div>
+          <div id="dish-image-type-error" style="color: #ef4444; font-size: 0.8rem; display: none; margin-top: 4px;">
+            <i class="fa-solid fa-circle-exclamation"></i> Only JPG, PNG, or WEBP up to 5MB allowed!
+          </div>
         </div>
 
         <div class="form-group">
@@ -1233,6 +1409,16 @@ function openAdminEditItemModal(name) {
   const dishNameInput = overlay.querySelector('#dish-name');
   const nameError = overlay.querySelector('#dish-name-error');
 
+  const fileInput = overlay.querySelector('#dish-image-file');
+  const imageUrlInput = overlay.querySelector('#dish-image-url');
+  const imagePublicIdInput = overlay.querySelector('#dish-image-public-id');
+  const uploadProgressContainer = overlay.querySelector('#dish-upload-progress-container');
+  const uploadProgressBar = overlay.querySelector('#dish-upload-progress-bar');
+  const uploadPercent = overlay.querySelector('#dish-upload-percent');
+  const previewDiv = overlay.querySelector('#dish-image-preview');
+  const imageError = overlay.querySelector('#dish-image-type-error');
+  const submitButton = form.querySelector('button[type="submit"]');
+
   const closeModal = () => overlay.remove();
 
   closeBtn.addEventListener('click', closeModal);
@@ -1240,7 +1426,83 @@ function openAdminEditItemModal(name) {
     if (e.target === overlay) closeModal();
   });
 
-  form.addEventListener('submit', (e) => {
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
+    }
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
+    }
+
+    imageError.style.display = 'none';
+
+    // Show preview immediately using FileReader
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      previewDiv.innerHTML = `<img src="${event.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    };
+    reader.readAsDataURL(file);
+
+    // Disable Save button while uploading
+    submitButton.disabled = true;
+    submitButton.textContent = 'Uploading Image...';
+    uploadProgressContainer.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = sessionStorage.getItem('varevva_admin_token');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload', true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        uploadProgressBar.style.width = `${percentComplete}%`;
+        uploadPercent.textContent = `${percentComplete}%`;
+      }
+    };
+
+    xhr.onload = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Save Changes';
+      
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        imageUrlInput.value = response.image;
+        imagePublicIdInput.value = response.imagePublicId;
+        uploadPercent.textContent = 'Upload complete!';
+      } else {
+        alert('Image upload failed. Please try again.');
+        uploadProgressContainer.style.display = 'none';
+        previewDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.9rem;">Upload failed!</span>';
+      }
+    };
+
+    xhr.onerror = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Save Changes';
+      alert('Network error occurred during upload.');
+      uploadProgressContainer.style.display = 'none';
+    };
+
+    xhr.send(formData);
+  });
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const newName = dishNameInput.value.trim();
     const price = Number(form.querySelector('#dish-price').value);
@@ -1248,7 +1510,13 @@ function openAdminEditItemModal(name) {
     const type = form.querySelector('#dish-diet').value;
     const description = form.querySelector('#dish-description').value.trim();
     const popular = form.querySelector('#dish-popular').checked;
-    const image = form.querySelector('#dish-image').value.trim();
+    const image = imageUrlInput.value;
+    const imagePublicId = imagePublicIdInput.value;
+
+    if (!image) {
+      alert('Please upload an image first!');
+      return;
+    }
 
     // Check duplicate name excluding current item
     const duplicate = currentMenu.find(i => i.name.toLowerCase() === newName.toLowerCase() && i.name.toLowerCase() !== name.toLowerCase());
@@ -1258,27 +1526,39 @@ function openAdminEditItemModal(name) {
       return;
     }
 
-    const oldName = item.name;
-    item.name = newName;
-    item.price = price;
-    item.category = category;
-    item.type = type;
-    item.description = description;
-    item.popular = popular;
-    item.image = image || "";
+    const token = sessionStorage.getItem('varevva_admin_token');
 
-    // Sync updated properties to cart if it was in the cart
-    const cart = getCart();
-    if (cart[oldName]) {
-      const cartQty = cart[oldName].quantity;
-      delete cart[oldName];
-      cart[newName] = { name: newName, price, quantity: cartQty };
-      saveCart(cart);
+    try {
+      const res = await fetch(`/api/menu/${item._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: newName,
+          price,
+          category,
+          subCategory: type,
+          description,
+          image,
+          imagePublicId,
+          availability: !item.outOfStock,
+          featured: popular
+        })
+      });
+
+      if (res.ok) {
+        currentMenu = await fetchMenuData();
+        closeModal();
+        renderMenu();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to save menu changes: ${errorData.message}`);
+      }
+    } catch (err) {
+      alert('Connection error occurred while saving changes.');
     }
-
-    saveMenuData(currentMenu);
-    closeModal();
-    renderMenu();
   });
 
   dishNameInput.addEventListener('input', () => {
@@ -1476,18 +1756,31 @@ function openAdminEditImageModal(identifier, isSpecial) {
       </div>
       <form class="admin-modal-form" id="admin-edit-image-form">
         <div class="form-group">
-          <label for="edit-image-url">Image URL or Local Path</label>
-          <input type="text" id="edit-image-url" placeholder="e.g. /assets/dish.png or online https://... URL" value="${initialPath}" required autocomplete="off">
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; line-height: 1.4;">
-            <i class="fa-solid fa-info-circle"></i> Enter an online link (e.g. <code>https://images.unsplash.com/...</code>) or local path (e.g. <code>/assets/naan.jpg</code>).
-          </p>
+          <label>Upload Dish Image</label>
+          <input type="file" id="edit-image-file" accept="image/png, image/jpeg, image/webp" style="margin-bottom: 8px;">
+          <input type="hidden" id="edit-image-url" value="${item.image || ''}">
+          <input type="hidden" id="edit-image-public-id" value="${item.imagePublicId || ''}">
+          
+          <div id="edit-upload-progress-container" style="display: none; margin-bottom: 10px;">
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>Uploading image...</span>
+              <span id="edit-upload-percent">0%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
+              <div id="edit-upload-progress-bar" style="width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.1s ease;"></div>
+            </div>
+          </div>
+
+          <div id="edit-image-type-error" style="color: #ef4444; font-size: 0.8rem; display: none; margin-top: 4px;">
+            <i class="fa-solid fa-circle-exclamation"></i> Only JPG, PNG, or WEBP up to 5MB allowed!
+          </div>
         </div>
 
         <div class="image-preview-box" style="margin-bottom: 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px; text-align: center;">
           <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
             <i class="fa-solid fa-eye"></i> Live Image Preview
           </div>
-          <div style="width: 100%; height: 180px; border-radius: 8px; overflow: hidden; background: #e2e8f0; position: relative;">
+          <div id="edit-image-preview-div" style="width: 100%; height: 180px; border-radius: 8px; overflow: hidden; background: #e2e8f0; position: relative; display: flex; justify-content: center; align-items: center;">
             <img id="edit-image-preview-img" src="${initialPath}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.onerror=null; this.src='${fallbackImg}';">
           </div>
         </div>
@@ -1503,16 +1796,15 @@ function openAdminEditImageModal(identifier, isSpecial) {
 
   const closeBtn = overlay.querySelector('#btn-close-admin-edit-image');
   const form = overlay.querySelector('#admin-edit-image-form');
-  const inputEl = overlay.querySelector('#edit-image-url');
-  const previewImgEl = overlay.querySelector('#edit-image-preview-img');
-
-  const updatePreview = () => {
-    const rawVal = inputEl.value;
-    const cleanVal = sanitizeImageUrl(rawVal, item.type);
-    previewImgEl.src = cleanVal;
-  };
-
-  inputEl.addEventListener('input', updatePreview);
+  const fileInput = overlay.querySelector('#edit-image-file');
+  const imageUrlInput = overlay.querySelector('#edit-image-url');
+  const imagePublicIdInput = overlay.querySelector('#edit-image-public-id');
+  const uploadProgressContainer = overlay.querySelector('#edit-upload-progress-container');
+  const uploadProgressBar = overlay.querySelector('#edit-upload-progress-bar');
+  const uploadPercent = overlay.querySelector('#edit-upload-percent');
+  const previewDiv = overlay.querySelector('#edit-image-preview-div');
+  const imageError = overlay.querySelector('#edit-image-type-error');
+  const submitButton = form.querySelector('button[type="submit"]');
 
   const closeModal = () => overlay.remove();
 
@@ -1521,20 +1813,119 @@ function openAdminEditImageModal(identifier, isSpecial) {
     if (e.target === overlay) closeModal();
   });
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newImageUrl = sanitizeImageUrl(inputEl.value, item.type);
-    item.image = newImageUrl;
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    if (isSpecial) {
-      saveSpecialsData(currentSpecials);
-      renderSpecials();
-    } else {
-      saveMenuData(currentMenu);
-      renderMenu();
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
     }
 
-    closeModal();
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
+    }
+
+    imageError.style.display = 'none';
+
+    // Show preview immediately using FileReader
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      previewDiv.innerHTML = `<img id="edit-image-preview-img" src="${event.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    };
+    reader.readAsDataURL(file);
+
+    // Disable Save button while uploading
+    submitButton.disabled = true;
+    submitButton.textContent = 'Uploading Image...';
+    uploadProgressContainer.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = sessionStorage.getItem('varevva_admin_token');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload', true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        uploadProgressBar.style.width = `${percentComplete}%`;
+        uploadPercent.textContent = `${percentComplete}%`;
+      }
+    };
+
+    xhr.onload = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Save Image';
+      
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        imageUrlInput.value = response.image;
+        imagePublicIdInput.value = response.imagePublicId;
+        uploadPercent.textContent = 'Upload complete!';
+      } else {
+        alert('Image upload failed. Please try again.');
+        uploadProgressContainer.style.display = 'none';
+        previewDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.9rem;">Upload failed!</span>';
+      }
+    };
+
+    xhr.onerror = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Save Image';
+      alert('Network error occurred during upload.');
+      uploadProgressContainer.style.display = 'none';
+    };
+
+    xhr.send(formData);
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newImageUrl = imageUrlInput.value;
+    const newImagePublicId = imagePublicIdInput.value;
+
+    if (isSpecial) {
+      item.image = newImageUrl;
+      saveSpecialsData(currentSpecials);
+      renderSpecials();
+      closeModal();
+    } else {
+      const token = sessionStorage.getItem('varevva_admin_token');
+      try {
+        const res = await fetch(`/api/menu/${item._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            image: newImageUrl,
+            imagePublicId: newImagePublicId
+          })
+        });
+
+        if (res.ok) {
+          currentMenu = await fetchMenuData();
+          closeModal();
+          renderMenu();
+        } else {
+          const errorData = await res.json();
+          alert(`Failed to save image changes: ${errorData.message}`);
+        }
+      } catch (err) {
+        alert('Connection error occurred while saving image.');
+      }
+    }
   });
 }
 
