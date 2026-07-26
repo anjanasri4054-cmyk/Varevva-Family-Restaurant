@@ -9,9 +9,9 @@ console.log('API Key Loaded:', process.env.CLOUDINARY_API_KEY ? 'true' : 'false'
 console.log('API Secret Loaded:', process.env.CLOUDINARY_API_SECRET ? 'true' : 'false');
 
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+  cloud_name: process.env.dasullah1,
+  api_key: process.env.526377496749222,
+  api_secret: process.env.1QjQJ6WSX1YlGSVRnnvHIv4HrZs,
 });
 
 // Setup Multer Storage Engine for Cloudinary (direct streaming, no local storage)
