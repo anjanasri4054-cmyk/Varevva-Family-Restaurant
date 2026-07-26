@@ -1,11 +1,9 @@
+import 'dotenv/config';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
 import Admin from './api/models/Admin.js';
 import MenuItem from './api/models/MenuItem.js';
 import { menuData } from './src/menuData.js';
 import { defaultSpecials } from './src/specialsData.js';
-
-dotenv.config();
 
 const seed = async () => {
   try {
