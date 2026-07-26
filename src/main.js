@@ -1851,9 +1851,17 @@ function openAdminEditImageModal(id, isSpecial) {
     const file = e.target.files[0];
     if (!file) return;
 
+    console.log('--- FRONTEND IMAGE UPLOAD PIPELINE STARTED ---');
+    console.log('Selected file properties:', {
+      name: file.name,
+      type: file.type,
+      size: `${(file.size / 1024 / 1024).toFixed(2)} MB`
+    });
+
     // Validate type
     const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!validTypes.includes(file.type)) {
+      console.warn('Validation failed: invalid file format', file.type);
       imageError.style.display = 'block';
       fileInput.value = '';
       return;
@@ -1861,6 +1869,7 @@ function openAdminEditImageModal(id, isSpecial) {
 
     // Validate size (5MB)
     if (file.size > 5 * 1024 * 1024) {
+      console.warn('Validation failed: file size exceeds 5MB limit', file.size);
       imageError.style.display = 'block';
       fileInput.value = '';
       return;
@@ -1882,31 +1891,43 @@ function openAdminEditImageModal(id, isSpecial) {
 
     const formData = new FormData();
     formData.append('image', file);
+    console.log('FormData constructed with key "image"');
 
     const token = sessionStorage.getItem('varevva_admin_token');
+    console.log('Authorization Token:', token ? `Bearer ${token.substring(0, 20)}...` : 'MISSING');
+
+    const requestUrl = '/api/upload';
+    console.log('Initiating POST request to:', requestUrl);
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/upload', true);
+    xhr.open('POST', requestUrl, true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    console.log('Request Header "Authorization" set to Bearer token');
 
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
         const percentComplete = Math.round((event.loaded / event.total) * 100);
+        console.log(`Upload progress: ${percentComplete}% (${event.loaded}/${event.total} bytes)`);
         uploadProgressBar.style.width = `${percentComplete}%`;
         uploadPercent.textContent = `${percentComplete}%`;
       }
     };
 
     xhr.onload = async () => {
+      console.log('POST /api/upload finished. HTTP Status:', xhr.status);
+      console.log('Response content:', xhr.responseText);
+
       if (xhr.status === 200) {
         try {
           const response = JSON.parse(xhr.responseText);
           const secure_url = response.image;
           const public_id = response.imagePublicId;
 
+          console.log('Upload success. Parsed values:', { secure_url, public_id });
+
           if (!secure_url || !public_id) {
-            console.error('Cloudinary upload failure: Response missing secure_url or public_id', response);
-            alert('Cloudinary upload failed: Invalid response from server.');
+            console.error('Cloudinary response verification failed: secure_url or public_id missing');
+            alert('Cloudinary upload failed: secure_url or public_id missing in response.');
             fileInput.disabled = false;
             uploadProgressContainer.style.display = 'none';
             return;
@@ -1914,6 +1935,9 @@ function openAdminEditImageModal(id, isSpecial) {
 
           uploadStatusText.textContent = 'Updating MongoDB...';
           uploadPercent.textContent = 'Saving...';
+
+          console.log('Initiating PUT request to update MongoDB for item:', id);
+          console.log('PUT URL:', `/api/menu/${id}`);
 
           // Trigger immediate MongoDB update using _id
           const updateRes = await fetch(`/api/menu/${id}`, {
@@ -1928,7 +1952,9 @@ function openAdminEditImageModal(id, isSpecial) {
             })
           });
 
+          console.log('PUT response status:', updateRes.status);
           if (updateRes.ok) {
+            console.log('MongoDB update succeeded. Reloading data...');
             uploadStatusText.textContent = 'Saved successfully!';
             uploadPercent.textContent = '100%';
             
@@ -1946,28 +1972,36 @@ function openAdminEditImageModal(id, isSpecial) {
             }, 800);
           } else {
             const errorData = await updateRes.json();
-            console.error('MongoDB update failure:', errorData);
-            alert(`MongoDB update failed: ${errorData.message}`);
+            const errMsg = errorData.message || 'Unknown database error';
+            console.error('MongoDB PUT update failed:', errorData);
+            alert(`MongoDB database update failed: ${errMsg}`);
             fileInput.disabled = false;
             uploadProgressContainer.style.display = 'none';
           }
         } catch (err) {
-          console.error('Error processing server response:', err);
-          alert('Failed to process server response.');
+          console.error('Error processing success payload:', err);
+          alert(`Failed to save: ${err.message}`);
           fileInput.disabled = false;
           uploadProgressContainer.style.display = 'none';
         }
       } else {
-        console.error('Upload failure: HTTP status', xhr.status, xhr.responseText);
-        alert('Image upload failed. Please try again.');
+        let errMsg = 'Unknown error';
+        try {
+          const errObj = JSON.parse(xhr.responseText);
+          errMsg = errObj.message || errMsg;
+        } catch (e) {
+          errMsg = xhr.responseText || errMsg;
+        }
+        console.error('Image upload endpoint returned error status:', xhr.status, errMsg);
+        alert(`Image upload failed: ${errMsg}`);
         fileInput.disabled = false;
         uploadProgressContainer.style.display = 'none';
-        previewDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.9rem;">Upload failed!</span>';
+        previewDiv.innerHTML = `<span style="color: #ef4444; font-size: 0.9rem;">Upload failed: ${errMsg}</span>`;
       }
     };
 
-    xhr.onerror = () => {
-      console.error('Network upload failure');
+    xhr.onerror = (err) => {
+      console.error('XMLHttpRequest network error:', err);
       alert('Network error occurred during image upload.');
       fileInput.disabled = false;
       uploadProgressContainer.style.display = 'none';
