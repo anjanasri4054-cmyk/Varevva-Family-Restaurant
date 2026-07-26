@@ -16,10 +16,10 @@ export const getMenuItems = async (req, res, next) => {
 // @route   POST /api/menu
 export const createMenuItem = async (req, res, next) => {
   try {
-    const { name, category, subCategory, description, price, image, imagePublicId, availability, featured } = req.body;
+    const { name, category, subCategory, description, price, image, imagePublicId, availability, featured, customPriceDisplay, tagText, tagIcon } = req.body;
 
-    if (!name || !category || !price || !image || !imagePublicId) {
-      return res.status(400).json({ message: 'Missing required menu fields: name, category, price, image, imagePublicId' });
+    if (!name || !category || !image || !imagePublicId) {
+      return res.status(400).json({ message: 'Missing required menu fields: name, category, image, imagePublicId' });
     }
 
     const menuItem = await MenuItem.create({
@@ -27,11 +27,14 @@ export const createMenuItem = async (req, res, next) => {
       category,
       subCategory: subCategory || '',
       description: description || '',
-      price: Number(price),
+      price: price !== undefined ? Number(price) : 0,
       image,
       imagePublicId,
       availability: availability !== undefined ? availability : true,
-      featured: featured !== undefined ? featured : false
+      featured: featured !== undefined ? featured : false,
+      customPriceDisplay: customPriceDisplay || '',
+      tagText: tagText || '',
+      tagIcon: tagIcon || ''
     });
 
     res.status(201).json(menuItem);
@@ -45,7 +48,7 @@ export const createMenuItem = async (req, res, next) => {
 export const updateMenuItem = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, category, subCategory, description, price, image, imagePublicId, availability, featured } = req.body;
+    const { name, category, subCategory, description, price, image, imagePublicId, availability, featured, customPriceDisplay, tagText, tagIcon } = req.body;
 
     const menuItem = await MenuItem.findById(id);
     if (!menuItem) {
@@ -71,6 +74,9 @@ export const updateMenuItem = async (req, res, next) => {
     menuItem.imagePublicId = imagePublicId !== undefined ? imagePublicId : menuItem.imagePublicId;
     menuItem.availability = availability !== undefined ? availability : menuItem.availability;
     menuItem.featured = featured !== undefined ? featured : menuItem.featured;
+    menuItem.customPriceDisplay = customPriceDisplay !== undefined ? customPriceDisplay : menuItem.customPriceDisplay;
+    menuItem.tagText = tagText !== undefined ? tagText : menuItem.tagText;
+    menuItem.tagIcon = tagIcon !== undefined ? tagIcon : menuItem.tagIcon;
 
     const updatedItem = await menuItem.save();
     res.json(updatedItem);

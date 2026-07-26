@@ -9,7 +9,10 @@ const menuItemSchema = new mongoose.Schema({
   image: { type: String, required: true }, // Cloudinary secure URL
   imagePublicId: { type: String, required: true }, // Necessary to delete images from Cloudinary
   availability: { type: Boolean, default: true },
-  featured: { type: Boolean, default: false }
+  featured: { type: Boolean, default: false },
+  customPriceDisplay: { type: String, default: '' },
+  tagText: { type: String, default: '' },
+  tagIcon: { type: String, default: '' }
 }, { timestamps: true });
 
 export default mongoose.model('MenuItem', menuItemSchema);

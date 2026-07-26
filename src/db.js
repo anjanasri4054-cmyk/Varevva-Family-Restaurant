@@ -10,7 +10,10 @@ function adaptMenuItem(item) {
   return {
     ...item,
     id: item._id,
-    type: item.category === 'rotis' ? 'veg' : 'non-veg', // Simple diet mapping
+    type: item.subCategory || (item.category === 'rotis' ? 'veg' : 'non-veg'),
+    price: item.category === 'specials' ? item.customPriceDisplay : item.price,
+    tag: item.tagText || 'Chef Special',
+    tagIcon: item.tagIcon || 'fa-fire',
     popular: item.featured || false,
     outOfStock: item.availability !== undefined ? !item.availability : false
   };

@@ -1981,8 +1981,27 @@ function openAdminAddSpecialModal() {
         </div>
 
         <div class="form-group">
-          <label for="special-image">Special Image URL / Path (Optional)</label>
-          <input type="text" id="special-image" placeholder="e.g. /assets/chicken_dum_biryani.png or any online URL">
+          <label>Special Image</label>
+          <input type="file" id="special-image-file" accept="image/png, image/jpeg, image/webp" style="margin-bottom: 8px;" required>
+          <input type="hidden" id="special-image-url">
+          <input type="hidden" id="special-image-public-id">
+          
+          <div id="special-upload-progress-container" style="display: none; margin-bottom: 10px;">
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between;">
+              <span>Uploading image...</span>
+              <span id="special-upload-percent">0%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
+              <div id="special-upload-progress-bar" style="width: 0%; height: 100%; background-color: var(--primary-color); transition: width 0.1s ease;"></div>
+            </div>
+          </div>
+
+          <div id="special-image-preview" style="width: 100%; height: 160px; border: 2px dashed #ccc; border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; background-color: #f9fafb;">
+            <span style="color: #9ca3af; font-size: 0.9rem;">No image selected (WEBP, PNG, JPG up to 5MB)</span>
+          </div>
+          <div id="special-image-type-error" style="color: #ef4444; font-size: 0.8rem; display: none; margin-top: 4px;">
+            <i class="fa-solid fa-circle-exclamation"></i> Only JPG, PNG, or WEBP up to 5MB allowed!
+          </div>
         </div>
 
         <div class="form-group">
@@ -2002,6 +2021,16 @@ function openAdminAddSpecialModal() {
   const specialNameInput = overlay.querySelector('#special-name');
   const nameError = overlay.querySelector('#special-name-error');
 
+  const fileInput = overlay.querySelector('#special-image-file');
+  const imageUrlInput = overlay.querySelector('#special-image-url');
+  const imagePublicIdInput = overlay.querySelector('#special-image-public-id');
+  const uploadProgressContainer = overlay.querySelector('#special-upload-progress-container');
+  const uploadProgressBar = overlay.querySelector('#special-upload-progress-bar');
+  const uploadPercent = overlay.querySelector('#special-upload-percent');
+  const previewDiv = overlay.querySelector('#special-image-preview');
+  const imageError = overlay.querySelector('#special-image-type-error');
+  const submitButton = form.querySelector('button[type="submit"]');
+
   const closeModal = () => overlay.remove();
 
   closeBtn.addEventListener('click', closeModal);
@@ -2009,15 +2038,97 @@ function openAdminAddSpecialModal() {
     if (e.target === overlay) closeModal();
   });
 
-  form.addEventListener('submit', (e) => {
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
+    }
+
+    // Validate size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      imageError.style.display = 'block';
+      fileInput.value = '';
+      return;
+    }
+
+    imageError.style.display = 'none';
+
+    // Show preview immediately using FileReader
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      previewDiv.innerHTML = `<img src="${event.target.result}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    };
+    reader.readAsDataURL(file);
+
+    // Disable Save button while uploading
+    submitButton.disabled = true;
+    submitButton.textContent = 'Uploading Image...';
+    uploadProgressContainer.style.display = 'block';
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const token = sessionStorage.getItem('varevva_admin_token');
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload', true);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percentComplete = Math.round((event.loaded / event.total) * 100);
+        uploadProgressBar.style.width = `${percentComplete}%`;
+        uploadPercent.textContent = `${percentComplete}%`;
+      }
+    };
+
+    xhr.onload = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Add Special';
+      
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        imageUrlInput.value = response.image;
+        imagePublicIdInput.value = response.imagePublicId;
+        uploadPercent.textContent = 'Upload complete!';
+      } else {
+        alert('Image upload failed. Please try again.');
+        uploadProgressContainer.style.display = 'none';
+        previewDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.9rem;">Upload failed!</span>';
+      }
+    };
+
+    xhr.onerror = () => {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Add Special';
+      alert('Network error occurred during upload.');
+      uploadProgressContainer.style.display = 'none';
+    };
+
+    xhr.send(formData);
+  });
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = specialNameInput.value.trim();
     const price = form.querySelector('#special-price').value.trim();
     const type = form.querySelector('#special-diet').value;
     const tag = form.querySelector('#special-tag-text').value.trim();
     const tagIcon = form.querySelector('#special-tag-icon').value;
-    const image = form.querySelector('#special-image').value.trim();
+    const image = imageUrlInput.value;
+    const imagePublicId = imagePublicIdInput.value;
     const description = form.querySelector('#special-description').value.trim();
+
+    if (!image || !imagePublicId) {
+      alert('Please select and upload a special image first!');
+      return;
+    }
 
     // Check duplicate name
     const duplicate = currentSpecials.find(i => i.name.toLowerCase() === name.toLowerCase());
@@ -2027,22 +2138,42 @@ function openAdminAddSpecialModal() {
       return;
     }
 
-    const newId = `special-cust-${Date.now()}`;
-    const newSpecial = {
-      id: newId,
-      name,
-      price,
-      type,
-      tag,
-      tagIcon,
-      image: image || "/assets/chicken_dum_biryani.png",
-      description
-    };
+    const token = sessionStorage.getItem('varevva_admin_token');
 
-    currentSpecials.push(newSpecial);
-    saveSpecialsData(currentSpecials);
-    closeModal();
-    renderSpecials();
+    try {
+      const res = await fetch('/api/menu', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name,
+          price: 0,
+          category: 'specials',
+          subCategory: type,
+          description,
+          image,
+          imagePublicId,
+          availability: true,
+          featured: true,
+          customPriceDisplay: price,
+          tagText: tag,
+          tagIcon: tagIcon
+        })
+      });
+
+      if (res.ok) {
+        currentSpecials = await fetchSpecialsData();
+        closeModal();
+        renderSpecials();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to save special: ${errorData.message}`);
+      }
+    } catch (err) {
+      alert('Connection error occurred while saving special.');
+    }
   });
 
   specialNameInput.addEventListener('input', () => {
@@ -2050,16 +2181,31 @@ function openAdminAddSpecialModal() {
   });
 }
 
-function deleteSpecialItem(id) {
+async function deleteSpecialItem(id) {
   const item = currentSpecials.find(i => i.id === id);
   if (!item) return;
 
   if (!confirm(`Are you sure you want to remove "${item.name}" from specials recommendations?`)) return;
 
-  currentSpecials = currentSpecials.filter(i => i.id !== id);
-  saveSpecialsData(currentSpecials);
+  const token = sessionStorage.getItem('varevva_admin_token');
 
-  renderSpecials();
+  try {
+    const res = await fetch(`/api/menu/${item._id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (res.ok) {
+      currentSpecials = await fetchSpecialsData();
+      renderSpecials();
+    } else {
+      alert('Failed to delete special item.');
+    }
+  } catch (err) {
+    alert('Connection error occurred while deleting special item.');
+  }
 }
 
 // --- Geolocation Distance Helpers ---
