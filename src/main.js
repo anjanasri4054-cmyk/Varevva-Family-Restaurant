@@ -1760,6 +1760,11 @@ function openAdminEditSpecialModal(id) {
 }
 
 function openAdminEditImageModal(id, isSpecial) {
+  console.log('openAdminEditImageModal: selected id =', id);
+  console.log('openAdminEditImageModal: isSpecial =', isSpecial);
+  console.log('openAdminEditImageModal: currentMenu =', currentMenu);
+  console.log('openAdminEditImageModal: currentSpecials =', currentSpecials);
+
   if (!id) {
     console.error('openAdminEditImageModal error: missing _id');
     alert('Operation failed: This item has no valid database ID.');
@@ -1770,6 +1775,8 @@ function openAdminEditImageModal(id, isSpecial) {
     ? currentSpecials.find(i => i._id === id || i.id === id)
     : currentMenu.find(i => i._id === id);
   
+  console.log('openAdminEditImageModal: matched item =', item);
+
   if (!item) {
     console.error('openAdminEditImageModal error: item not found for id', id);
     alert('Operation failed: Item not found in current list.');
