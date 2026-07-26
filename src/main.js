@@ -693,20 +693,25 @@ function initCartEventListeners() {
     // Admin stock status toggle click
     const stockBtn = e.target.closest('.btn-admin-stock');
     if (stockBtn) {
-      const name = stockBtn.dataset.name;
-      toggleStockStatus(name);
+      if (stockBtn.dataset.id) {
+        const id = stockBtn.dataset.id;
+        toggleStockStatus(id);
+      }
       return;
     }
     
     // Admin edit item click
     const editBtn = e.target.closest('.btn-admin-edit');
     if (editBtn) {
-      if (editBtn.dataset.name) {
-        const name = editBtn.dataset.name;
-        openAdminEditItemModal(name);
-      } else if (editBtn.dataset.id) {
+      if (editBtn.dataset.id) {
         const id = editBtn.dataset.id;
-        openAdminEditSpecialModal(id);
+        // Check if the item is a special or standard menu item
+        const item = currentMenu.find(i => i._id === id);
+        if (item && item.category === 'specials') {
+          openAdminEditSpecialModal(id);
+        } else {
+          openAdminEditItemModal(id);
+        }
       }
       return;
     }
@@ -714,12 +719,11 @@ function initCartEventListeners() {
     // Admin edit image click
     const editImgBtn = e.target.closest('.btn-admin-edit-image');
     if (editImgBtn) {
-      if (editImgBtn.dataset.name) {
-        const name = editImgBtn.dataset.name;
-        openAdminEditImageModal(name, false);
-      } else if (editImgBtn.dataset.id) {
+      if (editImgBtn.dataset.id) {
         const id = editImgBtn.dataset.id;
-        openAdminEditImageModal(id, true);
+        const item = currentMenu.find(i => i._id === id) || currentSpecials.find(i => i._id === id || i.id === id);
+        const isSpecial = item && item.category === 'specials';
+        openAdminEditImageModal(id, isSpecial);
       }
       return;
     }
@@ -727,12 +731,14 @@ function initCartEventListeners() {
     // Admin remove item click
     const deleteBtn = e.target.closest('.btn-admin-delete');
     if (deleteBtn) {
-      if (deleteBtn.dataset.name) {
-        const name = deleteBtn.dataset.name;
-        deleteMenuItem(name);
-      } else if (deleteBtn.dataset.id) {
+      if (deleteBtn.dataset.id) {
         const id = deleteBtn.dataset.id;
-        deleteSpecialItem(id);
+        const item = currentMenu.find(i => i._id === id) || currentSpecials.find(i => i._id === id || i.id === id);
+        if (item && item.category === 'specials') {
+          deleteSpecialItem(id);
+        } else {
+          deleteMenuItem(id);
+        }
       }
       return;
     }
@@ -819,19 +825,19 @@ function renderMenu() {
 
     const adminControlsHTML = isAdmin ? `
       <div class="admin-card-controls">
-        <button class="btn-admin-stock ${item.outOfStock ? 'btn-stock-out' : 'btn-stock-in'}" data-name="${item.name}">
+        <button class="btn-admin-stock ${item.outOfStock ? 'btn-stock-out' : 'btn-stock-in'}" data-id="${item._id}">
           <i class="fa-solid ${item.outOfStock ? 'fa-eye' : 'fa-eye-slash'}"></i>
           <span>${item.outOfStock ? 'Mark In Stock' : 'Mark Out of Stock'}</span>
         </button>
-        <button class="btn-admin-edit" data-name="${item.name}">
+        <button class="btn-admin-edit" data-id="${item._id}">
           <i class="fa-solid fa-pen-to-square"></i>
           <span>Edit</span>
         </button>
-        <button class="btn-admin-edit-image" data-name="${item.name}">
+        <button class="btn-admin-edit-image" data-id="${item._id}">
           <i class="fa-solid fa-image"></i>
           <span>Edit Image</span>
         </button>
-        <button class="btn-admin-delete" data-name="${item.name}">
+        <button class="btn-admin-delete" data-id="${item._id}">
           <i class="fa-solid fa-trash-can"></i>
           <span>Remove</span>
         </button>
@@ -1257,15 +1263,20 @@ function openAdminAddItemModal() {
   });
 }
 
-async function toggleStockStatus(name) {
-  const item = currentMenu.find(i => i.name === name);
+async function toggleStockStatus(id) {
+  if (!id) {
+    console.error('toggleStockStatus error: missing _id');
+    alert('Operation failed: This item has no valid database ID.');
+    return;
+  }
+  const item = currentMenu.find(i => i._id === id);
   if (!item) return;
 
   const newAvailability = item.outOfStock; // if it was out of stock, it will now be in stock
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`/api/menu/${item._id}`, {
+    const res = await fetch(`/api/menu/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -1280,23 +1291,30 @@ async function toggleStockStatus(name) {
       currentMenu = await fetchMenuData();
       renderMenu();
     } else {
+      console.error('toggleStockStatus failed: API error response');
       alert('Failed to update stock status on database.');
     }
   } catch (err) {
+    console.error('toggleStockStatus network error:', err);
     alert('Connection error occurred while updating stock status.');
   }
 }
 
-async function deleteMenuItem(name) {
-  const item = currentMenu.find(i => i.name === name);
+async function deleteMenuItem(id) {
+  if (!id) {
+    console.error('deleteMenuItem error: missing _id');
+    alert('Operation failed: This item has no valid database ID.');
+    return;
+  }
+  const item = currentMenu.find(i => i._id === id);
   if (!item) return;
 
-  if (!confirm(`Are you sure you want to remove "${name}" from the menu?`)) return;
+  if (!confirm(`Are you sure you want to remove "${item.name}" from the menu?`)) return;
 
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`/api/menu/${item._id}`, {
+    const res = await fetch(`/api/menu/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1307,15 +1325,22 @@ async function deleteMenuItem(name) {
       currentMenu = await fetchMenuData();
       renderMenu();
     } else {
+      console.error('deleteMenuItem failed: API error response');
       alert('Failed to delete menu item.');
     }
   } catch (err) {
+    console.error('deleteMenuItem network error:', err);
     alert('Connection error occurred while deleting item.');
   }
 }
 
-function openAdminEditItemModal(name) {
-  const item = currentMenu.find(i => i.name === name);
+function openAdminEditItemModal(id) {
+  if (!id) {
+    console.error('openAdminEditItemModal error: missing _id');
+    alert('Operation failed: This item has no valid database ID.');
+    return;
+  }
+  const item = currentMenu.find(i => i._id === id);
   if (!item) return;
 
   if (document.querySelector('.admin-edit-item-overlay')) return;
@@ -1519,7 +1544,7 @@ function openAdminEditItemModal(name) {
     }
 
     // Check duplicate name excluding current item
-    const duplicate = currentMenu.find(i => i.name.toLowerCase() === newName.toLowerCase() && i.name.toLowerCase() !== name.toLowerCase());
+    const duplicate = currentMenu.find(i => i.name.toLowerCase() === newName.toLowerCase() && i._id !== id);
     if (duplicate) {
       nameError.style.display = 'block';
       dishNameInput.focus();
@@ -1529,7 +1554,7 @@ function openAdminEditItemModal(name) {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch(`/api/menu/${item._id}`, {
+      const res = await fetch(`/api/menu/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1734,12 +1759,22 @@ function openAdminEditSpecialModal(id) {
   });
 }
 
-function openAdminEditImageModal(identifier, isSpecial) {
+function openAdminEditImageModal(id, isSpecial) {
+  if (!id) {
+    console.error('openAdminEditImageModal error: missing _id');
+    alert('Operation failed: This item has no valid database ID.');
+    return;
+  }
+
   const item = isSpecial 
-    ? currentSpecials.find(i => i.id === identifier)
-    : currentMenu.find(i => i.name === identifier);
+    ? currentSpecials.find(i => i._id === id || i.id === id)
+    : currentMenu.find(i => i._id === id);
   
-  if (!item) return;
+  if (!item) {
+    console.error('openAdminEditImageModal error: item not found for id', id);
+    alert('Operation failed: Item not found in current list.');
+    return;
+  }
 
   if (document.querySelector('.admin-edit-image-overlay')) return;
 
@@ -1756,14 +1791,12 @@ function openAdminEditImageModal(identifier, isSpecial) {
       </div>
       <form class="admin-modal-form" id="admin-edit-image-form">
         <div class="form-group">
-          <label>Upload Dish Image</label>
-          <input type="file" id="edit-image-file" accept="image/png, image/jpeg, image/webp" style="margin-bottom: 8px;">
-          <input type="hidden" id="edit-image-url" value="${item.image || ''}">
-          <input type="hidden" id="edit-image-public-id" value="${item.imagePublicId || ''}">
+          <label>Select Image File</label>
+          <input type="file" id="edit-image-file" accept="image/png, image/jpeg, image/webp" style="margin-bottom: 8px;" required>
           
           <div id="edit-upload-progress-container" style="display: none; margin-bottom: 10px;">
             <div style="font-size: 0.8rem; color: #666; margin-bottom: 4px; display: flex; justify-content: space-between;">
-              <span>Uploading image...</span>
+              <span id="edit-upload-status-text">Uploading image...</span>
               <span id="edit-upload-percent">0%</span>
             </div>
             <div style="width: 100%; height: 8px; background-color: #e5e7eb; border-radius: 4px; overflow: hidden;">
@@ -1778,16 +1811,12 @@ function openAdminEditImageModal(identifier, isSpecial) {
 
         <div class="image-preview-box" style="margin-bottom: 20px; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 12px; text-align: center;">
           <div style="font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-            <i class="fa-solid fa-eye"></i> Live Image Preview
+            <i class="fa-solid fa-eye"></i> Current Image Preview
           </div>
           <div id="edit-image-preview-div" style="width: 100%; height: 180px; border-radius: 8px; overflow: hidden; background: #e2e8f0; position: relative; display: flex; justify-content: center; align-items: center;">
             <img id="edit-image-preview-img" src="${initialPath}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;" onerror="this.onerror=null; this.src='${fallbackImg}';">
           </div>
         </div>
-
-        <button type="submit" class="btn-admin-submit" style="background-color: #8b5cf6;">
-          <i class="fa-solid fa-floppy-disk"></i> Save Image
-        </button>
       </form>
     </div>
   `;
@@ -1797,14 +1826,12 @@ function openAdminEditImageModal(identifier, isSpecial) {
   const closeBtn = overlay.querySelector('#btn-close-admin-edit-image');
   const form = overlay.querySelector('#admin-edit-image-form');
   const fileInput = overlay.querySelector('#edit-image-file');
-  const imageUrlInput = overlay.querySelector('#edit-image-url');
-  const imagePublicIdInput = overlay.querySelector('#edit-image-public-id');
   const uploadProgressContainer = overlay.querySelector('#edit-upload-progress-container');
   const uploadProgressBar = overlay.querySelector('#edit-upload-progress-bar');
   const uploadPercent = overlay.querySelector('#edit-upload-percent');
+  const uploadStatusText = overlay.querySelector('#edit-upload-status-text');
   const previewDiv = overlay.querySelector('#edit-image-preview-div');
   const imageError = overlay.querySelector('#edit-image-type-error');
-  const submitButton = form.querySelector('button[type="submit"]');
 
   const closeModal = () => overlay.remove();
 
@@ -1841,10 +1868,10 @@ function openAdminEditImageModal(identifier, isSpecial) {
     };
     reader.readAsDataURL(file);
 
-    // Disable Save button while uploading
-    submitButton.disabled = true;
-    submitButton.textContent = 'Uploading Image...';
+    // Disable file input during upload
+    fileInput.disabled = true;
     uploadProgressContainer.style.display = 'block';
+    uploadStatusText.textContent = 'Uploading to Cloudinary...';
 
     const formData = new FormData();
     formData.append('image', file);
@@ -1863,69 +1890,83 @@ function openAdminEditImageModal(identifier, isSpecial) {
       }
     };
 
-    xhr.onload = () => {
-      submitButton.disabled = false;
-      submitButton.textContent = 'Save Image';
-      
+    xhr.onload = async () => {
       if (xhr.status === 200) {
-        const response = JSON.parse(xhr.responseText);
-        imageUrlInput.value = response.image;
-        imagePublicIdInput.value = response.imagePublicId;
-        uploadPercent.textContent = 'Upload complete!';
+        try {
+          const response = JSON.parse(xhr.responseText);
+          const secure_url = response.image;
+          const public_id = response.imagePublicId;
+
+          if (!secure_url || !public_id) {
+            console.error('Cloudinary upload failure: Response missing secure_url or public_id', response);
+            alert('Cloudinary upload failed: Invalid response from server.');
+            fileInput.disabled = false;
+            uploadProgressContainer.style.display = 'none';
+            return;
+          }
+
+          uploadStatusText.textContent = 'Updating MongoDB...';
+          uploadPercent.textContent = 'Saving...';
+
+          // Trigger immediate MongoDB update using _id
+          const updateRes = await fetch(`/api/menu/${id}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              image: secure_url,
+              imagePublicId: public_id
+            })
+          });
+
+          if (updateRes.ok) {
+            uploadStatusText.textContent = 'Saved successfully!';
+            uploadPercent.textContent = '100%';
+            
+            // Reload menu and specials data from MongoDB and refresh UI
+            if (isSpecial) {
+              currentSpecials = await fetchSpecialsData();
+              renderSpecials();
+            } else {
+              currentMenu = await fetchMenuData();
+              renderMenu();
+            }
+
+            setTimeout(() => {
+              closeModal();
+            }, 800);
+          } else {
+            const errorData = await updateRes.json();
+            console.error('MongoDB update failure:', errorData);
+            alert(`MongoDB update failed: ${errorData.message}`);
+            fileInput.disabled = false;
+            uploadProgressContainer.style.display = 'none';
+          }
+        } catch (err) {
+          console.error('Error processing server response:', err);
+          alert('Failed to process server response.');
+          fileInput.disabled = false;
+          uploadProgressContainer.style.display = 'none';
+        }
       } else {
+        console.error('Upload failure: HTTP status', xhr.status, xhr.responseText);
         alert('Image upload failed. Please try again.');
+        fileInput.disabled = false;
         uploadProgressContainer.style.display = 'none';
         previewDiv.innerHTML = '<span style="color: #ef4444; font-size: 0.9rem;">Upload failed!</span>';
       }
     };
 
     xhr.onerror = () => {
-      submitButton.disabled = false;
-      submitButton.textContent = 'Save Image';
-      alert('Network error occurred during upload.');
+      console.error('Network upload failure');
+      alert('Network error occurred during image upload.');
+      fileInput.disabled = false;
       uploadProgressContainer.style.display = 'none';
     };
 
     xhr.send(formData);
-  });
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newImageUrl = imageUrlInput.value;
-    const newImagePublicId = imagePublicIdInput.value;
-
-    if (isSpecial) {
-      item.image = newImageUrl;
-      saveSpecialsData(currentSpecials);
-      renderSpecials();
-      closeModal();
-    } else {
-      const token = sessionStorage.getItem('varevva_admin_token');
-      try {
-        const res = await fetch(`/api/menu/${item._id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            image: newImageUrl,
-            imagePublicId: newImagePublicId
-          })
-        });
-
-        if (res.ok) {
-          currentMenu = await fetchMenuData();
-          closeModal();
-          renderMenu();
-        } else {
-          const errorData = await res.json();
-          alert(`Failed to save image changes: ${errorData.message}`);
-        }
-      } catch (err) {
-        alert('Connection error occurred while saving image.');
-      }
-    }
   });
 }
 

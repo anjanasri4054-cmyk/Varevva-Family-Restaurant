@@ -10,6 +10,7 @@ function adaptMenuItem(item) {
   return {
     ...item,
     id: item._id,
+    _id: item._id,
     type: item.subCategory || (item.category === 'rotis' ? 'veg' : 'non-veg'),
     price: item.category === 'specials' ? item.customPriceDisplay : item.price,
     tag: item.tagText || 'Chef Special',

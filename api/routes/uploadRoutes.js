@@ -17,7 +17,13 @@ router.post('/', protect, upload.single('image'), (req, res) => {
       imagePublicId: req.file.filename
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("========== UPLOAD ERROR ==========");
+    console.error(error);
+    console.error("==================================");
+
+  res.status(500).json({
+    message: error.message
+  });
   }
 });
 
