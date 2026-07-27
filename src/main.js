@@ -1940,74 +1940,74 @@ function openAdminEditImageModal(id, isSpecial) {
           console.log('PUT URL:', `/api/menu/${id}`);
 
           // Trigger immediate MongoDB update using _id
-          const updateRes = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
+          const updateRes = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          image: secure_url,
-          imagePublicId: public_id
-        })
-      });
+            },
+            body: JSON.stringify({
+              image: secure_url,
+              imagePublicId: public_id
+            })
+          });
 
-  console.log('PUT response status:', updateRes.status);
-  if (updateRes.ok) {
-    console.log('MongoDB update succeeded. Reloading data...');
-    uploadStatusText.textContent = 'Saved successfully!';
-    uploadPercent.textContent = '100%';
+          console.log('PUT response status:', updateRes.status);
+          if (updateRes.ok) {
+            console.log('MongoDB update succeeded. Reloading data...');
+            uploadStatusText.textContent = 'Saved successfully!';
+            uploadPercent.textContent = '100%';
 
-    // Reload menu and specials data from MongoDB and refresh UI
-    if (isSpecial) {
-      currentSpecials = await fetchSpecialsData();
-      renderSpecials();
-    } else {
-      currentMenu = await fetchMenuData();
-      renderMenu();
-    }
+            // Reload menu and specials data from MongoDB and refresh UI
+            if (isSpecial) {
+              currentSpecials = await fetchSpecialsData();
+              renderSpecials();
+            } else {
+              currentMenu = await fetchMenuData();
+              renderMenu();
+            }
 
-    setTimeout(() => {
-      closeModal();
-    }, 800);
-  } else {
-    const errorData = await updateRes.json();
-    const errMsg = errorData.message || 'Unknown database error';
-    console.error('MongoDB PUT update failed:', errorData);
-    alert(`MongoDB database update failed: ${errMsg}`);
-    fileInput.disabled = false;
-    uploadProgressContainer.style.display = 'none';
-  }
-} catch (err) {
-  console.error('Error processing success payload:', err);
-  alert(`Failed to save: ${err.message}`);
-  fileInput.disabled = false;
-  uploadProgressContainer.style.display = 'none';
-}
+            setTimeout(() => {
+              closeModal();
+            }, 800);
+          } else {
+            const errorData = await updateRes.json();
+            const errMsg = errorData.message || 'Unknown database error';
+            console.error('MongoDB PUT update failed:', errorData);
+            alert(`MongoDB database update failed: ${errMsg}`);
+            fileInput.disabled = false;
+            uploadProgressContainer.style.display = 'none';
+          }
+        } catch (err) {
+          console.error('Error processing success payload:', err);
+          alert(`Failed to save: ${err.message}`);
+          fileInput.disabled = false;
+          uploadProgressContainer.style.display = 'none';
+        }
       } else {
-  let errMsg = 'Unknown error';
-  try {
-    const errObj = JSON.parse(xhr.responseText);
-    errMsg = errObj.message || errMsg;
-  } catch (e) {
-    errMsg = xhr.responseText || errMsg;
-  }
-  console.error('Image upload endpoint returned error status:', xhr.status, errMsg);
-  alert(`Image upload failed: ${errMsg}`);
-  fileInput.disabled = false;
-  uploadProgressContainer.style.display = 'none';
-  previewDiv.innerHTML = `<span style="color: #ef4444; font-size: 0.9rem;">Upload failed: ${errMsg}</span>`;
-}
+        let errMsg = 'Unknown error';
+        try {
+          const errObj = JSON.parse(xhr.responseText);
+          errMsg = errObj.message || errMsg;
+        } catch (e) {
+          errMsg = xhr.responseText || errMsg;
+        }
+        console.error('Image upload endpoint returned error status:', xhr.status, errMsg);
+        alert(`Image upload failed: ${errMsg}`);
+        fileInput.disabled = false;
+        uploadProgressContainer.style.display = 'none';
+        previewDiv.innerHTML = `<span style="color: #ef4444; font-size: 0.9rem;">Upload failed: ${errMsg}</span>`;
+      }
     };
 
-xhr.onerror = (err) => {
-  console.error('XMLHttpRequest network error:', err);
-  alert('Network error occurred during image upload.');
-  fileInput.disabled = false;
-  uploadProgressContainer.style.display = 'none';
-};
+    xhr.onerror = (err) => {
+      console.error('XMLHttpRequest network error:', err);
+      alert('Network error occurred during image upload.');
+      fileInput.disabled = false;
+      uploadProgressContainer.style.display = 'none';
+    };
 
-xhr.send(formData);
+    xhr.send(formData);
   });
 }
 
