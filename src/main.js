@@ -1226,41 +1226,41 @@ function openAdminAddItemModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu'), {
+      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      name,
-      price,
-      category,
-      subCategory: type,
-      description,
-      image,
-      imagePublicId,
-      availability: true,
-      featured: popular
-    })
+        },
+        body: JSON.stringify({
+          name,
+          price,
+          category,
+          subCategory: type,
+          description,
+          image,
+          imagePublicId,
+          availability: true,
+          featured: popular
+        })
+      });
+
+      if (res.ok) {
+        currentMenu = await fetchMenuData();
+        closeModal();
+        renderMenu();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to save menu item: ${errorData.message}`);
+      }
+    } catch (err) {
+      alert('Connection error occurred while saving menu item.');
+    }
   });
 
-  if (res.ok) {
-    currentMenu = await fetchMenuData();
-    closeModal();
-    renderMenu();
-  } else {
-    const errorData = await res.json();
-    alert(`Failed to save menu item: ${errorData.message}`);
-  }
-} catch (err) {
-  alert('Connection error occurred while saving menu item.');
-}
+  dishNameInput.addEventListener('input', () => {
+    nameError.style.display = 'none';
   });
-
-dishNameInput.addEventListener('input', () => {
-  nameError.style.display = 'none';
-});
 }
 
 async function toggleStockStatus(id) {
@@ -1276,28 +1276,28 @@ async function toggleStockStatus(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
+    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    availability: newAvailability
-  })
-});
+      },
+      body: JSON.stringify({
+        availability: newAvailability
+      })
+    });
 
-if (res.ok) {
-  currentMenu = await fetchMenuData();
-  renderMenu();
-} else {
-  console.error('toggleStockStatus failed: API error response');
-  alert('Failed to update stock status on database.');
-}
+    if (res.ok) {
+      currentMenu = await fetchMenuData();
+      renderMenu();
+    } else {
+      console.error('toggleStockStatus failed: API error response');
+      alert('Failed to update stock status on database.');
+    }
   } catch (err) {
-  console.error('toggleStockStatus network error:', err);
-  alert('Connection error occurred while updating stock status.');
-}
+    console.error('toggleStockStatus network error:', err);
+    alert('Connection error occurred while updating stock status.');
+  }
 }
 
 async function deleteMenuItem(id) {
@@ -1314,24 +1314,24 @@ async function deleteMenuItem(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
+    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
-  }
+      }
     });
 
-if (res.ok) {
-  currentMenu = await fetchMenuData();
-  renderMenu();
-} else {
-  console.error('deleteMenuItem failed: API error response');
-  alert('Failed to delete menu item.');
-}
+    if (res.ok) {
+      currentMenu = await fetchMenuData();
+      renderMenu();
+    } else {
+      console.error('deleteMenuItem failed: API error response');
+      alert('Failed to delete menu item.');
+    }
   } catch (err) {
-  console.error('deleteMenuItem network error:', err);
-  alert('Connection error occurred while deleting item.');
-}
+    console.error('deleteMenuItem network error:', err);
+    alert('Connection error occurred while deleting item.');
+  }
 }
 
 function openAdminEditItemModal(id) {
@@ -1554,41 +1554,41 @@ function openAdminEditItemModal(id) {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
+      const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      name: newName,
-      price,
-      category,
-      subCategory: type,
-      description,
-      image,
-      imagePublicId,
-      availability: !item.outOfStock,
-      featured: popular
-    })
+        },
+        body: JSON.stringify({
+          name: newName,
+          price,
+          category,
+          subCategory: type,
+          description,
+          image,
+          imagePublicId,
+          availability: !item.outOfStock,
+          featured: popular
+        })
+      });
+
+      if (res.ok) {
+        currentMenu = await fetchMenuData();
+        closeModal();
+        renderMenu();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to save menu changes: ${errorData.message}`);
+      }
+    } catch (err) {
+      alert('Connection error occurred while saving changes.');
+    }
   });
 
-  if (res.ok) {
-    currentMenu = await fetchMenuData();
-    closeModal();
-    renderMenu();
-  } else {
-    const errorData = await res.json();
-    alert(`Failed to save menu changes: ${errorData.message}`);
-  }
-} catch (err) {
-  alert('Connection error occurred while saving changes.');
-}
+  dishNameInput.addEventListener('input', () => {
+    nameError.style.display = 'none';
   });
-
-dishNameInput.addEventListener('input', () => {
-  nameError.style.display = 'none';
-});
 }
 
 function renderSpecials() {
@@ -2223,44 +2223,44 @@ function openAdminAddSpecialModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu'), {
+      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      name,
-      price: 0,
-      category: 'specials',
-      subCategory: type,
-      description,
-      image,
-      imagePublicId,
-      availability: true,
-      featured: true,
-      customPriceDisplay: price,
-      tagText: tag,
-      tagIcon: tagIcon
-    })
+        },
+        body: JSON.stringify({
+          name,
+          price: 0,
+          category: 'specials',
+          subCategory: type,
+          description,
+          image,
+          imagePublicId,
+          availability: true,
+          featured: true,
+          customPriceDisplay: price,
+          tagText: tag,
+          tagIcon: tagIcon
+        })
+      });
+
+      if (res.ok) {
+        currentSpecials = await fetchSpecialsData();
+        closeModal();
+        renderSpecials();
+      } else {
+        const errorData = await res.json();
+        alert(`Failed to save special: ${errorData.message}`);
+      }
+    } catch (err) {
+      alert('Connection error occurred while saving special.');
+    }
   });
 
-  if (res.ok) {
-    currentSpecials = await fetchSpecialsData();
-    closeModal();
-    renderSpecials();
-  } else {
-    const errorData = await res.json();
-    alert(`Failed to save special: ${errorData.message}`);
-  }
-} catch (err) {
-  alert('Connection error occurred while saving special.');
-}
+  specialNameInput.addEventListener('input', () => {
+    nameError.style.display = 'none';
   });
-
-specialNameInput.addEventListener('input', () => {
-  nameError.style.display = 'none';
-});
 }
 
 async function deleteSpecialItem(id) {
