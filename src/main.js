@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initNavbarScroll();
   initMobileNav();
   updateFloatingCartBar();
-  
+
   // Only initialize menu search and filters if they exist (on menu.html)
   if (menuGrid) {
     initMenuFilters();
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initAdminPortal();
     renderSpecials();
   }
-  
+
   initCartEventListeners();
 
   // Open checkout modal if redirected from item page with ?checkout=true
@@ -78,7 +78,7 @@ function initMobileNav() {
   if (mobileNavToggle && navMenu) {
     mobileNavToggle.addEventListener('click', () => {
       navMenu.classList.toggle('open');
-      
+
       // Toggle menu icon
       const icon = mobileNavToggle.querySelector('i');
       if (navMenu.classList.contains('open')) {
@@ -106,7 +106,7 @@ function initMenuFilters() {
     tab.addEventListener('click', () => {
       categoryTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      
+
       activeCategory = tab.dataset.category;
       renderMenu();
     });
@@ -117,7 +117,7 @@ function initMenuFilters() {
     btn.addEventListener('click', () => {
       dietButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      
+
       activeDiet = btn.dataset.diet;
       renderMenu();
     });
@@ -129,7 +129,7 @@ function initSearch() {
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value.toLowerCase().trim();
-      
+
       if (searchClearBtn) {
         if (searchQuery.length > 0) {
           searchClearBtn.style.display = 'block';
@@ -137,7 +137,7 @@ function initSearch() {
           searchClearBtn.style.display = 'none';
         }
       }
-      
+
       renderMenu();
     });
   }
@@ -217,7 +217,7 @@ function addToCart(name, price) {
 function updateQuantity(name, change) {
   const cart = getCart();
   if (!cart[name]) return;
-  
+
   cart[name].quantity += change;
   if (cart[name].quantity <= 0) {
     delete cart[name];
@@ -230,27 +230,27 @@ function updateFloatingCartBar() {
   const cart = getCart();
   const keys = Object.keys(cart);
   let existingBar = document.querySelector('.floating-cart-bar');
-  
+
   if (keys.length === 0) {
     if (existingBar) {
       existingBar.remove();
     }
     return;
   }
-  
+
   let totalQty = 0;
   let totalPrice = 0;
   keys.forEach(k => {
     totalQty += cart[k].quantity;
     totalPrice += cart[k].price * cart[k].quantity;
   });
-  
+
   if (!existingBar) {
     existingBar = document.createElement('div');
     existingBar.className = 'floating-cart-bar';
     document.body.appendChild(existingBar);
   }
-  
+
   existingBar.innerHTML = `
     <div class="cart-info">
       <div class="cart-icon-wrapper">
@@ -276,7 +276,7 @@ function openOrderModal() {
 
   const modalOverlay = document.createElement('div');
   modalOverlay.className = 'order-modal-overlay';
-  
+
   modalOverlay.innerHTML = `
     <div class="order-modal-card">
       <div class="order-modal-header">
@@ -348,20 +348,20 @@ function openOrderModal() {
   const updateModalSummary = () => {
     const currentCart = getCart();
     const keys = Object.keys(currentCart);
-    
+
     if (keys.length === 0) {
       closeOrderModal();
       return;
     }
-    
+
     let itemsHTML = '';
     let total = 0;
-    
+
     keys.forEach(k => {
       const item = currentCart[k];
       const subtotal = item.price * item.quantity;
       total += subtotal;
-      
+
       itemsHTML += `
         <div class="modal-summary-item" data-name="${item.name}">
           <div class="summary-item-info">
@@ -379,7 +379,7 @@ function openOrderModal() {
         </div>
       `;
     });
-    
+
     summaryContainer.innerHTML = `
       <div class="modal-items-list">
         ${itemsHTML}
@@ -398,7 +398,7 @@ function openOrderModal() {
   summaryContainer.addEventListener('click', (e) => {
     const minusBtn = e.target.closest('.btn-modal-qty-minus');
     const plusBtn = e.target.closest('.btn-modal-qty-plus');
-    
+
     if (minusBtn) {
       const name = minusBtn.dataset.name;
       updateQuantity(name, -1);
@@ -418,7 +418,7 @@ function openOrderModal() {
   orderTypeSelect.addEventListener('change', () => {
     const deliveryFields = modalOverlay.querySelector('#delivery-fields');
     const addressInput = modalOverlay.querySelector('#cust-address');
-    
+
     if (orderTypeSelect.value === 'delivery') {
       deliveryFields.style.display = 'flex';
       addressInput.setAttribute('required', 'true');
@@ -436,7 +436,7 @@ function openOrderModal() {
 
   const detectBtn = modalOverlay.querySelector('#btn-detect-location');
   const statusSpan = modalOverlay.querySelector('#location-status');
-  
+
   detectBtn.addEventListener('click', () => {
     if (!navigator.geolocation) {
       statusSpan.style.color = '#ef4444';
@@ -444,18 +444,18 @@ function openOrderModal() {
       isLocationVerified = true;
       return;
     }
-    
+
     statusSpan.style.color = 'var(--text-dark)';
     statusSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking GPS...';
-    
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
         const lon = position.coords.longitude;
-        
+
         // Query OSRM routing API for the actual driving distance (original road distance)
         const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lon},${lat};78.9440528,17.5700914?overview=false`;
-        
+
         fetch(osrmUrl)
           .then(res => res.json())
           .then(data => {
@@ -466,11 +466,11 @@ function openOrderModal() {
               // Fallback to Haversine straight-line distance
               distance = calculateDistance(17.5700914, 78.9440528, lat, lon);
             }
-            
+
             verifiedLat = lat;
             verifiedLon = lon;
             verifiedDistance = distance.toFixed(2);
-            
+
             if (distance <= 4.0) {
               statusSpan.style.color = '#10b981';
               statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km)`;
@@ -488,7 +488,7 @@ function openOrderModal() {
             verifiedLat = lat;
             verifiedLon = lon;
             verifiedDistance = distance.toFixed(2);
-            
+
             if (distance <= 4.0) {
               statusSpan.style.color = '#10b981';
               statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km)`;
@@ -513,7 +513,7 @@ function openOrderModal() {
 
   // Handle close action
   closeBtn.addEventListener('click', closeOrderModal);
-  
+
   modalOverlay.addEventListener('click', (e) => {
     if (e.target === modalOverlay) {
       closeOrderModal();
@@ -594,7 +594,7 @@ function buildWhatsAppUrl({ name, phone, typeLabel, token, address = '', distanc
   const cart = getCart();
   const keys = Object.keys(cart);
   if (keys.length === 0) return '';
-  
+
   let message = `*Order Token: ${token}*\n`;
   message += `*Customer:* ${name}\n`;
   message += `*Phone:* ${phone}\n`;
@@ -607,26 +607,26 @@ function buildWhatsAppUrl({ name, phone, typeLabel, token, address = '', distanc
   }
   message += `-------------------------\n`;
   message += `*Items Ordered:*\n`;
-  
+
   let total = 0;
   let index = 1;
   const itemsArray = [];
-  
+
   keys.forEach(k => {
     const item = cart[k];
     const subtotal = item.price * item.quantity;
     message += `${index}. ${item.name} x ${item.quantity} - ₹${subtotal}\n`;
     total += subtotal;
     index++;
-    
+
     // Find item ID for encoding
     const dbItem = currentMenu.find(d => d.name === item.name);
     itemsArray.push([dbItem ? dbItem.id : item.name, item.quantity, item.price]);
   });
-  
+
   message += `-------------------------\n`;
   message += `*Total Amount:* ₹${total}\n\n`;
-  
+
   // Generate verification code & link
   let typeVal = 1; // Takeaway / Parcel
   if (typeLabel.includes('Dine')) {
@@ -648,10 +648,10 @@ function buildWhatsAppUrl({ name, phone, typeLabel, token, address = '', distanc
   const code = encodePayload(payload);
   const origin = window.location.origin;
   const verifyUrl = `${origin}/verify.html?o=${code}`;
-  
+
   message += `*Verify Original Price & Bill:*\n${verifyUrl}\n\n`;
   message += `Please confirm my order. Thank you!`;
-  
+
   const encodedMsg = encodeURIComponent(message);
   return `https://wa.me/916302019925?text=${encodedMsg}`;
 }
@@ -666,7 +666,7 @@ function initCartEventListeners() {
       addToCart(name, price);
       return;
     }
-    
+
     // Qty minus click
     const minusBtn = e.target.closest('.btn-qty-minus');
     if (minusBtn) {
@@ -674,7 +674,7 @@ function initCartEventListeners() {
       updateQuantity(name, -1);
       return;
     }
-    
+
     // Qty plus click
     const plusBtn = e.target.closest('.btn-qty-plus');
     if (plusBtn) {
@@ -682,14 +682,14 @@ function initCartEventListeners() {
       updateQuantity(name, 1);
       return;
     }
-    
+
     // Trigger Details Modal overlay
     const orderBtn = e.target.closest('#btn-cart-whatsapp-order');
     if (orderBtn) {
       openOrderModal();
       return;
     }
-    
+
     // Admin stock status toggle click
     const stockBtn = e.target.closest('.btn-admin-stock');
     if (stockBtn) {
@@ -699,7 +699,7 @@ function initCartEventListeners() {
       }
       return;
     }
-    
+
     // Admin edit item click
     const editBtn = e.target.closest('.btn-admin-edit');
     if (editBtn) {
@@ -727,7 +727,7 @@ function initCartEventListeners() {
       }
       return;
     }
-    
+
     // Admin remove item click
     const deleteBtn = e.target.closest('.btn-admin-delete');
     if (deleteBtn) {
@@ -776,9 +776,9 @@ function renderMenu() {
   const filteredItems = currentMenu.filter(item => {
     const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
     const matchesDiet = activeDiet === 'all' || item.type === activeDiet;
-    const matchesSearch = searchQuery === '' || 
-                          item.name.toLowerCase().includes(searchQuery) || 
-                          item.description.toLowerCase().includes(searchQuery);
+    const matchesSearch = searchQuery === '' ||
+      item.name.toLowerCase().includes(searchQuery) ||
+      item.description.toLowerCase().includes(searchQuery);
 
     return matchesCategory && matchesDiet && matchesSearch;
   });
@@ -797,10 +797,10 @@ function renderMenu() {
 
     const isVeg = item.type === 'veg';
     const dietIconClass = isVeg ? 'veg' : 'non-veg';
-    
+
     const cartItem = cart[item.name];
     let actionHTML = '';
-    
+
     if (item.outOfStock) {
       actionHTML = `
         <button class="btn-add-zomato" disabled style="background-color: #9ca3af; border-color: #9ca3af; color: white; cursor: not-allowed;">
@@ -985,7 +985,7 @@ function openAdminLoginModal() {
     const errorDiv = form.querySelector('#admin-login-error');
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user, password: pass })
@@ -1176,7 +1176,7 @@ function openAdminAddItemModal() {
     xhr.onload = () => {
       submitButton.disabled = false;
       submitButton.textContent = 'Add to Menu';
-      
+
       if (xhr.status === 200) {
         const response = JSON.parse(xhr.responseText);
         imageUrlInput.value = response.image;
@@ -1226,41 +1226,41 @@ function openAdminAddItemModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch('/api/menu', {
+      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name,
-          price,
-          category,
-          subCategory: type,
-          description,
-          image,
-          imagePublicId,
-          availability: true,
-          featured: popular
-        })
-      });
-
-      if (res.ok) {
-        currentMenu = await fetchMenuData();
-        closeModal();
-        renderMenu();
-      } else {
-        const errorData = await res.json();
-        alert(`Failed to save menu item: ${errorData.message}`);
-      }
-    } catch (err) {
-      alert('Connection error occurred while saving menu item.');
-    }
+    },
+    body: JSON.stringify({
+      name,
+      price,
+      category,
+      subCategory: type,
+      description,
+      image,
+      imagePublicId,
+      availability: true,
+      featured: popular
+    })
   });
 
-  dishNameInput.addEventListener('input', () => {
-    nameError.style.display = 'none';
+  if (res.ok) {
+    currentMenu = await fetchMenuData();
+    closeModal();
+    renderMenu();
+  } else {
+    const errorData = await res.json();
+    alert(`Failed to save menu item: ${errorData.message}`);
+  }
+} catch (err) {
+  alert('Connection error occurred while saving menu item.');
+}
   });
+
+dishNameInput.addEventListener('input', () => {
+  nameError.style.display = 'none';
+});
 }
 
 async function toggleStockStatus(id) {
@@ -1276,28 +1276,28 @@ async function toggleStockStatus(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`/api/menu/${id}`, {
+    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        availability: newAvailability
-      })
-    });
+  },
+  body: JSON.stringify({
+    availability: newAvailability
+  })
+});
 
-    if (res.ok) {
-      currentMenu = await fetchMenuData();
-      renderMenu();
-    } else {
-      console.error('toggleStockStatus failed: API error response');
-      alert('Failed to update stock status on database.');
-    }
+if (res.ok) {
+  currentMenu = await fetchMenuData();
+  renderMenu();
+} else {
+  console.error('toggleStockStatus failed: API error response');
+  alert('Failed to update stock status on database.');
+}
   } catch (err) {
-    console.error('toggleStockStatus network error:', err);
-    alert('Connection error occurred while updating stock status.');
-  }
+  console.error('toggleStockStatus network error:', err);
+  alert('Connection error occurred while updating stock status.');
+}
 }
 
 async function deleteMenuItem(id) {
@@ -1314,24 +1314,24 @@ async function deleteMenuItem(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`/api/menu/${id}`, {
+    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
-      }
+  }
     });
 
-    if (res.ok) {
-      currentMenu = await fetchMenuData();
-      renderMenu();
-    } else {
-      console.error('deleteMenuItem failed: API error response');
-      alert('Failed to delete menu item.');
-    }
+if (res.ok) {
+  currentMenu = await fetchMenuData();
+  renderMenu();
+} else {
+  console.error('deleteMenuItem failed: API error response');
+  alert('Failed to delete menu item.');
+}
   } catch (err) {
-    console.error('deleteMenuItem network error:', err);
-    alert('Connection error occurred while deleting item.');
-  }
+  console.error('deleteMenuItem network error:', err);
+  alert('Connection error occurred while deleting item.');
+}
 }
 
 function openAdminEditItemModal(id) {
@@ -1504,7 +1504,7 @@ function openAdminEditItemModal(id) {
     xhr.onload = () => {
       submitButton.disabled = false;
       submitButton.textContent = 'Save Changes';
-      
+
       if (xhr.status === 200) {
         const response = JSON.parse(xhr.responseText);
         imageUrlInput.value = response.image;
@@ -1554,41 +1554,41 @@ function openAdminEditItemModal(id) {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch(`/api/menu/${id}`, {
+      const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: newName,
-          price,
-          category,
-          subCategory: type,
-          description,
-          image,
-          imagePublicId,
-          availability: !item.outOfStock,
-          featured: popular
-        })
-      });
-
-      if (res.ok) {
-        currentMenu = await fetchMenuData();
-        closeModal();
-        renderMenu();
-      } else {
-        const errorData = await res.json();
-        alert(`Failed to save menu changes: ${errorData.message}`);
-      }
-    } catch (err) {
-      alert('Connection error occurred while saving changes.');
-    }
+    },
+    body: JSON.stringify({
+      name: newName,
+      price,
+      category,
+      subCategory: type,
+      description,
+      image,
+      imagePublicId,
+      availability: !item.outOfStock,
+      featured: popular
+    })
   });
 
-  dishNameInput.addEventListener('input', () => {
-    nameError.style.display = 'none';
+  if (res.ok) {
+    currentMenu = await fetchMenuData();
+    closeModal();
+    renderMenu();
+  } else {
+    const errorData = await res.json();
+    alert(`Failed to save menu changes: ${errorData.message}`);
+  }
+} catch (err) {
+  alert('Connection error occurred while saving changes.');
+}
   });
+
+dishNameInput.addEventListener('input', () => {
+  nameError.style.display = 'none';
+});
 }
 
 function renderSpecials() {
@@ -1771,10 +1771,10 @@ function openAdminEditImageModal(id, isSpecial) {
     return;
   }
 
-  const item = isSpecial 
+  const item = isSpecial
     ? currentSpecials.find(i => i._id === id || i.id === id)
     : currentMenu.find(i => i._id === id);
-  
+
   console.log('openAdminEditImageModal: matched item =', item);
 
   if (!item) {
@@ -1940,74 +1940,74 @@ function openAdminEditImageModal(id, isSpecial) {
           console.log('PUT URL:', `/api/menu/${id}`);
 
           // Trigger immediate MongoDB update using _id
-          const updateRes = await fetch(`/api/menu/${id}`, {
+          const updateRes = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`), {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({
-              image: secure_url,
-              imagePublicId: public_id
-            })
-          });
+        },
+        body: JSON.stringify({
+          image: secure_url,
+          imagePublicId: public_id
+        })
+      });
 
-          console.log('PUT response status:', updateRes.status);
-          if (updateRes.ok) {
-            console.log('MongoDB update succeeded. Reloading data...');
-            uploadStatusText.textContent = 'Saved successfully!';
-            uploadPercent.textContent = '100%';
-            
-            // Reload menu and specials data from MongoDB and refresh UI
-            if (isSpecial) {
-              currentSpecials = await fetchSpecialsData();
-              renderSpecials();
-            } else {
-              currentMenu = await fetchMenuData();
-              renderMenu();
-            }
+  console.log('PUT response status:', updateRes.status);
+  if (updateRes.ok) {
+    console.log('MongoDB update succeeded. Reloading data...');
+    uploadStatusText.textContent = 'Saved successfully!';
+    uploadPercent.textContent = '100%';
 
-            setTimeout(() => {
-              closeModal();
-            }, 800);
-          } else {
-            const errorData = await updateRes.json();
-            const errMsg = errorData.message || 'Unknown database error';
-            console.error('MongoDB PUT update failed:', errorData);
-            alert(`MongoDB database update failed: ${errMsg}`);
-            fileInput.disabled = false;
-            uploadProgressContainer.style.display = 'none';
-          }
-        } catch (err) {
-          console.error('Error processing success payload:', err);
-          alert(`Failed to save: ${err.message}`);
-          fileInput.disabled = false;
-          uploadProgressContainer.style.display = 'none';
-        }
+    // Reload menu and specials data from MongoDB and refresh UI
+    if (isSpecial) {
+      currentSpecials = await fetchSpecialsData();
+      renderSpecials();
+    } else {
+      currentMenu = await fetchMenuData();
+      renderMenu();
+    }
+
+    setTimeout(() => {
+      closeModal();
+    }, 800);
+  } else {
+    const errorData = await updateRes.json();
+    const errMsg = errorData.message || 'Unknown database error';
+    console.error('MongoDB PUT update failed:', errorData);
+    alert(`MongoDB database update failed: ${errMsg}`);
+    fileInput.disabled = false;
+    uploadProgressContainer.style.display = 'none';
+  }
+} catch (err) {
+  console.error('Error processing success payload:', err);
+  alert(`Failed to save: ${err.message}`);
+  fileInput.disabled = false;
+  uploadProgressContainer.style.display = 'none';
+}
       } else {
-        let errMsg = 'Unknown error';
-        try {
-          const errObj = JSON.parse(xhr.responseText);
-          errMsg = errObj.message || errMsg;
-        } catch (e) {
-          errMsg = xhr.responseText || errMsg;
-        }
-        console.error('Image upload endpoint returned error status:', xhr.status, errMsg);
-        alert(`Image upload failed: ${errMsg}`);
-        fileInput.disabled = false;
-        uploadProgressContainer.style.display = 'none';
-        previewDiv.innerHTML = `<span style="color: #ef4444; font-size: 0.9rem;">Upload failed: ${errMsg}</span>`;
-      }
+  let errMsg = 'Unknown error';
+  try {
+    const errObj = JSON.parse(xhr.responseText);
+    errMsg = errObj.message || errMsg;
+  } catch (e) {
+    errMsg = xhr.responseText || errMsg;
+  }
+  console.error('Image upload endpoint returned error status:', xhr.status, errMsg);
+  alert(`Image upload failed: ${errMsg}`);
+  fileInput.disabled = false;
+  uploadProgressContainer.style.display = 'none';
+  previewDiv.innerHTML = `<span style="color: #ef4444; font-size: 0.9rem;">Upload failed: ${errMsg}</span>`;
+}
     };
 
-    xhr.onerror = (err) => {
-      console.error('XMLHttpRequest network error:', err);
-      alert('Network error occurred during image upload.');
-      fileInput.disabled = false;
-      uploadProgressContainer.style.display = 'none';
-    };
+xhr.onerror = (err) => {
+  console.error('XMLHttpRequest network error:', err);
+  alert('Network error occurred during image upload.');
+  fileInput.disabled = false;
+  uploadProgressContainer.style.display = 'none';
+};
 
-    xhr.send(formData);
+xhr.send(formData);
   });
 }
 
@@ -2173,7 +2173,7 @@ function openAdminAddSpecialModal() {
     xhr.onload = () => {
       submitButton.disabled = false;
       submitButton.textContent = 'Add Special';
-      
+
       if (xhr.status === 200) {
         const response = JSON.parse(xhr.responseText);
         imageUrlInput.value = response.image;
@@ -2223,44 +2223,44 @@ function openAdminAddSpecialModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch('/api/menu', {
+      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name,
-          price: 0,
-          category: 'specials',
-          subCategory: type,
-          description,
-          image,
-          imagePublicId,
-          availability: true,
-          featured: true,
-          customPriceDisplay: price,
-          tagText: tag,
-          tagIcon: tagIcon
-        })
-      });
-
-      if (res.ok) {
-        currentSpecials = await fetchSpecialsData();
-        closeModal();
-        renderSpecials();
-      } else {
-        const errorData = await res.json();
-        alert(`Failed to save special: ${errorData.message}`);
-      }
-    } catch (err) {
-      alert('Connection error occurred while saving special.');
-    }
+    },
+    body: JSON.stringify({
+      name,
+      price: 0,
+      category: 'specials',
+      subCategory: type,
+      description,
+      image,
+      imagePublicId,
+      availability: true,
+      featured: true,
+      customPriceDisplay: price,
+      tagText: tag,
+      tagIcon: tagIcon
+    })
   });
 
-  specialNameInput.addEventListener('input', () => {
-    nameError.style.display = 'none';
+  if (res.ok) {
+    currentSpecials = await fetchSpecialsData();
+    closeModal();
+    renderSpecials();
+  } else {
+    const errorData = await res.json();
+    alert(`Failed to save special: ${errorData.message}`);
+  }
+} catch (err) {
+  alert('Connection error occurred while saving special.');
+}
   });
+
+specialNameInput.addEventListener('input', () => {
+  nameError.style.display = 'none';
+});
 }
 
 async function deleteSpecialItem(id) {
