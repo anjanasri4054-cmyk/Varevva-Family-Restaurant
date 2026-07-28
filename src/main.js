@@ -1162,7 +1162,7 @@ function openAdminAddItemModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/upload', true);
+    xhr.open('POST', 'https://varevva-family-restaurant.onrender.com/api/upload', true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
     xhr.upload.onprogress = (event) => {
@@ -1490,7 +1490,7 @@ function openAdminEditItemModal(id) {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/upload', true);
+    xhr.open('POST', 'https://varevva-family-restaurant.onrender.com/api/upload', true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
     xhr.upload.onprogress = (event) => {
@@ -1896,7 +1896,7 @@ function openAdminEditImageModal(id, isSpecial) {
     const token = sessionStorage.getItem('varevva_admin_token');
     console.log('Authorization Token:', token ? `Bearer ${token.substring(0, 20)}...` : 'MISSING');
 
-    const requestUrl = '/api/upload';
+    const requestUrl = 'https://varevva-family-restaurant.onrender.com/api/upload';
     console.log('Initiating POST request to:', requestUrl);
 
     const xhr = new XMLHttpRequest();
@@ -1914,7 +1914,7 @@ function openAdminEditImageModal(id, isSpecial) {
     };
 
     xhr.onload = async () => {
-      console.log('POST /api/upload finished. HTTP Status:', xhr.status);
+      console.log('POST https://varevva-family-restaurant.onrender.com/api/upload finished. HTTP Status:', xhr.status);
       console.log('Response content:', xhr.responseText);
 
       if (xhr.status === 200) {
@@ -1937,7 +1937,7 @@ function openAdminEditImageModal(id, isSpecial) {
           uploadPercent.textContent = 'Saving...';
 
           console.log('Initiating PUT request to update MongoDB for item:', id);
-          console.log('PUT URL:', `/api/menu/${id}`);
+          console.log('PUT URL:', `https://varevva-family-restaurant.onrender.com/api/menu/${id}`);
 
           // Trigger immediate MongoDB update using _id
           const updateRes = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
@@ -2159,7 +2159,7 @@ function openAdminAddSpecialModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/upload', true);
+    xhr.open('POST', 'https://varevva-family-restaurant.onrender.com/api/upload', true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
     xhr.upload.onprogress = (event) => {
@@ -2272,7 +2272,7 @@ async function deleteSpecialItem(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`/api/menu/${item._id}`, {
+    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${item._id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -2372,7 +2372,7 @@ async function openAdminFirebaseConfigModal() {
 
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       try {
-        const response = await fetch('/api/save-firebase-config', {
+        const response = await fetch('https://varevva-family-restaurant.onrender.com/api/save-firebase-config', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
