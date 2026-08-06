@@ -2590,7 +2590,13 @@ export async function openAdminOrdersModal() {
     }
 
     tableBody.innerHTML = list.map(order => {
-      const itemsText = (order.items || []).map(i => `${i.name} (${i.quantity})`).join(', ');
+      const itemsText = (order.items || []).map(i => {
+        let name = i.name || i.title || 'Meal Item';
+        if (/^[a-f0-9]{24}$/i.test(name.trim())) {
+          name = i.title || 'Special Dish';
+        }
+        return `${name} (${i.quantity || 1})`;
+      }).join(', ');
       const paymentTimeStr = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.createdAt).toLocaleDateString();
 
       return `

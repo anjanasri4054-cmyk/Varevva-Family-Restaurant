@@ -180,9 +180,37 @@
             }
 
             if (order.items && order.items.length > 0) {
-              paymentItemsSummary.innerHTML = order.items.map(item => 
-                `<div style="display:flex; justify-content:space-between;"><span>${item.name} &times; ${item.quantity}</span><span>₹${item.subtotal || (item.price * item.quantity)}</span></div>`
-              ).join('');
+              paymentItemsSummary.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 4px;">
+                  <thead style="border-bottom: 1.5px solid rgba(0,0,0,0.1); color: var(--text-muted);">
+                    <tr>
+                      <th style="text-align: left; padding: 4px 0;">Item Name</th>
+                      <th style="text-align: center; padding: 4px 0;">Qty</th>
+                      <th style="text-align: right; padding: 4px 0;">Unit Price</th>
+                      <th style="text-align: right; padding: 4px 0;">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${order.items.map(item => {
+                      let name = item.name || item.title || 'Menu Item';
+                      if (/^[a-f0-9]{24}$/i.test(name.trim())) {
+                        name = item.title || 'Special Dish';
+                      }
+                      const qty = item.quantity || 1;
+                      const price = item.price || (item.subtotal ? Math.round(item.subtotal / qty) : 0);
+                      const subtotal = item.subtotal || (price * qty);
+                      return `
+                        <tr style="border-bottom: 1px dashed rgba(0,0,0,0.06);">
+                          <td style="padding: 5px 0; font-weight: 600;">${name}</td>
+                          <td style="padding: 5px 0; text-align: center; font-weight: 700;">${qty}</td>
+                          <td style="padding: 5px 0; text-align: right; color: var(--text-muted);">₹${price}</td>
+                          <td style="padding: 5px 0; text-align: right; font-weight: 700; color: var(--accent-color);">₹${subtotal}</td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              `;
             } else {
               paymentItemsSummary.innerHTML = '<span>Customer Meal Order</span>';
             }

@@ -43,6 +43,16 @@
         </div>
       </div>
 
+      <!-- Itemized Receipt Section -->
+      <div style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+        <h5 style="font-family: var(--font-header); font-weight: 700; font-size: 0.88rem; margin: 0 0 10px; color: var(--text-dark);">
+          <i class="fa-solid fa-receipt" style="color: var(--primary-color);"></i> Order Items Receipt
+        </h5>
+        <div id="track-items-summary" style="font-size: 0.82rem; color: var(--text-dark);">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
       <!-- Pickup Token Card (Shown when Payment / Order Confirmed) -->
       <div id="token-card-section" style="display: flex; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
         <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Order Confirmed & Pickup Token Issued</span>
@@ -110,6 +120,7 @@
     const trackOrderId = document.getElementById('track-order-id');
     const trackCustomerName = document.getElementById('track-customer-name');
     const trackTotalAmount = document.getElementById('track-total-amount');
+    const trackItemsSummary = document.getElementById('track-items-summary');
     const tokenCardSection = document.getElementById('token-card-section');
     const displayPickupToken = document.getElementById('display-pickup-token');
     const displayPrepTime = document.getElementById('display-prep-time');
@@ -144,6 +155,41 @@
     function updateUI(order) {
       trackCustomerName.textContent = `Customer: ${order.customerName} (${order.customerPhone})`;
       trackTotalAmount.textContent = `₹${order.totalAmount}`;
+
+      // Render Itemized Order Receipt
+      if (trackItemsSummary && order.items && order.items.length > 0) {
+        trackItemsSummary.innerHTML = `
+          <table style="width: 100%; border-collapse: collapse; font-size: 0.84rem;">
+            <thead style="border-bottom: 1.5px solid rgba(0,0,0,0.1); color: var(--text-muted);">
+              <tr>
+                <th style="text-align: left; padding: 6px 0;">Item Name</th>
+                <th style="text-align: center; padding: 6px 0;">Qty</th>
+                <th style="text-align: right; padding: 6px 0;">Unit Price</th>
+                <th style="text-align: right; padding: 6px 0;">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => {
+                let name = item.name || item.title || 'Menu Item';
+                if (/^[a-f0-9]{24}$/i.test(name.trim())) {
+                  name = item.title || 'Special Dish';
+                }
+                const qty = item.quantity || 1;
+                const price = item.price || (item.subtotal ? Math.round(item.subtotal / qty) : 0);
+                const subtotal = item.subtotal || (price * qty);
+                return `
+                  <tr style="border-bottom: 1px dashed rgba(0,0,0,0.06);">
+                    <td style="padding: 6px 0; font-weight: 600;">${name}</td>
+                    <td style="padding: 6px 0; text-align: center; font-weight: 700;">${qty}</td>
+                    <td style="padding: 6px 0; text-align: right; color: var(--text-muted);">₹${price}</td>
+                    <td style="padding: 6px 0; text-align: right; font-weight: 700; color: var(--accent-color);">₹${subtotal}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      }
 
       const currentStage = order.orderStage || 'Preparing Food';
 
