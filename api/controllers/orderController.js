@@ -23,8 +23,7 @@ export const createOrder = async (req, res) => {
     const orderId = `VRV${1001 + orderCount}`;
 
     const isCod = paymentMethod === 'Cash on Delivery';
-    const initialPaymentStatus = isCod ? 'COD' : 'Order Confirmed';
-    const pickupToken = `A${tokenCounter++}`;
+    const initialPaymentStatus = isCod ? 'COD' : 'Pending';
 
     const newOrder = new Order({
       orderId,
@@ -38,14 +37,14 @@ export const createOrder = async (req, res) => {
       totalAmount,
       paymentMethod: paymentMethod || 'UPI QR Payment',
       paymentStatus: initialPaymentStatus,
-      orderStage: 'Order Confirmed',
-      pickupToken: pickupToken,
+      orderStage: 'Waiting for Payment',
+      pickupToken: null,
       estimatedPrepTime: '15 Minutes',
       auditLogs: [{
         adminName: 'System',
-        action: 'ORDER_CONFIRMED',
+        action: 'ORDER_CREATED',
         time: new Date(),
-        reason: 'Order placed & confirmed immediately'
+        reason: 'Order placed, awaiting payment submission & approval'
       }]
     });
 
@@ -128,11 +127,7 @@ export const submitUtr = async (req, res) => {
       });
     }
 
-    // Create payment verification record immediately & assign token
-    if (!order.pickupToken) {
-      order.pickupToken = `A${tokenCounter++}`;
-    }
-
+    // Create payment verification record immediately (Token remains null until approved)
     order.utrNumber = cleanUtr;
     order.last4DigitsMobile = cleanLast4;
     order.paymentStatus = 'Waiting for Verification';
@@ -189,7 +184,7 @@ export const checkUtrAvailability = async (req, res) => {
   }
 };
 
-// 5. Admin Action: Approve Payment (Verified in PhonePe)
+// 5. Admin Action: Approve Payment (Generate Next Available Token ONLY after approval)
 export const approvePayment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -200,9 +195,27 @@ export const approvePayment = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    // Generate Pickup Token if not assigned
+    // Generate dynamic next available token ONLY after payment approval
     if (!order.pickupToken) {
-      order.pickupToken = `A${tokenCounter++}`;
+      const allTokens = await Order.distinct('pickupToken');
+      const numericTokens = allTokens
+        .filter(t => t && /^A\d+$/i.test(t))
+        .map(t => parseInt(t.replace(/[^0-9]/g, ''), 10));
+
+      let nextNum = 101;
+      if (numericTokens.length > 0) {
+        nextNum = Math.max(...numericTokens) + 1;
+      }
+
+      let generatedToken = `A${nextNum}`;
+
+      // Prevent duplicate tokens permanently
+      while (await Order.findOne({ pickupToken: generatedToken })) {
+        nextNum++;
+        generatedToken = `A${nextNum}`;
+      }
+
+      order.pickupToken = generatedToken;
     }
 
     order.paymentStatus = 'Paid';
@@ -213,7 +226,7 @@ export const approvePayment = async (req, res) => {
       adminName,
       action: 'PAYMENT_APPROVED_PHONEPE',
       time: new Date(),
-      reason: `Payment verified in PhonePe by owner. Pickup token ${order.pickupToken} assigned.`
+      reason: `Payment verified in PhonePe by owner. Permanent Pickup token ${order.pickupToken} generated & assigned.`
     });
 
     await order.save();

@@ -191,12 +191,28 @@
         `;
       }
 
-      const currentStage = order.orderStage || 'Preparing Food';
+      const currentStage = order.orderStage || 'Waiting for Verification';
 
-      // Always Display Pickup Token immediately
+      // Display Pickup Token section depending on approval state
       tokenCardSection.style.display = 'block';
-      displayPickupToken.textContent = order.pickupToken || 'A101';
-      displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
+      if (order.pickupToken) {
+        tokenCardSection.style.background = '#ecfdf5';
+        tokenCardSection.style.borderColor = '#10b981';
+        tokenCardSection.querySelector('span:first-child').style.color = '#047857';
+        tokenCardSection.querySelector('span:first-child').textContent = 'Payment Verified & Pickup Token Issued';
+        displayPickupToken.textContent = order.pickupToken;
+        displayPickupToken.style.color = '#065f46';
+        displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
+      } else {
+        tokenCardSection.style.background = '#fffbeb';
+        tokenCardSection.style.borderColor = '#f59e0b';
+        tokenCardSection.querySelector('span:first-child').style.color = '#b45309';
+        tokenCardSection.querySelector('span:first-child').textContent = 'Payment Details Received — Verification Pending';
+        displayPickupToken.textContent = 'Pending Approval';
+        displayPickupToken.style.fontSize = '1.8rem';
+        displayPickupToken.style.color = '#b45309';
+        displayPrepTime.textContent = 'Pickup Token will be generated immediately after payment approval by restaurant.';
+      }
 
       // Update Timeline Nodes
       const currentIdx = stagesOrder.indexOf(currentStage);
