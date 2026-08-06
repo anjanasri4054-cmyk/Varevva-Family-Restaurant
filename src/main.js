@@ -2477,13 +2477,18 @@ export async function openAdminOrdersModal() {
   const overlay = document.createElement('div');
   overlay.className = 'order-modal-overlay admin-orders-overlay';
   overlay.innerHTML = `
-    <div class="order-modal-card admin-orders-card" style="max-width: 1150px; width: 95%;">
+    <div class="order-modal-card admin-orders-card" style="max-width: 1180px; width: 95%;">
       <div class="order-modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-receipt" style="color: var(--accent-color); font-size: 1.4rem;"></i>
-          <h3 style="margin: 0; font-size: 1.25rem; font-family: var(--font-header);">Payment Records & Orders Dashboard</h3>
+          <i class="fa-solid fa-shield-halved" style="color: var(--accent-color); font-size: 1.4rem;"></i>
+          <h3 style="margin: 0; font-size: 1.25rem; font-family: var(--font-header);">Manual Payment Verification Dashboard</h3>
         </div>
-        <button class="btn-close-modal" id="btn-close-admin-orders">&times;</button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 0.76rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 12px; border: 1px solid #10b98140;">
+            <i class="fa-solid fa-circle fa-beat" style="font-size: 0.6rem; color: #10b981;"></i> Live Auto Sync Active
+          </span>
+          <button class="btn-close-modal" id="btn-close-admin-orders">&times;</button>
+        </div>
       </div>
 
       <!-- Top Search & Filter Toolbar -->
@@ -2492,10 +2497,10 @@ export async function openAdminOrdersModal() {
         <!-- Filter Tabs -->
         <div class="admin-orders-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
           <button class="admin-tab-btn active" data-filter="all">All Orders</button>
+          <button class="admin-tab-btn" data-filter="Waiting for Verification">Waiting for Verification</button>
           <button class="admin-tab-btn" data-filter="UPI QR Payment">UPI Payments</button>
           <button class="admin-tab-btn" data-filter="Cash on Delivery">Cash on Delivery</button>
           <button class="admin-tab-btn" data-filter="Preparing Food">Preparing</button>
-          <button class="admin-tab-btn" data-filter="Ready for Pickup">Ready for Pickup</button>
           <button class="admin-tab-btn" data-filter="Completed">Completed</button>
         </div>
 
@@ -2519,16 +2524,15 @@ export async function openAdminOrdersModal() {
               <th style="padding: 12px; font-weight: 700;">Payment Method</th>
               <th style="padding: 12px; font-weight: 700;">UTR Number</th>
               <th style="padding: 12px; font-weight: 700;">Last 4 Digits</th>
-              <th style="padding: 12px; font-weight: 700;">Payment Time</th>
-              <th style="padding: 12px; font-weight: 700;">Token</th>
+              <th style="padding: 12px; font-weight: 700;">Submission Time</th>
               <th style="padding: 12px; font-weight: 700;">Status</th>
             </tr>
           </thead>
           <tbody id="admin-orders-table-body">
             <tr>
-              <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
-                <p style="margin: 0;">Loading payment records...</p>
+                <p style="margin: 0;">Loading payment verification records...</p>
               </td>
             </tr>
           </tbody>
@@ -2544,7 +2548,12 @@ export async function openAdminOrdersModal() {
   const searchInput = overlay.querySelector('#admin-orders-search');
   const tabButtons = overlay.querySelectorAll('.admin-tab-btn');
 
-  const closeModal = () => overlay.remove();
+  let pollInterval = null;
+  const closeModal = () => {
+    if (pollInterval) clearInterval(pollInterval);
+    overlay.remove();
+  };
+
   closeBtn.addEventListener('click', closeModal);
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeModal();
@@ -2558,7 +2567,9 @@ export async function openAdminOrdersModal() {
     let list = fetchedOrders;
 
     // Apply Filter Tab
-    if (currentFilter === 'UPI QR Payment') {
+    if (currentFilter === 'Waiting for Verification') {
+      list = list.filter(o => o.paymentStatus === 'Waiting for Verification' || o.orderStage === 'Waiting for Verification' || !o.paymentStatus);
+    } else if (currentFilter === 'UPI QR Payment') {
       list = list.filter(o => o.paymentMethod === 'UPI QR Payment');
     } else if (currentFilter === 'Cash on Delivery') {
       list = list.filter(o => o.paymentMethod === 'Cash on Delivery');
@@ -2580,9 +2591,9 @@ export async function openAdminOrdersModal() {
     if (list.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">
             <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
-            <p style="margin: 0; font-weight: 600;">No payment records found matching this filter.</p>
+            <p style="margin: 0; font-weight: 600;">No payment verification records found.</p>
           </td>
         </tr>
       `;
@@ -2597,7 +2608,14 @@ export async function openAdminOrdersModal() {
         }
         return `${name} (${i.quantity || 1})`;
       }).join(', ');
-      const paymentTimeStr = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.createdAt).toLocaleDateString();
+
+      const submissionTimeStr = new Date(order.updatedAt || order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.updatedAt || order.createdAt).toLocaleDateString();
+      const statusText = order.paymentStatus || 'Waiting for Verification';
+
+      const isWaiting = statusText === 'Waiting for Verification' || statusText === 'Pending';
+      const statusBg = isWaiting ? '#fffbeb' : '#ecfdf5';
+      const statusColor = isWaiting ? '#d97706' : '#059669';
+      const statusIcon = isWaiting ? 'fa-clock' : 'fa-circle-check';
 
       return `
         <tr style="border-bottom: 1px solid rgba(0,0,0,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='transparent'">
@@ -2613,11 +2631,10 @@ export async function openAdminOrdersModal() {
           </td>
           <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #1e293b;">${order.utrNumber || '<em style="color:#94a3b8">Submitted</em>'}</td>
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark); text-align: center;">${order.last4DigitsMobile ? `**** ${order.last4DigitsMobile}` : '-'}</td>
-          <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${paymentTimeStr}</td>
-          <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
+          <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${submissionTimeStr}</td>
           <td style="padding: 10px 12px;">
-            <span style="background-color: #ecfdf5; color: #059669; border: 1px solid #10b98140; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid fa-circle-check"></i> ${order.paymentStatus || 'Order Confirmed'}
+            <span style="background-color: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}40; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fa-solid ${statusIcon}"></i> ${statusText}
             </span>
           </td>
         </tr>
@@ -2625,37 +2642,29 @@ export async function openAdminOrdersModal() {
     }).join('');
   };
 
-  // Fetch orders from backend
-  try {
-    const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:5000/api/orders'
-      : 'https://varevva-family-restaurant.onrender.com/api/orders';
+  // Fetch orders from backend API
+  const fetchOrders = async () => {
+    try {
+      const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5000/api/orders'
+        : 'https://varevva-family-restaurant.onrender.com/api/orders';
 
-    const res = await fetch(backendUrl);
-    if (res.ok) {
-      const data = await res.json();
-      fetchedOrders = data.orders || [];
-    }
-  } catch (e) {
-    console.warn('Backend orders fetch fallback:', e);
-    fetchedOrders = [
-      {
-        orderId: 'VRV1001',
-        customerName: 'Suresh Kumar',
-        customerPhone: '9876543210',
-        items: [{ name: 'Spl Telangana Chicken Curry', quantity: 2, price: 340, subtotal: 680 }],
-        totalAmount: 680,
-        paymentMethod: 'UPI QR Payment',
-        paymentStatus: 'Order Confirmed',
-        utrNumber: '402918475920',
-        last4DigitsMobile: '3210',
-        pickupToken: 'A101',
-        createdAt: new Date()
+      const res = await fetch(backendUrl);
+      if (res.ok) {
+        const data = await res.json();
+        fetchedOrders = data.orders || [];
+        renderTable();
       }
-    ];
-  }
+    } catch (e) {
+      console.warn('Backend orders fetch error:', e);
+    }
+  };
 
-  renderTable();
+  // Initial fetch
+  await fetchOrders();
+
+  // Automatic real-time background sync every 3 seconds
+  pollInterval = setInterval(fetchOrders, 3000);
 
   // Search input event
   searchInput.addEventListener('input', (e) => {

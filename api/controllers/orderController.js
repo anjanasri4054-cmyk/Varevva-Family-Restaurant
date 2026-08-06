@@ -128,30 +128,29 @@ export const submitUtr = async (req, res) => {
       });
     }
 
-    // Assign Token if not already assigned
+    // Create payment verification record immediately & assign token
     if (!order.pickupToken) {
       order.pickupToken = `A${tokenCounter++}`;
     }
 
-    // Update Order Details to Order Confirmed immediately
     order.utrNumber = cleanUtr;
     order.last4DigitsMobile = cleanLast4;
-    order.paymentStatus = 'Order Confirmed';
-    order.orderStage = 'Order Confirmed';
+    order.paymentStatus = 'Waiting for Verification';
+    order.orderStage = 'Waiting for Verification';
     order.estimatedPrepTime = '15 Minutes';
     
     order.auditLogs.push({
       adminName: 'Customer',
-      action: 'UTR_SUBMITTED_CONFIRMED',
+      action: 'PAYMENT_SUBMITTED_WAITING_VERIFICATION',
       time: new Date(),
-      reason: `UTR ${cleanUtr} submitted. Order confirmed immediately.`
+      reason: `UTR ${cleanUtr} submitted. Status set to Waiting for Verification.`
     });
 
     await order.save();
 
     return res.status(200).json({
       success: true,
-      message: 'Payment details saved and order confirmed!',
+      message: 'Payment details submitted! Verification record created.',
       order
     });
   } catch (error) {
