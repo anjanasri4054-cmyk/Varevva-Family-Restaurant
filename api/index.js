@@ -5,7 +5,6 @@ import { connectDB } from './config/db.js';
 import menuRoutes from './routes/menuRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
-import paymentRoutes from './routes/paymentRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 
 // Connect to MongoDB
@@ -35,7 +34,6 @@ app.use(express.json());
 app.use('/api/menu', menuRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/payment', paymentRoutes);
 app.use('/api/orders', orderRoutes);
 
 // Error Handler Middleware

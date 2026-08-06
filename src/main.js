@@ -1,7 +1,6 @@
 import { menuData } from './menuData.js';
 import { defaultSpecials } from './specialsData.js';
 import { initDatabase, fetchMenuData, saveMenuData, fetchSpecialsData, saveSpecialsData } from './db.js';
-import { runFullPaymentVerification } from './services/paymentVerifier.js';
 
 // --- DOM Element References ---
 const navbar = document.getElementById('navbar');

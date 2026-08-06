@@ -21,7 +21,6 @@ export default defineConfig({
         item: resolve(__dirname, 'item.html'),
         ambience: resolve(__dirname, 'ambience.html'),
         contact: resolve(__dirname, 'contact.html'),
-        verify: resolve(__dirname, 'verify.html'),
         payment: resolve(__dirname, 'payment.html'),
         track: resolve(__dirname, 'track.html'),
       },
