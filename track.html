@@ -53,11 +53,10 @@
         </div>
       </div>
 
-      <!-- Pickup Token Card (Shown when Payment / Order Confirmed) -->
-      <div id="token-card-section" style="display: flex; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
-        <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Order Confirmed & Pickup Token Issued</span>
-        <div style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; color: #065f46; margin: 4px 0;" id="display-pickup-token">A101</div>
-        <span style="font-size: 0.88rem; font-weight: 600; color: #047857;" id="display-prep-time">Estimated Preparation Time: 15 Minutes</span>
+      <!-- Status Banner / Pickup Token Card -->
+      <div id="token-card-section" style="display: block; background: #fffbeb; border: 2px solid #f59e0b; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
+        <span style="font-size: 0.84rem; font-weight: 800; color: #b45309; letter-spacing: 0.5px; text-transform: uppercase;">Payment details submitted successfully.</span>
+        <h3 style="font-family: var(--font-header); font-size: 1.3rem; font-weight: 800; color: #92400e; margin: 6px 0 0;"><i class="fa-solid fa-clock fa-spin"></i> Waiting for Restaurant Verification</h3>
       </div>
 
       <!-- Live Tracking Timeline -->
@@ -67,6 +66,15 @@
 
       <div class="tracking-timeline-container" id="tracking-timeline">
         <!-- Stage 1 -->
+        <div class="timeline-step done" data-stage="Order Placed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Order Placed</span>
+            <span class="timeline-sub">Customer order created successfully</span>
+          </div>
+        </div>
+
+        <!-- Stage 2 -->
         <div class="timeline-step preparing" data-stage="Waiting for Verification">
           <div class="timeline-icon-circle"><i class="fa-solid fa-clock fa-spin"></i></div>
           <div class="timeline-content">
@@ -75,7 +83,7 @@
           </div>
         </div>
 
-        <!-- Stage 2 -->
+        <!-- Stage 3 -->
         <div class="timeline-step pending" data-stage="Payment Verified">
           <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
           <div class="timeline-content">
@@ -84,16 +92,16 @@
           </div>
         </div>
 
-        <!-- Stage 3 -->
+        <!-- Stage 4 -->
         <div class="timeline-step pending" data-stage="Preparing Food">
           <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner"></i></div>
           <div class="timeline-content">
             <span class="timeline-title">Preparing Food</span>
-            <span class="timeline-sub">Chef is preparing your delicious meal</span>
+            <span class="timeline-sub">Chef is preparing your meal</span>
           </div>
         </div>
 
-        <!-- Stage 4 -->
+        <!-- Stage 5 -->
         <div class="timeline-step pending" data-stage="Ready for Pickup">
           <div class="timeline-icon-circle"><i class="fa-solid fa-bell-concierge"></i></div>
           <div class="timeline-content">
@@ -102,7 +110,7 @@
           </div>
         </div>
 
-        <!-- Stage 5 -->
+        <!-- Stage 6 -->
         <div class="timeline-step pending" data-stage="Completed">
           <div class="timeline-icon-circle"><i class="fa-solid fa-house-flag"></i></div>
           <div class="timeline-content">
@@ -131,12 +139,11 @@
     const trackTotalAmount = document.getElementById('track-total-amount');
     const trackItemsSummary = document.getElementById('track-items-summary');
     const tokenCardSection = document.getElementById('token-card-section');
-    const displayPickupToken = document.getElementById('display-pickup-token');
-    const displayPrepTime = document.getElementById('display-prep-time');
 
     trackOrderId.textContent = orderId;
 
     const stagesOrder = [
+      'Order Placed',
       'Waiting for Verification',
       'Payment Verified',
       'Preparing Food',
@@ -203,28 +210,28 @@
 
       const currentStage = order.orderStage || 'Waiting for Verification';
 
-      // Display Pickup Token section depending on approval state
-      tokenCardSection.style.display = 'block';
-      if (order.pickupToken) {
+      // STATE 1 vs APPROVED STATE
+      if (order.pickupToken && (order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid')) {
+        tokenCardSection.style.display = 'block';
         tokenCardSection.style.background = '#ecfdf5';
         tokenCardSection.style.borderColor = '#10b981';
-        tokenCardSection.querySelector('span:first-child').style.color = '#047857';
-        tokenCardSection.querySelector('span:first-child').textContent = 'Payment Verified & Pickup Token Issued';
-        displayPickupToken.textContent = order.pickupToken;
-        displayPickupToken.style.color = '#065f46';
-        displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
+        tokenCardSection.innerHTML = `
+          <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Payment Verified & Pickup Token Issued</span>
+          <div style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; color: #065f46; margin: 4px 0;">${order.pickupToken}</div>
+          <span style="font-size: 0.88rem; font-weight: 600; color: #047857;">Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}</span>
+        `;
       } else {
+        // STATE 1: Waiting for Verification (Hide token, hide prep time, hide green success card)
+        tokenCardSection.style.display = 'block';
         tokenCardSection.style.background = '#fffbeb';
         tokenCardSection.style.borderColor = '#f59e0b';
-        tokenCardSection.querySelector('span:first-child').style.color = '#b45309';
-        tokenCardSection.querySelector('span:first-child').textContent = 'Payment Details Received — Verification Pending';
-        displayPickupToken.textContent = 'Pending Approval';
-        displayPickupToken.style.fontSize = '1.8rem';
-        displayPickupToken.style.color = '#b45309';
-        displayPrepTime.textContent = 'Pickup Token will be generated immediately after payment approval by restaurant.';
+        tokenCardSection.innerHTML = `
+          <span style="font-size: 0.84rem; font-weight: 800; color: #b45309; letter-spacing: 0.5px; text-transform: uppercase;">Payment details submitted successfully.</span>
+          <h3 style="font-family: var(--font-header); font-size: 1.3rem; font-weight: 800; color: #92400e; margin: 6px 0 0;"><i class="fa-solid fa-clock fa-spin"></i> Waiting for Restaurant Verification</h3>
+        `;
       }
 
-      // Update Timeline Nodes
+      // Update Timeline Nodes dynamically
       const currentIdx = stagesOrder.indexOf(currentStage);
       const stepNodes = document.querySelectorAll('.timeline-step');
 
@@ -239,19 +246,31 @@
           if (stageName === 'Preparing Food') {
             node.className = 'timeline-step preparing';
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner fa-bounce"></i>';
+          } else if (stageName === 'Waiting for Verification') {
+            node.className = 'timeline-step preparing';
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-clock fa-spin"></i>';
           } else {
             node.className = 'timeline-step done';
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
           }
         } else {
           node.className = 'timeline-step pending';
+          if (stageName === 'Payment Verified') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+          } else if (stageName === 'Preparing Food') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner"></i>';
+          } else if (stageName === 'Ready for Pickup') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-bell-concierge"></i>';
+          } else if (stageName === 'Completed') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-house-flag"></i>';
+          }
         }
       });
     }
 
-    // Initial fetch & set 10 second auto-polling
+    // Initial fetch & 5-second live auto-polling
     fetchLiveOrderStatus();
-    setInterval(fetchLiveOrderStatus, 10000);
+    setInterval(fetchLiveOrderStatus, 5000);
   </script>
 </body>
 </html>
