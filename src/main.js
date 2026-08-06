@@ -684,9 +684,8 @@ function buildWhatsAppUrl({ name, phone, typeLabel, paymentMethodLabel = 'UPI QR
     total += subtotal;
     index++;
 
-    // Find item ID for encoding
-    const dbItem = currentMenu.find(d => d.name === item.name);
-    itemsArray.push([dbItem ? dbItem.id : item.name, item.quantity, item.price]);
+    // Use dish name instead of MongoDB ObjectId
+    itemsArray.push([dbItem ? dbItem.name : item.name, item.quantity, item.price]);
   });
 
   message += `-------------------------\n`;
