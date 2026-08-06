@@ -578,6 +578,9 @@ function openOrderModal() {
         const data = await res.json();
         if (data.order && data.order.orderId) {
           assignedOrderId = data.order.orderId;
+          if (data.order.totalAmount !== undefined) {
+            localStorage.setItem('varevva_last_total', data.order.totalAmount);
+          }
         }
       }
     } catch (err) {
@@ -585,7 +588,6 @@ function openOrderModal() {
     }
 
     localStorage.setItem('varevva_last_order_id', assignedOrderId);
-    localStorage.setItem('varevva_last_total', cartTotal);
 
     // Clear cart & close modal
     localStorage.removeItem('varevva_cart');

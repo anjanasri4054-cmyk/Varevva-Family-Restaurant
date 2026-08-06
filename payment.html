@@ -47,7 +47,7 @@
           <span style="font-family: var(--font-header); font-weight: 700; font-size: 0.9rem; color: var(--text-dark);">
             <i class="fa-solid fa-bag-shopping" style="color: var(--primary-color);"></i> Order Summary
           </span>
-          <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.1rem; color: var(--accent-color);" id="display-total-amount">₹0</span>
+          <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.1rem; color: var(--accent-color);" id="display-total-amount"><i class="fa-solid fa-spinner fa-spin"></i></span>
         </div>
         <div id="payment-items-summary" style="font-size: 0.82rem; color: var(--text-dark); display: flex; flex-direction: column; gap: 4px;">
           <!-- Dynamically populated -->
@@ -82,7 +82,7 @@
           </li>
           <li class="payment-step-item">
             <span class="step-icon-wrapper"><i class="fa-solid fa-indian-rupee-sign"></i></span>
-            <span class="step-text"><strong>Step 2:</strong> Pay the exact amount shown above (<strong id="step-amount-text">₹0</strong>).</span>
+            <span class="step-text"><strong>Step 2:</strong> Pay the exact amount shown above (<strong id="step-amount-text">...</strong>).</span>
           </li>
           <li class="payment-step-item">
             <span class="step-icon-wrapper"><i class="fa-solid fa-receipt"></i></span>
@@ -195,8 +195,11 @@
         }
       } catch (e) {
         console.warn('Order details fetch error:', e);
-        displayTotalAmount.textContent = '₹' + (localStorage.getItem('varevva_last_total') || '450');
-        stepAmountText.textContent = displayTotalAmount.textContent;
+        const cachedTotal = localStorage.getItem('varevva_last_total');
+        if (cachedTotal) {
+          displayTotalAmount.textContent = `₹${cachedTotal}`;
+          stepAmountText.textContent = `₹${cachedTotal}`;
+        }
       }
     }
 
