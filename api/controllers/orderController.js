@@ -189,7 +189,81 @@ export const checkUtrAvailability = async (req, res) => {
   }
 };
 
-// 5. Update Order Stage (Preparing Food -> Ready for Pickup -> Completed)
+// 5. Admin Action: Approve Payment (Verified in PhonePe)
+export const approvePayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adminName = 'Restaurant Owner' } = req.body;
+
+    const order = await Order.findOne({ $or: [{ _id: id }, { orderId: id }] });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Generate Pickup Token if not assigned
+    if (!order.pickupToken) {
+      order.pickupToken = `A${tokenCounter++}`;
+    }
+
+    order.paymentStatus = 'Paid';
+    order.orderStage = 'Preparing Food';
+    order.estimatedPrepTime = '15 Minutes';
+
+    order.auditLogs.push({
+      adminName,
+      action: 'PAYMENT_APPROVED_PHONEPE',
+      time: new Date(),
+      reason: `Payment verified in PhonePe by owner. Pickup token ${order.pickupToken} assigned.`
+    });
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Payment verified & approved! Pickup Token: ${order.pickupToken}`,
+      order
+    });
+  } catch (error) {
+    console.error('Approve Payment Error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 6. Admin Action: Reject Payment
+export const rejectPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rejectionReason = 'Payment not received in PhonePe', adminName = 'Restaurant Owner' } = req.body;
+
+    const order = await Order.findOne({ $or: [{ _id: id }, { orderId: id }] });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    order.paymentStatus = 'Rejected';
+    order.orderStage = 'Payment Verification Failed';
+
+    order.auditLogs.push({
+      adminName,
+      action: 'PAYMENT_REJECTED',
+      time: new Date(),
+      reason: rejectionReason
+    });
+
+    await order.save();
+
+    return res.status(200).json({
+      success: true,
+      message: `Order #${order.orderId} payment rejected.`,
+      order
+    });
+  } catch (error) {
+    console.error('Reject Payment Error:', error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 7. Update Order Stage (Preparing Food -> Ready for Pickup -> Completed)
 export const updateOrderStage = async (req, res) => {
   try {
     const { id } = req.params;
