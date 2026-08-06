@@ -99,27 +99,39 @@
       <form id="utr-submit-form" style="display: flex; flex-direction: column; gap: 14px;">
         
         <div class="form-group">
-          <label for="utr-input" style="font-weight: 700; font-size: 0.88rem;">
-            <i class="fa-solid fa-key" style="color: var(--primary-color);"></i> UTR / Transaction ID <span style="color: #ef4444;">*</span>
-          </label>
-          <input type="text" id="utr-input" placeholder="e.g. 402918475920 (12 - 22 chars)" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem;">
-          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;" id="utr-help-text">Found in PhonePe / GPay payment details screen.</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label for="utr-input" style="font-weight: 700; font-size: 0.88rem; margin: 0;">
+              <i class="fa-solid fa-key" style="color: var(--primary-color);"></i> UTR / Transaction ID <span style="color: #ef4444;">*</span>
+            </label>
+            <span id="utr-live-badge" style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">12-22 chars</span>
+          </div>
+          <input type="text" id="utr-input" maxlength="22" placeholder="e.g. 516218765432 or T2506081432" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem; font-family: monospace; text-transform: uppercase;">
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;" id="utr-help-text">Found in PhonePe, GPay or Paytm payment receipt screen.</span>
         </div>
 
         <div class="form-group">
-          <label for="last4-mobile-input" style="font-weight: 700; font-size: 0.88rem;">
-            <i class="fa-solid fa-phone" style="color: var(--primary-color);"></i> Last 4 Digits of Mobile Number Used for Payment <span style="color: #ef4444;">*</span>
-          </label>
-          <input type="text" id="last4-mobile-input" maxlength="4" placeholder="e.g. 9825" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <label for="last4-mobile-input" style="font-weight: 700; font-size: 0.88rem; margin: 0;">
+              <i class="fa-solid fa-phone" style="color: var(--primary-color);"></i> Last 4 Digits of Mobile Used for Payment <span style="color: #ef4444;">*</span>
+            </label>
+            <span id="mobile-hint-badge" style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Matches registered mobile</span>
+          </div>
+          <input type="text" id="last4-mobile-input" maxlength="4" placeholder="e.g. 1478" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem; font-family: monospace;">
         </div>
 
         <!-- Validation Alert Banner -->
-        <div id="utr-error-alert" style="display: none; background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; padding: 10px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-circle-exclamation"></i>
+        <div id="utr-error-alert" style="display: none; background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 10px 14px; border-radius: 10px; font-size: 0.84rem; font-weight: 600; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 1rem; flex-shrink: 0;"></i>
           <span id="utr-error-msg-text">Error message</span>
         </div>
 
-        <button type="submit" id="btn-submit-payment-utr" class="btn-submit-order" style="width: 100%; margin-top: 6px;">
+        <!-- Validation Success Banner -->
+        <div id="utr-success-alert" style="display: none; background: #ecfdf5; border: 1.5px solid #10b981; color: #047857; padding: 10px 14px; border-radius: 10px; font-size: 0.84rem; font-weight: 700; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-check" style="font-size: 1rem; flex-shrink: 0;"></i>
+          <span>Valid UTR & Registered Mobile Suffix Matched! Ready to submit.</span>
+        </div>
+
+        <button type="submit" id="btn-submit-payment-utr" class="btn-submit-order" disabled style="width: 100%; margin-top: 6px; opacity: 0.6; cursor: not-allowed;">
           <span>Submit Payment</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
@@ -137,8 +149,12 @@
     const displayTotalAmount = document.getElementById('display-total-amount');
     const stepAmountText = document.getElementById('step-amount-text');
     const paymentItemsSummary = document.getElementById('payment-items-summary');
+    const mobileHintBadge = document.getElementById('mobile-hint-badge');
 
     orderIdBadge.innerHTML = `<i class="fa-solid fa-receipt"></i> Order: ${orderId}`;
+
+    let registeredCustomerPhone = '';
+    let expectedLast4 = '';
 
     // Fetch order summary from backend API
     async function loadOrderDetails() {
@@ -155,6 +171,14 @@
             displayTotalAmount.textContent = `₹${order.totalAmount}`;
             stepAmountText.textContent = `₹${order.totalAmount}`;
             
+            registeredCustomerPhone = order.customerPhone || '';
+            const cleanPhone = registeredCustomerPhone.replace(/\D/g, '');
+            expectedLast4 = cleanPhone.length >= 4 ? cleanPhone.slice(-4) : '';
+
+            if (registeredCustomerPhone) {
+              mobileHintBadge.textContent = `Mobile: ****${expectedLast4}`;
+            }
+
             if (order.items && order.items.length > 0) {
               paymentItemsSummary.innerHTML = order.items.map(item => 
                 `<div style="display:flex; justify-content:space-between;"><span>${item.name} &times; ${item.quantity}</span><span>₹${item.subtotal || (item.price * item.quantity)}</span></div>`
@@ -186,64 +210,149 @@
       });
     });
 
-    // UTR Form Submission
+    // Elements & State Variables
     const utrForm = document.getElementById('utr-submit-form');
     const utrInput = document.getElementById('utr-input');
     const last4Input = document.getElementById('last4-mobile-input');
+    const utrLiveBadge = document.getElementById('utr-live-badge');
     const errorAlert = document.getElementById('utr-error-alert');
     const errorMsgText = document.getElementById('utr-error-msg-text');
+    const successAlert = document.getElementById('utr-success-alert');
     const submitBtn = document.getElementById('btn-submit-payment-utr');
+
+    let utrDuplicateError = '';
+    let isCheckingDuplicate = false;
+    let checkTimeout = null;
 
     const showError = (msg) => {
       errorMsgText.textContent = msg;
       errorAlert.style.display = 'flex';
+      successAlert.style.display = 'none';
     };
 
-    const clearError = () => {
+    const showSuccess = () => {
       errorAlert.style.display = 'none';
+      successAlert.style.display = 'flex';
     };
 
-    // Pre-flight real time duplicate check
-    utrInput.addEventListener('blur', async () => {
-      const val = utrInput.value.trim();
-      if (val.length >= 12 && val.length <= 22) {
-        try {
-          const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? `http://localhost:5000/api/orders/check-utr?utr=${encodeURIComponent(val)}`
-            : `https://varevva-family-restaurant.onrender.com/api/orders/check-utr?utr=${encodeURIComponent(val)}`;
+    const clearStatusBanners = () => {
+      errorAlert.style.display = 'none';
+      successAlert.style.display = 'none';
+    };
 
-          const res = await fetch(backendUrl);
-          const data = await res.json();
-          if (data.exists) {
-            showError('This Transaction ID has already been submitted.');
-          } else {
-            clearError();
-          }
-        } catch (e) {}
+    // Master Form Validation Function
+    const validateForm = () => {
+      const utrVal = utrInput.value;
+      const last4Val = last4Input.value;
+
+      let utrError = '';
+      let last4Error = '';
+
+      // UTR Validation Rules
+      if (!utrVal) {
+        utrError = 'UTR / Transaction ID is required.';
+      } else if (utrVal.length < 12) {
+        utrError = `UTR Number must be at least 12 characters (currently ${utrVal.length}/12).`;
+      } else if (utrVal.length > 22) {
+        utrError = 'UTR Number cannot exceed 22 characters.';
+      } else if (!/^[A-Z0-9]{12,22}$/.test(utrVal)) {
+        utrError = 'UTR must contain only uppercase letters (A-Z) and numbers (0-9).';
+      } else if (utrDuplicateError) {
+        utrError = utrDuplicateError;
       }
+
+      // Last 4 Digits Mobile Validation Rules
+      if (!last4Val) {
+        last4Error = 'Last 4 digits of mobile number is required.';
+      } else if (last4Val.length !== 4 || !/^\d{4}$/.test(last4Val)) {
+        last4Error = 'Please enter exactly 4 numeric digits.';
+      } else if (expectedLast4 && last4Val !== expectedLast4) {
+        last4Error = 'The last four digits do not match the registered mobile number.';
+      }
+
+      // Live Badge Updates
+      if (!utrVal) {
+        utrLiveBadge.textContent = 'Required (12-22 chars)';
+        utrLiveBadge.style.color = 'var(--text-muted)';
+      } else if (utrError) {
+        utrLiveBadge.textContent = `${utrVal.length}/12-22 chars`;
+        utrLiveBadge.style.color = '#ef4444';
+      } else {
+        utrLiveBadge.textContent = '✓ Valid Format';
+        utrLiveBadge.style.color = '#10b981';
+      }
+
+      // Update Error/Success Banners & Submit Button State
+      if (utrError) {
+        showError(utrError);
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.style.cursor = 'not-allowed';
+      } else if (last4Error) {
+        showError(last4Error);
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.6';
+        submitBtn.style.cursor = 'not-allowed';
+      } else {
+        showSuccess();
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+      }
+    };
+
+    // Live Formatting & Check for UTR Input
+    utrInput.addEventListener('input', () => {
+      // 1. Remove spaces & convert to uppercase
+      let val = utrInput.value.replace(/\s+/g, '').toUpperCase();
+      // 2. Reject special characters (Keep A-Z and 0-9 only)
+      val = val.replace(/[^A-Z0-9]/g, '');
+      utrInput.value = val;
+
+      utrDuplicateError = '';
+
+      clearTimeout(checkTimeout);
+      if (val.length >= 12 && val.length <= 22) {
+        // Debounced Live Duplicate Check
+        checkTimeout = setTimeout(async () => {
+          try {
+            const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+              ? `http://localhost:5000/api/orders/check-utr?utr=${encodeURIComponent(val)}`
+              : `https://varevva-family-restaurant.onrender.com/api/orders/check-utr?utr=${encodeURIComponent(val)}`;
+
+            const res = await fetch(backendUrl);
+            const data = await res.json();
+            if (data.exists) {
+              utrDuplicateError = 'This Transaction ID has already been submitted.';
+            } else {
+              utrDuplicateError = '';
+            }
+          } catch (e) {
+            utrDuplicateError = '';
+          }
+          validateForm();
+        }, 300);
+      }
+
+      validateForm();
     });
 
+    // Live Formatting & Check for Last 4 Digits Mobile Input
+    last4Input.addEventListener('input', () => {
+      // Strip non-numeric characters
+      last4Input.value = last4Input.value.replace(/\D/g, '');
+      validateForm();
+    });
+
+    // Form Submit Event
     utrForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const utr = utrInput.value.trim();
-      const last4 = last4Input.value.trim();
+      const utr = utrInput.value.trim().replace(/\s+/g, '').toUpperCase();
+      const last4 = last4Input.value.trim().replace(/\D/g, '');
 
-      if (!utr) {
-        showError('UTR / Transaction ID cannot be empty.');
-        return;
-      }
+      if (submitBtn.disabled) return;
 
-      if (utr.length < 12 || utr.length > 22) {
-        showError('UTR / Transaction ID must be between 12 and 22 characters.');
-        return;
-      }
-
-      if (last4.length !== 4 || !/^\d{4}$/.test(last4)) {
-        showError('Please enter valid 4 digits of the mobile number used for payment.');
-        return;
-      }
-
-      clearError();
+      clearStatusBanners();
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
 
@@ -269,6 +378,8 @@
         } else {
           showError(result.message || 'Failed to submit payment details.');
           submitBtn.disabled = false;
+          submitBtn.style.opacity = '1';
+          submitBtn.style.cursor = 'pointer';
           submitBtn.innerHTML = '<span>Submit Payment</span><i class="fa-solid fa-arrow-right"></i>';
         }
       } catch (err) {

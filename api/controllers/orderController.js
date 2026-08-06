@@ -77,23 +77,44 @@ export const submitUtr = async (req, res) => {
       });
     }
 
-    const cleanUtr = utrNumber.trim();
-    const cleanLast4 = last4DigitsMobile.trim();
+    const cleanUtr = utrNumber.toString().trim().replace(/\s+/g, '').toUpperCase();
+    const cleanLast4 = last4DigitsMobile.toString().trim().replace(/\D/g, '');
 
-    if (cleanUtr.length < 12 || cleanUtr.length > 22) {
+    // 1. UTR Format Validation (A-Z, 0-9, 12-22 chars)
+    if (!/^[A-Z0-9]{12,22}$/.test(cleanUtr)) {
       return res.status(400).json({
         success: false,
-        message: 'UTR / Transaction ID must be between 12 and 22 characters.'
+        message: 'UTR must be between 12 and 22 uppercase alphanumeric characters (A-Z, 0-9).'
       });
     }
 
+    // 2. Last 4 Digits Format Validation (Exactly 4 digits)
     if (cleanLast4.length !== 4 || !/^\d{4}$/.test(cleanLast4)) {
       return res.status(400).json({
         success: false,
-        message: 'Please enter a valid 4-digit mobile number suffix.'
+        message: 'Please enter exactly 4 numeric digits for mobile suffix.'
       });
     }
 
+    const order = await Order.findOne({ orderId });
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
+    // 3. Registered Mobile Suffix Match Validation
+    if (order.customerPhone) {
+      const registeredDigits = order.customerPhone.replace(/\D/g, '');
+      const expectedLast4 = registeredDigits.slice(-4);
+
+      if (expectedLast4 && cleanLast4 !== expectedLast4) {
+        return res.status(400).json({
+          success: false,
+          message: 'The last four digits do not match the registered mobile number.'
+        });
+      }
+    }
+
+    // 4. Duplicate UTR Check
     const duplicateUtrOrder = await Order.findOne({
       utrNumber: cleanUtr,
       orderId: { $ne: orderId }
@@ -105,11 +126,6 @@ export const submitUtr = async (req, res) => {
         isDuplicate: true,
         message: 'This Transaction ID has already been submitted.'
       });
-    }
-
-    const order = await Order.findOne({ orderId });
-    if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found.' });
     }
 
     // Assign Token if not already assigned
