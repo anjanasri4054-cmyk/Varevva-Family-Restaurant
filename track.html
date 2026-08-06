@@ -231,8 +231,8 @@
         `;
       }
 
-      // Update Timeline Nodes dynamically
-      const currentIdx = stagesOrder.indexOf(currentStage);
+      // Update Timeline Nodes dynamically: ONLY ONE active step at a time
+      const currentIdx = stagesOrder.indexOf(currentStage) !== -1 ? stagesOrder.indexOf(currentStage) : 1;
       const stepNodes = document.querySelectorAll('.timeline-step');
 
       stepNodes.forEach(node => {
@@ -240,20 +240,26 @@
         const idx = stagesOrder.indexOf(stageName);
 
         if (idx < currentIdx) {
+          // Completed prior steps
           node.className = 'timeline-step done';
           node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
         } else if (idx === currentIdx) {
-          if (stageName === 'Preparing Food') {
-            node.className = 'timeline-step preparing';
-            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner fa-bounce"></i>';
-          } else if (stageName === 'Waiting for Verification') {
-            node.className = 'timeline-step preparing';
-            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-clock fa-spin"></i>';
-          } else {
+          // Exactly ONE active step
+          node.className = 'timeline-step preparing';
+          if (stageName === 'Waiting for Verification') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-clock fa-spin" style="color:#d97706"></i>';
+          } else if (stageName === 'Payment Verified') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check fa-bounce" style="color:#10b981"></i>';
+          } else if (stageName === 'Preparing Food') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner fa-bounce" style="color:#d97706"></i>';
+          } else if (stageName === 'Ready for Pickup') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-bell-concierge fa-bounce" style="color:#10b981"></i>';
+          } else if (stageName === 'Completed') {
             node.className = 'timeline-step done';
-            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-house-flag"></i>';
           }
         } else {
+          // Future pending steps
           node.className = 'timeline-step pending';
           if (stageName === 'Payment Verified') {
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
@@ -268,9 +274,9 @@
       });
     }
 
-    // Initial fetch & 5-second live auto-polling
+    // Initial fetch & 3-second live auto-polling for instant real-time timeline updates
     fetchLiveOrderStatus();
-    setInterval(fetchLiveOrderStatus, 5000);
+    setInterval(fetchLiveOrderStatus, 3000);
   </script>
 </body>
 </html>

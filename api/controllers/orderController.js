@@ -239,7 +239,7 @@ export const approvePayment = async (req, res) => {
 
     order.paymentStatus = 'Paid';
     order.verificationStatus = 'Verified';
-    order.orderStage = 'Preparing Food';
+    order.orderStage = 'Payment Verified';
     order.estimatedPrepTime = '15 Minutes';
     order.verifiedBy = adminName;
     order.verificationTime = new Date();

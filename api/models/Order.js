@@ -57,7 +57,7 @@ const orderSchema = new mongoose.Schema({
   },
   orderStage: {
     type: String,
-    enum: ['Order Confirmed', 'Waiting for Verification', 'Preparing Food', 'Ready for Pickup', 'Completed'],
+    enum: ['Order Placed', 'Waiting for Verification', 'Payment Verified', 'Preparing Food', 'Ready for Pickup', 'Completed', 'Payment Verification Failed'],
     default: 'Waiting for Verification',
   },
   utrNumber: {
