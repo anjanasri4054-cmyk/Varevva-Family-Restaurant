@@ -60,31 +60,40 @@
         <span style="font-size: 0.88rem; font-weight: 600; color: #047857;" id="display-prep-time">Estimated Preparation Time: 15 Minutes</span>
       </div>
 
-      <!-- Live 4-Stage Tracking Timeline -->
+      <!-- Live Tracking Timeline -->
       <h4 style="font-family: var(--font-header); font-size: 1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-dark);">
         <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Live Order Timeline
       </h4>
 
       <div class="tracking-timeline-container" id="tracking-timeline">
         <!-- Stage 1 -->
-        <div class="timeline-step done" data-stage="Order Confirmed">
-          <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="timeline-step preparing" data-stage="Waiting for Verification">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-clock fa-spin"></i></div>
           <div class="timeline-content">
-            <span class="timeline-title">Order Confirmed</span>
-            <span class="timeline-sub">Payment details saved & order confirmed</span>
+            <span class="timeline-title">Waiting for Restaurant Verification</span>
+            <span class="timeline-sub">Restaurant owner is verifying your UTR details in PhonePe</span>
           </div>
         </div>
 
         <!-- Stage 2 -->
-        <div class="timeline-step preparing" data-stage="Preparing Food">
-          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner fa-bounce"></i></div>
+        <div class="timeline-step pending" data-stage="Payment Verified">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Payment Verified</span>
+            <span class="timeline-sub">Payment confirmed by restaurant owner</span>
+          </div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="timeline-step pending" data-stage="Preparing Food">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner"></i></div>
           <div class="timeline-content">
             <span class="timeline-title">Preparing Food</span>
             <span class="timeline-sub">Chef is preparing your delicious meal</span>
           </div>
         </div>
 
-        <!-- Stage 3 -->
+        <!-- Stage 4 -->
         <div class="timeline-step pending" data-stage="Ready for Pickup">
           <div class="timeline-icon-circle"><i class="fa-solid fa-bell-concierge"></i></div>
           <div class="timeline-content">
@@ -93,7 +102,7 @@
           </div>
         </div>
 
-        <!-- Stage 4 -->
+        <!-- Stage 5 -->
         <div class="timeline-step pending" data-stage="Completed">
           <div class="timeline-icon-circle"><i class="fa-solid fa-house-flag"></i></div>
           <div class="timeline-content">
@@ -128,7 +137,8 @@
     trackOrderId.textContent = orderId;
 
     const stagesOrder = [
-      'Order Confirmed',
+      'Waiting for Verification',
+      'Payment Verified',
       'Preparing Food',
       'Ready for Pickup',
       'Completed'
