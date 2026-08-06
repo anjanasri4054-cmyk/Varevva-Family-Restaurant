@@ -72,11 +72,19 @@ const orderSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  verifiedBy: {
+    type: String,
+    default: '',
+  },
+  verificationTime: {
+    type: Date,
+  },
   auditLogs: [{
     adminName: String,
     action: String,
     time: { type: Date, default: Date.now },
-    reason: String
+    reason: String,
+    ipAddress: String
   }],
   createdAt: {
     type: Date,

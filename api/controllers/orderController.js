@@ -184,15 +184,32 @@ export const checkUtrAvailability = async (req, res) => {
   }
 };
 
-// 5. Admin Action: Approve Payment (Generate Next Available Token ONLY after approval)
+// Helper to extract client IP address
+const getClientIp = (req) => {
+  return (req.headers['x-forwarded-for'] || req.ip || req.socket?.remoteAddress || '127.0.0.1')
+    .toString()
+    .split(',')[0]
+    .trim();
+};
+
+// 5. Admin Action: Approve Payment (Verified in PhonePe)
 export const approvePayment = async (req, res) => {
   try {
     const { id } = req.params;
     const { adminName = 'Restaurant Owner' } = req.body;
+    const clientIp = getClientIp(req);
 
     const order = await Order.findOne({ $or: [{ _id: id }, { orderId: id }] });
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
+    }
+
+    // Prevent duplicate order approvals
+    if (order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' || order.orderStage === 'Preparing Food' || order.orderStage === 'Ready for Pickup' || order.orderStage === 'Completed') {
+      return res.status(400).json({
+        success: false,
+        message: `Order #${order.orderId} has already been approved and verified.`
+      });
     }
 
     // Generate dynamic next available token ONLY after payment approval
@@ -221,12 +238,15 @@ export const approvePayment = async (req, res) => {
     order.paymentStatus = 'Paid';
     order.orderStage = 'Preparing Food';
     order.estimatedPrepTime = '15 Minutes';
+    order.verifiedBy = adminName;
+    order.verificationTime = new Date();
 
     order.auditLogs.push({
       adminName,
-      action: 'PAYMENT_APPROVED_PHONEPE',
+      action: 'APPROVAL',
       time: new Date(),
-      reason: `Payment verified in PhonePe by owner. Permanent Pickup token ${order.pickupToken} generated & assigned.`
+      reason: `Payment verified in PhonePe by owner. Token ${order.pickupToken} assigned.`,
+      ipAddress: clientIp
     });
 
     await order.save();
@@ -247,6 +267,7 @@ export const rejectPayment = async (req, res) => {
   try {
     const { id } = req.params;
     const { rejectionReason = 'Payment not received in PhonePe', adminName = 'Restaurant Owner' } = req.body;
+    const clientIp = getClientIp(req);
 
     const order = await Order.findOne({ $or: [{ _id: id }, { orderId: id }] });
     if (!order) {
@@ -255,12 +276,15 @@ export const rejectPayment = async (req, res) => {
 
     order.paymentStatus = 'Rejected';
     order.orderStage = 'Payment Verification Failed';
+    order.verifiedBy = adminName;
+    order.verificationTime = new Date();
 
     order.auditLogs.push({
       adminName,
-      action: 'PAYMENT_REJECTED',
+      action: 'REJECTION',
       time: new Date(),
-      reason: rejectionReason
+      reason: rejectionReason,
+      ipAddress: clientIp
     });
 
     await order.save();
