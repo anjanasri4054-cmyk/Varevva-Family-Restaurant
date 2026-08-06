@@ -43,29 +43,14 @@
         </div>
       </div>
 
-      <!-- Pickup Token Card (Shown when Payment Verified) -->
-      <div id="token-card-section" style="display: none; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
-        <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Payment Verified Successfully</span>
+      <!-- Pickup Token Card (Shown when Payment / Order Confirmed) -->
+      <div id="token-card-section" style="display: flex; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
+        <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Order Confirmed & Pickup Token Issued</span>
         <div style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; color: #065f46; margin: 4px 0;" id="display-pickup-token">A101</div>
         <span style="font-size: 0.88rem; font-weight: 600; color: #047857;" id="display-prep-time">Estimated Preparation Time: 15 Minutes</span>
       </div>
 
-      <!-- Rejection Alert Card (Shown when Rejected) -->
-      <div id="rejection-card-section" style="display: none; background: #fef2f2; border: 1.5px solid #ef4444; border-radius: 14px; padding: 16px; margin-bottom: 24px;">
-        <div style="display: flex; align-items: center; gap: 10px; color: #991b1b; margin-bottom: 8px;">
-          <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; color: #dc2626;"></i>
-          <h4 style="margin: 0; font-size: 1rem; font-family: var(--font-header);">Payment Could Not Be Verified</h4>
-        </div>
-        <p style="margin: 0 0 12px; font-size: 0.85rem; color: #b91c1c;">
-          Reason: <strong id="rejection-reason-text">Payment not received</strong>
-        </p>
-        <a id="btn-resubmit-utr" href="payment.html" class="btn-submit-order" style="text-decoration: none; display: flex; justify-content: center; background: #dc2626;">
-          <i class="fa-solid fa-arrows-rotate"></i>
-          <span>Resubmit UTR Number</span>
-        </a>
-      </div>
-
-      <!-- Interactive 6-Stage Tracking Timeline -->
+      <!-- Live 4-Stage Tracking Timeline -->
       <h4 style="font-family: var(--font-header); font-size: 1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-dark);">
         <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Live Order Timeline
       </h4>
@@ -75,39 +60,21 @@
         <div class="timeline-step done" data-stage="Order Placed">
           <div class="timeline-icon-circle"><i class="fa-solid fa-receipt"></i></div>
           <div class="timeline-content">
-            <span class="timeline-title">Order Placed</span>
-            <span class="timeline-sub">Order registered in restaurant system</span>
+            <span class="timeline-title">Order Placed & Confirmed</span>
+            <span class="timeline-sub">Order registered and confirmed in restaurant system</span>
           </div>
         </div>
 
         <!-- Stage 2 -->
-        <div class="timeline-step waiting" data-stage="Waiting for Payment Verification">
-          <div class="timeline-icon-circle"><i class="fa-solid fa-clock"></i></div>
-          <div class="timeline-content">
-            <span class="timeline-title">Waiting for Payment Verification</span>
-            <span class="timeline-sub">Restaurant owner is verifying UTR on PhonePe</span>
-          </div>
-        </div>
-
-        <!-- Stage 3 -->
-        <div class="timeline-step pending" data-stage="Payment Verified">
-          <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
-          <div class="timeline-content">
-            <span class="timeline-title">Payment Verified</span>
-            <span class="timeline-sub">Payment confirmed & pickup token issued</span>
-          </div>
-        </div>
-
-        <!-- Stage 4 -->
-        <div class="timeline-step pending" data-stage="Preparing Food">
-          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner"></i></div>
+        <div class="timeline-step preparing" data-stage="Preparing Food">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner fa-bounce"></i></div>
           <div class="timeline-content">
             <span class="timeline-title">Preparing Food</span>
             <span class="timeline-sub">Chef is preparing your delicious meal</span>
           </div>
         </div>
 
-        <!-- Stage 5 -->
+        <!-- Stage 3 -->
         <div class="timeline-step pending" data-stage="Ready for Pickup">
           <div class="timeline-icon-circle"><i class="fa-solid fa-bell-concierge"></i></div>
           <div class="timeline-content">
@@ -116,7 +83,7 @@
           </div>
         </div>
 
-        <!-- Stage 6 -->
+        <!-- Stage 4 -->
         <div class="timeline-step pending" data-stage="Completed">
           <div class="timeline-icon-circle"><i class="fa-solid fa-house-flag"></i></div>
           <div class="timeline-content">
@@ -146,17 +113,11 @@
     const tokenCardSection = document.getElementById('token-card-section');
     const displayPickupToken = document.getElementById('display-pickup-token');
     const displayPrepTime = document.getElementById('display-prep-time');
-    const rejectionCardSection = document.getElementById('rejection-card-section');
-    const rejectionReasonText = document.getElementById('rejection-reason-text');
-    const btnResubmitUtr = document.getElementById('btn-resubmit-utr');
 
     trackOrderId.textContent = orderId;
-    btnResubmitUtr.href = `payment.html?orderId=${orderId}`;
 
     const stagesOrder = [
       'Order Placed',
-      'Waiting for Payment Verification',
-      'Payment Verified',
       'Preparing Food',
       'Ready for Pickup',
       'Completed'
@@ -184,24 +145,12 @@
       trackCustomerName.textContent = `Customer: ${order.customerName} (${order.customerPhone})`;
       trackTotalAmount.textContent = `₹${order.totalAmount}`;
 
-      const currentStage = order.orderStage || 'Order Placed';
-      const paymentStatus = order.paymentStatus;
+      const currentStage = order.orderStage || 'Preparing Food';
 
-      // Handle Rejection
-      if (paymentStatus === 'Rejected') {
-        rejectionCardSection.style.display = 'block';
-        tokenCardSection.style.display = 'none';
-        rejectionReasonText.textContent = order.rejectionReason || 'Payment verification failed';
-      } else {
-        rejectionCardSection.style.display = 'none';
-      }
-
-      // Handle Token Display
-      if (order.pickupToken && (paymentStatus === 'Paid' || paymentStatus === 'Verified & Paid')) {
-        tokenCardSection.style.display = 'block';
-        displayPickupToken.textContent = order.pickupToken;
-        displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
-      }
+      // Always Display Pickup Token immediately
+      tokenCardSection.style.display = 'block';
+      displayPickupToken.textContent = order.pickupToken || 'A101';
+      displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
 
       // Update Timeline Nodes
       const currentIdx = stagesOrder.indexOf(currentStage);
@@ -211,19 +160,13 @@
         const stageName = node.dataset.stage;
         const idx = stagesOrder.indexOf(stageName);
 
-        if (paymentStatus === 'Rejected' && stageName === 'Waiting for Payment Verification') {
-          node.className = 'timeline-step rejected';
-          node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-xmark"></i>';
-        } else if (idx < currentIdx) {
+        if (idx < currentIdx) {
           node.className = 'timeline-step done';
           node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
         } else if (idx === currentIdx) {
           if (stageName === 'Preparing Food') {
             node.className = 'timeline-step preparing';
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner fa-bounce"></i>';
-          } else if (stageName === 'Waiting for Payment Verification') {
-            node.className = 'timeline-step waiting';
-            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-clock fa-spin"></i>';
           } else {
             node.className = 'timeline-step done';
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';

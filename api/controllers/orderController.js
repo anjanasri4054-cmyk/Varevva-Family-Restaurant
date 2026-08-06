@@ -23,8 +23,8 @@ export const createOrder = async (req, res) => {
     const orderId = `VRV${1001 + orderCount}`;
 
     const isCod = paymentMethod === 'Cash on Delivery';
-    const initialPaymentStatus = isCod ? 'COD Pending' : 'Pending';
-    const initialOrderStage = 'Order Placed';
+    const initialPaymentStatus = isCod ? 'COD' : 'Paid';
+    const pickupToken = `A${tokenCounter++}`;
 
     const newOrder = new Order({
       orderId,
@@ -38,14 +38,15 @@ export const createOrder = async (req, res) => {
       totalAmount,
       paymentMethod: paymentMethod || 'UPI QR Payment',
       paymentStatus: initialPaymentStatus,
-      verificationStatus: 'Waiting',
-      orderStage: initialOrderStage,
-      pickupToken: null,
+      verificationStatus: 'Verified',
+      orderStage: 'Preparing Food',
+      pickupToken: pickupToken,
+      estimatedPrepTime: '15 Minutes',
       auditLogs: [{
         adminName: 'System',
-        action: 'ORDER_CREATED',
+        action: 'ORDER_CONFIRMED',
         time: new Date(),
-        reason: 'Order placed by customer'
+        reason: 'Order placed & confirmed immediately'
       }]
     });
 
@@ -53,7 +54,7 @@ export const createOrder = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Order created successfully',
+      message: 'Order placed and confirmed successfully!',
       order: newOrder
     });
   } catch (error) {
@@ -65,7 +66,7 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// 2. Submit UTR & Last 4 Digits Mobile (Payment Page)
+// 2. Submit UTR & Last 4 Digits Mobile (Payment Details Submission)
 export const submitUtr = async (req, res) => {
   try {
     const { orderId, utrNumber, last4DigitsMobile } = req.body;
@@ -80,7 +81,6 @@ export const submitUtr = async (req, res) => {
     const cleanUtr = utrNumber.trim();
     const cleanLast4 = last4DigitsMobile.trim();
 
-    // UTR Length validation (12 to 22 characters)
     if (cleanUtr.length < 12 || cleanUtr.length > 22) {
       return res.status(400).json({
         success: false,
@@ -95,7 +95,6 @@ export const submitUtr = async (req, res) => {
       });
     }
 
-    // Duplicate UTR check across all existing orders
     const duplicateUtrOrder = await Order.findOne({
       utrNumber: cleanUtr,
       orderId: { $ne: orderId }
@@ -114,25 +113,31 @@ export const submitUtr = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found.' });
     }
 
-    // Update Order Payment Details
+    // Assign Token if not already assigned
+    if (!order.pickupToken) {
+      order.pickupToken = `A${tokenCounter++}`;
+    }
+
+    // Update Order Payment Details to Confirmed & Preparing Food immediately
     order.utrNumber = cleanUtr;
     order.last4DigitsMobile = cleanLast4;
-    order.paymentStatus = 'Waiting for Verification';
-    order.verificationStatus = 'Waiting';
-    order.orderStage = 'Waiting for Payment Verification';
+    order.paymentStatus = 'Paid';
+    order.verificationStatus = 'Verified';
+    order.orderStage = 'Preparing Food';
+    order.estimatedPrepTime = '15 Minutes';
     
     order.auditLogs.push({
       adminName: 'Customer',
-      action: 'UTR_SUBMITTED',
+      action: 'UTR_SUBMITTED_CONFIRMED',
       time: new Date(),
-      reason: `UTR ${cleanUtr} submitted with last 4 digits ${cleanLast4}`
+      reason: `UTR ${cleanUtr} submitted. Order confirmed immediately.`
     });
 
     await order.save();
 
     return res.status(200).json({
       success: true,
-      message: 'Payment details submitted successfully. Restaurant will verify your payment shortly.',
+      message: 'Payment details received and order confirmed!',
       order
     });
   } catch (error) {
