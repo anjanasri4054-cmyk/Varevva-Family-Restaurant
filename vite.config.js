@@ -22,6 +22,8 @@ export default defineConfig({
         ambience: resolve(__dirname, 'ambience.html'),
         contact: resolve(__dirname, 'contact.html'),
         verify: resolve(__dirname, 'verify.html'),
+        payment: resolve(__dirname, 'payment.html'),
+        track: resolve(__dirname, 'track.html'),
       },
     },
   },

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order | Varevva Family Restaurant</title>
+  <meta name="description" content="Live tracking for Varevva Family Restaurant order and payment status.">
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background-color: var(--light-bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Simple Header -->
+  <header style="background: #ffffff; padding: 14px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: var(--text-dark); font-weight: 800; font-size: 1.1rem;">V</div>
+      <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.2rem; color: var(--text-dark);">VAREVVA</span>
+    </a>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted);">
+      <i class="fa-solid fa-rotate fa-spin" id="refresh-indicator"></i> Live Auto-Refresh (10s)
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main style="flex: 1; max-width: 650px; width: calc(100% - 32px); margin: 24px auto; padding: 0 16px;">
+
+    <!-- Order Track Card -->
+    <div style="background: #ffffff; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
+      
+      <!-- Top Order Details Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Order Reference</span>
+          <h2 style="margin: 2px 0 0; font-family: var(--font-header); font-size: 1.4rem; color: var(--text-dark);" id="track-order-id">VRV1001</h2>
+          <span style="font-size: 0.82rem; color: var(--text-muted);" id="track-customer-name">Customer: ...</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Amount</span>
+          <h2 style="margin: 2px 0 0; font-family: var(--font-header); font-size: 1.4rem; color: var(--accent-color);" id="track-total-amount">₹0</h2>
+        </div>
+      </div>
+
+      <!-- Pickup Token Card (Shown when Payment Verified) -->
+      <div id="token-card-section" style="display: none; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
+        <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Payment Verified Successfully</span>
+        <div style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; color: #065f46; margin: 4px 0;" id="display-pickup-token">A101</div>
+        <span style="font-size: 0.88rem; font-weight: 600; color: #047857;" id="display-prep-time">Estimated Preparation Time: 15 Minutes</span>
+      </div>
+
+      <!-- Rejection Alert Card (Shown when Rejected) -->
+      <div id="rejection-card-section" style="display: none; background: #fef2f2; border: 1.5px solid #ef4444; border-radius: 14px; padding: 16px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; gap: 10px; color: #991b1b; margin-bottom: 8px;">
+          <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.4rem; color: #dc2626;"></i>
+          <h4 style="margin: 0; font-size: 1rem; font-family: var(--font-header);">Payment Could Not Be Verified</h4>
+        </div>
+        <p style="margin: 0 0 12px; font-size: 0.85rem; color: #b91c1c;">
+          Reason: <strong id="rejection-reason-text">Payment not received</strong>
+        </p>
+        <a id="btn-resubmit-utr" href="payment.html" class="btn-submit-order" style="text-decoration: none; display: flex; justify-content: center; background: #dc2626;">
+          <i class="fa-solid fa-arrows-rotate"></i>
+          <span>Resubmit UTR Number</span>
+        </a>
+      </div>
+
+      <!-- Interactive 6-Stage Tracking Timeline -->
+      <h4 style="font-family: var(--font-header); font-size: 1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-dark);">
+        <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Live Order Timeline
+      </h4>
+
+      <div class="tracking-timeline-container" id="tracking-timeline">
+        <!-- Stage 1 -->
+        <div class="timeline-step done" data-stage="Order Placed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-receipt"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Order Placed</span>
+            <span class="timeline-sub">Order registered in restaurant system</span>
+          </div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="timeline-step waiting" data-stage="Waiting for Payment Verification">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-clock"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Waiting for Payment Verification</span>
+            <span class="timeline-sub">Restaurant owner is verifying UTR on PhonePe</span>
+          </div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="timeline-step pending" data-stage="Payment Verified">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Payment Verified</span>
+            <span class="timeline-sub">Payment confirmed & pickup token issued</span>
+          </div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="timeline-step pending" data-stage="Preparing Food">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Preparing Food</span>
+            <span class="timeline-sub">Chef is preparing your delicious meal</span>
+          </div>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="timeline-step pending" data-stage="Ready for Pickup">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-bell-concierge"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Ready for Pickup</span>
+            <span class="timeline-sub">Food is packed and ready at counter</span>
+          </div>
+        </div>
+
+        <!-- Stage 6 -->
+        <div class="timeline-step pending" data-stage="Completed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-house-flag"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Completed</span>
+            <span class="timeline-sub">Order handed over to customer</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <a href="index.html" style="color: var(--text-dark); font-weight: 600; text-decoration: none; font-size: 0.88rem;">
+        <i class="fa-solid fa-arrow-left"></i> Return to Restaurant Menu
+      </a>
+    </div>
+
+  </main>
+
+  <script type="module">
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('orderId') || localStorage.getItem('varevva_last_order_id') || 'VRV1001';
+
+    const trackOrderId = document.getElementById('track-order-id');
+    const trackCustomerName = document.getElementById('track-customer-name');
+    const trackTotalAmount = document.getElementById('track-total-amount');
+    const tokenCardSection = document.getElementById('token-card-section');
+    const displayPickupToken = document.getElementById('display-pickup-token');
+    const displayPrepTime = document.getElementById('display-prep-time');
+    const rejectionCardSection = document.getElementById('rejection-card-section');
+    const rejectionReasonText = document.getElementById('rejection-reason-text');
+    const btnResubmitUtr = document.getElementById('btn-resubmit-utr');
+
+    trackOrderId.textContent = orderId;
+    btnResubmitUtr.href = `payment.html?orderId=${orderId}`;
+
+    const stagesOrder = [
+      'Order Placed',
+      'Waiting for Payment Verification',
+      'Payment Verified',
+      'Preparing Food',
+      'Ready for Pickup',
+      'Completed'
+    ];
+
+    async function fetchLiveOrderStatus() {
+      try {
+        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? `http://localhost:5000/api/orders/track/${orderId}`
+          : `https://varevva-family-restaurant.onrender.com/api/orders/track/${orderId}`;
+
+        const response = await fetch(backendUrl);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.order) {
+            updateUI(data.order);
+          }
+        }
+      } catch (err) {
+        console.warn('Live tracking fetch error:', err);
+      }
+    }
+
+    function updateUI(order) {
+      trackCustomerName.textContent = `Customer: ${order.customerName} (${order.customerPhone})`;
+      trackTotalAmount.textContent = `₹${order.totalAmount}`;
+
+      const currentStage = order.orderStage || 'Order Placed';
+      const paymentStatus = order.paymentStatus;
+
+      // Handle Rejection
+      if (paymentStatus === 'Rejected') {
+        rejectionCardSection.style.display = 'block';
+        tokenCardSection.style.display = 'none';
+        rejectionReasonText.textContent = order.rejectionReason || 'Payment verification failed';
+      } else {
+        rejectionCardSection.style.display = 'none';
+      }
+
+      // Handle Token Display
+      if (order.pickupToken && (paymentStatus === 'Paid' || paymentStatus === 'Verified & Paid')) {
+        tokenCardSection.style.display = 'block';
+        displayPickupToken.textContent = order.pickupToken;
+        displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
+      }
+
+      // Update Timeline Nodes
+      const currentIdx = stagesOrder.indexOf(currentStage);
+      const stepNodes = document.querySelectorAll('.timeline-step');
+
+      stepNodes.forEach(node => {
+        const stageName = node.dataset.stage;
+        const idx = stagesOrder.indexOf(stageName);
+
+        if (paymentStatus === 'Rejected' && stageName === 'Waiting for Payment Verification') {
+          node.className = 'timeline-step rejected';
+          node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-xmark"></i>';
+        } else if (idx < currentIdx) {
+          node.className = 'timeline-step done';
+          node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+        } else if (idx === currentIdx) {
+          if (stageName === 'Preparing Food') {
+            node.className = 'timeline-step preparing';
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner fa-bounce"></i>';
+          } else if (stageName === 'Waiting for Payment Verification') {
+            node.className = 'timeline-step waiting';
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-clock fa-spin"></i>';
+          } else {
+            node.className = 'timeline-step done';
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+          }
+        } else {
+          node.className = 'timeline-step pending';
+        }
+      });
+    }
+
+    // Initial fetch & set 10 second auto-polling
+    fetchLiveOrderStatus();
+    setInterval(fetchLiveOrderStatus, 10000);
+  </script>
+</body>
+</html>

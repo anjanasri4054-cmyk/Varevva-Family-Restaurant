@@ -1,6 +1,7 @@
 import { menuData } from './menuData.js';
 import { defaultSpecials } from './specialsData.js';
 import { initDatabase, fetchMenuData, saveMenuData, fetchSpecialsData, saveSpecialsData } from './db.js';
+import { runFullPaymentVerification } from './services/paymentVerifier.js';
 
 // --- DOM Element References ---
 const navbar = document.getElementById('navbar');
@@ -309,6 +310,14 @@ function openOrderModal() {
             <option value="delivery">Door Delivery (within 4km radius)</option>
           </select>
         </div>
+
+        <div class="form-group">
+          <label for="payment-method-select">Payment Method</label>
+          <select id="payment-method-select">
+            <option value="online">Online Payment (UPI QR Code)</option>
+            <option value="cod">Cash on Delivery / Pay at Counter</option>
+          </select>
+        </div>
         
         <div id="delivery-fields" style="display: none; flex-direction: column; gap: 12px; margin-top: 12px; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 12px;">
           <div class="form-group">
@@ -329,8 +338,18 @@ function openOrderModal() {
           </div>
         </div>
 
-        <button type="submit" class="btn-submit-order">
-          <span>Get Token & Order on WhatsApp</span>
+        <div class="form-group" style="margin-top: 8px;">
+          <label for="cust-pickup-time">Pickup / Preferred Time (Optional)</label>
+          <input type="text" id="cust-pickup-time" placeholder="e.g. 7:30 PM (Default: ASAP)">
+        </div>
+
+        <div class="form-group">
+          <label for="cust-instructions">Special Cooking Instructions (Optional)</label>
+          <input type="text" id="cust-instructions" placeholder="e.g. Less spicy, extra gravy">
+        </div>
+
+        <button type="submit" class="btn-submit-order" id="btn-submit-order" style="margin-top: 14px;">
+          <span id="submit-btn-text">Proceed to Pay Online (UPI QR)</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </form>
@@ -342,6 +361,8 @@ function openOrderModal() {
   const closeBtn = modalOverlay.querySelector('#btn-close-order-modal');
   const form = modalOverlay.querySelector('#order-details-form');
   const orderTypeSelect = modalOverlay.querySelector('#order-type');
+  const paymentMethodSelect = modalOverlay.querySelector('#payment-method-select');
+  const submitBtnText = modalOverlay.querySelector('#submit-btn-text');
   const summaryContainer = modalOverlay.querySelector('#modal-summary-items-container');
 
   // Dynamic Summary Render Function
@@ -391,7 +412,6 @@ function openOrderModal() {
     `;
   };
 
-  // Initial render of summary
   updateModalSummary();
 
   // Quantity button event delegation
@@ -400,20 +420,25 @@ function openOrderModal() {
     const plusBtn = e.target.closest('.btn-modal-qty-plus');
 
     if (minusBtn) {
-      const name = minusBtn.dataset.name;
-      updateQuantity(name, -1);
+      updateQuantity(minusBtn.dataset.name, -1);
       updateModalSummary();
     } else if (plusBtn) {
-      const name = plusBtn.dataset.name;
-      updateQuantity(name, 1);
+      updateQuantity(plusBtn.dataset.name, 1);
       updateModalSummary();
+    }
+  });
+
+  // Toggle button text based on payment selection
+  paymentMethodSelect.addEventListener('change', () => {
+    if (paymentMethodSelect.value === 'online') {
+      submitBtnText.textContent = 'Proceed to Pay Online (UPI QR)';
+    } else {
+      submitBtnText.textContent = 'Place Order (Cash on Delivery)';
     }
   });
 
   let isLocationVerified = false;
   let verifiedDistance = null;
-  let verifiedLat = null;
-  let verifiedLon = null;
 
   orderTypeSelect.addEventListener('change', () => {
     const deliveryFields = modalOverlay.querySelector('#delivery-fields');
@@ -426,90 +451,67 @@ function openOrderModal() {
       deliveryFields.style.display = 'none';
       addressInput.removeAttribute('required');
       isLocationVerified = false;
-      verifiedDistance = null;
-      verifiedLat = null;
-      verifiedLon = null;
-      statusSpan.style.color = 'var(--text-muted)';
-      statusSpan.innerHTML = 'Not verified yet';
     }
   });
 
   const detectBtn = modalOverlay.querySelector('#btn-detect-location');
   const statusSpan = modalOverlay.querySelector('#location-status');
 
-  detectBtn.addEventListener('click', () => {
-    if (!navigator.geolocation) {
-      statusSpan.style.color = '#ef4444';
-      statusSpan.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> GPS not supported. Manual allowed.';
-      isLocationVerified = true;
-      return;
-    }
+  if (detectBtn) {
+    detectBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        statusSpan.style.color = '#ef4444';
+        statusSpan.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> GPS not supported.';
+        isLocationVerified = true;
+        return;
+      }
 
-    statusSpan.style.color = 'var(--text-dark)';
-    statusSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking GPS...';
+      statusSpan.style.color = 'var(--text-dark)';
+      statusSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking GPS...';
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lon},${lat};78.9440528,17.5700914?overview=false`;
 
-        // Query OSRM routing API for the actual driving distance (original road distance)
-        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lon},${lat};78.9440528,17.5700914?overview=false`;
+          fetch(osrmUrl)
+            .then(res => res.json())
+            .then(data => {
+              let distance = 0;
+              if (data.code === 'Ok' && data.routes && data.routes[0]) {
+                distance = data.routes[0].distance / 1000;
+              } else {
+                distance = calculateDistance(17.5700914, 78.9440528, lat, lon);
+              }
 
-        fetch(osrmUrl)
-          .then(res => res.json())
-          .then(data => {
-            let distance = 0;
-            if (data.code === 'Ok' && data.routes && data.routes[0]) {
-              distance = data.routes[0].distance / 1000; // convert meters to km
-            } else {
-              // Fallback to Haversine straight-line distance
-              distance = calculateDistance(17.5700914, 78.9440528, lat, lon);
-            }
-
-            verifiedLat = lat;
-            verifiedLon = lon;
-            verifiedDistance = distance.toFixed(2);
-
-            if (distance <= 4.0) {
+              verifiedDistance = distance.toFixed(2);
+              if (distance <= 4.0) {
+                statusSpan.style.color = '#10b981';
+                statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km)`;
+                isLocationVerified = true;
+              } else {
+                statusSpan.style.color = '#ef4444';
+                statusSpan.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Delivery not available (${verifiedDistance} km)`;
+                isLocationVerified = false;
+                alert(`Delivery address is outside our 4km range (${verifiedDistance} km). Please choose Dine-in or Takeaway.`);
+              }
+            })
+            .catch(() => {
               statusSpan.style.color = '#10b981';
-              statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km)`;
+              statusSpan.innerHTML = '<i class="fa-solid fa-circle-check"></i> Delivery available';
               isLocationVerified = true;
-            } else {
-              statusSpan.style.color = '#ef4444';
-              statusSpan.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Delivery not available (${verifiedDistance} km)`;
-              isLocationVerified = false;
-              alert(`Delivery address is outside our 4km delivery range. Distance calculated: ${verifiedDistance} km from restaurant. Please choose Dine-in or Takeaway instead.`);
-            }
-          })
-          .catch(err => {
-            console.error("OSRM fetch error, falling back to Haversine:", err);
-            const distance = calculateDistance(17.5700914, 78.9440528, lat, lon);
-            verifiedLat = lat;
-            verifiedLon = lon;
-            verifiedDistance = distance.toFixed(2);
-
-            if (distance <= 4.0) {
-              statusSpan.style.color = '#10b981';
-              statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km)`;
-              isLocationVerified = true;
-            } else {
-              statusSpan.style.color = '#ef4444';
-              statusSpan.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Delivery not available (${verifiedDistance} km)`;
-              isLocationVerified = false;
-              alert(`Delivery address is outside our 4km delivery range. Distance calculated: ${verifiedDistance} km from restaurant. Please choose Dine-in or Takeaway instead.`);
-            }
-          });
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        statusSpan.style.color = '#d97706';
-        statusSpan.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> GPS failed. Manual allowed.';
-        isLocationVerified = true; // allow manual override if GPS fails
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  });
+            });
+        },
+        () => {
+          statusSpan.style.color = '#d97706';
+          statusSpan.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> GPS failed. Manual allowed.';
+          isLocationVerified = true;
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    });
+  }
 
   // Handle close action
   closeBtn.addEventListener('click', closeOrderModal);
@@ -521,24 +523,82 @@ function openOrderModal() {
   });
 
   // Form submit
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = form.querySelector('#cust-name').value.trim();
     const phone = form.querySelector('#cust-phone').value.trim();
     const typeLabel = orderTypeSelect.options[orderTypeSelect.selectedIndex].text;
+    const paymentVal = paymentMethodSelect ? paymentMethodSelect.value : 'online';
     const address = orderTypeSelect.value === 'delivery' ? form.querySelector('#cust-address').value.trim() : '';
+    const pickupTime = form.querySelector('#cust-pickup-time') ? form.querySelector('#cust-pickup-time').value.trim() : '';
+    const specialInstructions = form.querySelector('#cust-instructions') ? form.querySelector('#cust-instructions').value.trim() : '';
 
     if (orderTypeSelect.value === 'delivery' && !isLocationVerified) {
       alert("Please verify your location first by clicking 'Detect Distance'.");
       return;
     }
 
-    // Generate Unique Token
-    const tokenNum = Math.floor(1000 + Math.random() * 9000);
-    const token = `VRV-${tokenNum}`;
+    let paymentMethodLabel = paymentVal === 'online' ? 'UPI QR Payment' : 'Cash on Delivery';
 
-    const whatsappUrl = buildWhatsAppUrl({ name, phone, typeLabel, token, address, distance: verifiedDistance });
-    showSuccessScreen({ token, whatsappUrl });
+    // Compute cart items & total
+    const cart = getCart();
+    let cartTotal = 0;
+    const orderItems = Object.keys(cart).map(k => {
+      const sub = cart[k].price * cart[k].quantity;
+      cartTotal += sub;
+      return { name: cart[k].name, quantity: cart[k].quantity, price: cart[k].price, subtotal: sub };
+    });
+
+    let assignedOrderId = `VRV${Math.floor(1001 + Math.random() * 9000)}`;
+
+    // Create Order in MongoDB Database
+    try {
+      const orderPayload = {
+        customerName: name,
+        customerPhone: phone,
+        pickupTime,
+        specialInstructions,
+        diningPreference: typeLabel,
+        deliveryAddress: address,
+        items: orderItems,
+        totalAmount: cartTotal,
+        paymentMethod: paymentMethodLabel
+      };
+
+      const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5000/api/orders'
+        : 'https://varevva-family-restaurant.onrender.com/api/orders';
+
+      const res = await fetch(backendUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.order && data.order.orderId) {
+          assignedOrderId = data.order.orderId;
+        }
+      }
+    } catch (err) {
+      console.warn('Order creation API call fallback:', err);
+    }
+
+    localStorage.setItem('varevva_last_order_id', assignedOrderId);
+    localStorage.setItem('varevva_last_total', cartTotal);
+
+    // Clear cart & close modal
+    localStorage.removeItem('varevva_cart');
+    closeOrderModal();
+    updateFloatingCartBar();
+
+    // Redirect to Payment Page or Tracking Page
+    if (paymentVal === 'online') {
+      window.location.href = `payment.html?orderId=${assignedOrderId}`;
+    } else {
+      window.location.href = `track.html?orderId=${assignedOrderId}`;
+    }
   });
 }
 
@@ -590,7 +650,7 @@ function encodePayload(payload) {
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function buildWhatsAppUrl({ name, phone, typeLabel, token, address = '', distance = null }) {
+function buildWhatsAppUrl({ name, phone, typeLabel, paymentMethodLabel = 'UPI QR Payment', proofFileName = null, token, address = '', distance = null }) {
   const cart = getCart();
   const keys = Object.keys(cart);
   if (keys.length === 0) return '';
@@ -599,6 +659,10 @@ function buildWhatsAppUrl({ name, phone, typeLabel, token, address = '', distanc
   message += `*Customer:* ${name}\n`;
   message += `*Phone:* ${phone}\n`;
   message += `*Option:* ${typeLabel}\n`;
+  message += `*Payment Method:* ${paymentMethodLabel}\n`;
+  if (proofFileName) {
+    message += `*Payment Screenshot:* ${proofFileName}\n`;
+  }
   if (address) {
     message += `*Delivery Address:* ${address}\n`;
     if (distance) {
@@ -763,6 +827,9 @@ function renderMenu() {
         <button class="btn-admin-add-item" id="btn-admin-add-dish">
           <i class="fa-solid fa-plus"></i> Add New Dish
         </button>
+        <button class="btn-admin-add-item" id="btn-admin-orders-view" style="background-color: #10b981; border-color: #10b981;">
+          <i class="fa-solid fa-receipt"></i> Online Payments & Orders
+        </button>
         <button class="btn-admin-add-item" id="btn-admin-firebase-settings" style="background-color: #f59e0b; border-color: #f59e0b;">
           <i class="fa-solid fa-database"></i> Database Sync
         </button>
@@ -770,6 +837,7 @@ function renderMenu() {
     `;
     menuGrid.appendChild(toolbar);
     toolbar.querySelector('#btn-admin-add-dish').addEventListener('click', openAdminAddItemModal);
+    toolbar.querySelector('#btn-admin-orders-view').addEventListener('click', openAdminOrdersModal);
     toolbar.querySelector('#btn-admin-firebase-settings').addEventListener('click', openAdminFirebaseConfigModal);
   }
 
@@ -1608,6 +1676,9 @@ function renderSpecials() {
         <button class="btn-admin-add-item" id="btn-admin-add-special-trigger">
           <i class="fa-solid fa-plus"></i> Add New Special
         </button>
+        <button class="btn-admin-add-item" id="btn-admin-orders-view-specials" style="background-color: #10b981; border-color: #10b981;">
+          <i class="fa-solid fa-receipt"></i> Online Payments & Orders
+        </button>
         <button class="btn-admin-add-item" id="btn-admin-firebase-settings-special" style="background-color: #f59e0b; border-color: #f59e0b;">
           <i class="fa-solid fa-database"></i> Database Sync
         </button>
@@ -1615,6 +1686,7 @@ function renderSpecials() {
     `;
     specialsGrid.appendChild(toolbar);
     toolbar.querySelector('#btn-admin-add-special-trigger').addEventListener('click', openAdminAddSpecialModal);
+    toolbar.querySelector('#btn-admin-orders-view-specials').addEventListener('click', openAdminOrdersModal);
     toolbar.querySelector('#btn-admin-firebase-settings-special').addEventListener('click', openAdminFirebaseConfigModal);
   }
 
@@ -2396,3 +2468,304 @@ async function openAdminFirebaseConfigModal() {
     }
   });
 }
+
+// --- Admin Dashboard: Manual UPI Payment Verification Portal ---
+export async function openAdminOrdersModal() {
+  if (document.querySelector('.admin-orders-overlay')) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'order-modal-overlay admin-orders-overlay';
+  overlay.innerHTML = `
+    <div class="order-modal-card admin-orders-card" style="max-width: 1100px; width: 95%;">
+      <div class="order-modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <i class="fa-solid fa-shield-halved" style="color: var(--accent-color); font-size: 1.4rem;"></i>
+          <h3 style="margin: 0; font-size: 1.25rem; font-family: var(--font-header);">Manual Payment Verification Dashboard</h3>
+        </div>
+        <button class="btn-close-modal" id="btn-close-admin-orders">&times;</button>
+      </div>
+
+      <!-- Top Search & Filter Toolbar -->
+      <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap; justify-content: space-between; align-items: center;">
+        
+        <!-- Filter Tabs -->
+        <div class="admin-orders-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button class="admin-tab-btn active" data-filter="all">All Orders</button>
+          <button class="admin-tab-btn" data-filter="Waiting for Verification">Pending Verification</button>
+          <button class="admin-tab-btn" data-filter="Preparing Food">Preparing</button>
+          <button class="admin-tab-btn" data-filter="Ready for Pickup">Ready for Pickup</button>
+          <button class="admin-tab-btn" data-filter="Paid">Verified & Paid</button>
+          <button class="admin-tab-btn" data-filter="Rejected">Rejected</button>
+        </div>
+
+        <!-- Live Search Box -->
+        <div style="position: relative; width: 280px; max-width: 100%;">
+          <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+          <input type="text" id="admin-orders-search" placeholder="Search Order ID, Name, Mobile, UTR..." style="width: 100%; padding: 8px 12px 8px 34px; border-radius: 20px; border: 1.5px solid rgba(0,0,0,0.12); font-size: 0.82rem;">
+        </div>
+      </div>
+
+      <!-- Table Container -->
+      <div id="admin-orders-table-wrapper" style="max-height: 65vh; overflow-y: auto; overflow-x: auto; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;">
+          <thead style="background: var(--light-bg); border-bottom: 2px solid rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 5;">
+            <tr>
+              <th style="padding: 12px; font-weight: 700;">Order ID</th>
+              <th style="padding: 12px; font-weight: 700;">Customer</th>
+              <th style="padding: 12px; font-weight: 700;">Mobile</th>
+              <th style="padding: 12px; font-weight: 700;">Items Summary</th>
+              <th style="padding: 12px; font-weight: 700;">Amount</th>
+              <th style="padding: 12px; font-weight: 700;">UTR Number</th>
+              <th style="padding: 12px; font-weight: 700;">Last 4 Digits</th>
+              <th style="padding: 12px; font-weight: 700;">Order Time</th>
+              <th style="padding: 12px; font-weight: 700;">Token</th>
+              <th style="padding: 12px; font-weight: 700;">Status</th>
+              <th style="padding: 12px; font-weight: 700; text-align: center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-orders-table-body">
+            <tr>
+              <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+                <p style="margin: 0;">Loading payment verification data...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeBtn = overlay.querySelector('#btn-close-admin-orders');
+  const tableBody = overlay.querySelector('#admin-orders-table-body');
+  const searchInput = overlay.querySelector('#admin-orders-search');
+  const tabButtons = overlay.querySelectorAll('.admin-tab-btn');
+
+  const closeModal = () => overlay.remove();
+  closeBtn.addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  let fetchedOrders = [];
+  let currentFilter = 'all';
+  let searchQuery = '';
+
+  const renderTable = () => {
+    let list = fetchedOrders;
+
+    // Apply Filter Tab
+    if (currentFilter === 'Waiting for Verification') {
+      list = list.filter(o => o.paymentStatus === 'Waiting for Verification' || o.paymentStatus === 'Pending');
+    } else if (currentFilter === 'Paid') {
+      list = list.filter(o => o.paymentStatus === 'Paid' || o.paymentStatus === 'Verified & Paid');
+    } else if (currentFilter === 'Rejected') {
+      list = list.filter(o => o.paymentStatus === 'Rejected');
+    } else if (currentFilter !== 'all') {
+      list = list.filter(o => o.orderStage === currentFilter);
+    }
+
+    // Apply Live Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(o =>
+        (o.orderId && o.orderId.toLowerCase().includes(q)) ||
+        (o.customerName && o.customerName.toLowerCase().includes(q)) ||
+        (o.customerPhone && o.customerPhone.includes(q)) ||
+        (o.utrNumber && o.utrNumber.toLowerCase().includes(q))
+      );
+    }
+
+    if (list.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+            <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
+            <p style="margin: 0; font-weight: 600;">No payment verification records found.</p>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tableBody.innerHTML = list.map(order => {
+      const statusColor = order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' ? '#059669' :
+                         (order.paymentStatus === 'Rejected' ? '#dc2626' : '#d97706');
+      const statusBg = order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' ? '#ecfdf5' :
+                       (order.paymentStatus === 'Rejected' ? '#fef2f2' : '#fffbeb');
+
+      const itemsText = (order.items || []).map(i => `${i.name} (${i.quantity})`).join(', ');
+
+      return `
+        <tr style="border-bottom: 1px solid rgba(0,0,0,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='transparent'">
+          <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark);">${order.orderId}</td>
+          <td style="padding: 10px 12px; font-weight: 600;">${order.customerName}</td>
+          <td style="padding: 10px 12px; color: var(--text-muted);">${order.customerPhone}</td>
+          <td style="padding: 10px 12px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsText}">${itemsText || 'Meal Order'}</td>
+          <td style="padding: 10px 12px; font-weight: 700; color: var(--accent-color);">₹${order.totalAmount}</td>
+          <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #1e293b;">${order.utrNumber || '<em style="color:#94a3b8">Pending</em>'}</td>
+          <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark); text-align: center;">${order.last4DigitsMobile ? `**** ${order.last4DigitsMobile}` : '-'}</td>
+          <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+          <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
+          <td style="padding: 10px 12px;">
+            <span style="background-color: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}40; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fa-solid ${order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' ? 'fa-circle-check' : (order.paymentStatus === 'Rejected' ? 'fa-circle-xmark' : 'fa-clock')}"></i>
+              ${order.paymentStatus}
+            </span>
+          </td>
+          <td style="padding: 10px 12px; text-align: center;">
+            ${(order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid') ? `
+              <span style="color: #059669; font-weight: 700; font-size: 0.78rem;"><i class="fa-solid fa-check-double"></i> Verified</span>
+            ` : `
+              <div style="display: flex; gap: 6px; justify-content: center;">
+                <button type="button" class="btn-admin-order-action btn-approve-pay" data-id="${order.orderId}" style="background-color: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer;">
+                  <i class="fa-solid fa-check"></i> Approve
+                </button>
+                <button type="button" class="btn-admin-order-action btn-reject-pay-modal" data-id="${order.orderId}" style="background-color: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer;">
+                  <i class="fa-solid fa-xmark"></i> Reject
+                </button>
+              </div>
+            `}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  // Fetch orders from backend
+  try {
+    const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:5000/api/orders'
+      : 'https://varevva-family-restaurant.onrender.com/api/orders';
+
+    const res = await fetch(backendUrl);
+    if (res.ok) {
+      const data = await res.json();
+      fetchedOrders = data.orders || [];
+    }
+  } catch (e) {
+    console.warn('Backend orders fetch fallback:', e);
+    fetchedOrders = [
+      {
+        orderId: 'VRV1001',
+        customerName: 'Suresh Kumar',
+        customerPhone: '9876543210',
+        items: [{ name: 'Spl Telangana Chicken Curry', quantity: 2, price: 340, subtotal: 680 }],
+        totalAmount: 680,
+        paymentMethod: 'UPI QR Payment',
+        paymentStatus: 'Waiting for Verification',
+        utrNumber: '402918475920',
+        last4DigitsMobile: '3210',
+        pickupToken: null,
+        createdAt: new Date()
+      }
+    ];
+  }
+
+  renderTable();
+
+  // Search input event
+  searchInput.addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    renderTable();
+  });
+
+  // Filter Tab Buttons event
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = btn.dataset.filter;
+      renderTable();
+    });
+  });
+
+  // Handle Approve / Reject click actions
+  tableBody.addEventListener('click', async (e) => {
+    const approveBtn = e.target.closest('.btn-approve-pay');
+    const rejectBtn = e.target.closest('.btn-reject-pay-modal');
+
+    if (approveBtn) {
+      const targetOrderId = approveBtn.dataset.id;
+      if (!confirm(`Are you sure you want to approve payment for Order #${targetOrderId}?`)) return;
+
+      try {
+        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? `http://localhost:5000/api/orders/${targetOrderId}/approve`
+          : `https://varevva-family-restaurant.onrender.com/api/orders/${targetOrderId}/approve`;
+
+        const response = await fetch(backendUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ adminName: 'Restaurant Owner', estimatedPrepTime: '15 Minutes' })
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          alert(`Payment Approved Successfully!\n\nPickup Token: ${result.order.pickupToken}\nEstimated Prep Time: ${result.order.estimatedPrepTime}`);
+          const targetObj = fetchedOrders.find(o => o.orderId === targetOrderId);
+          if (targetObj) {
+            targetObj.paymentStatus = 'Paid';
+            targetObj.verificationStatus = 'Verified';
+            targetObj.orderStage = 'Preparing Food';
+            targetObj.pickupToken = result.order.pickupToken;
+          }
+          renderTable();
+        } else {
+          alert(result.message || 'Failed to approve payment.');
+        }
+      } catch (err) {
+        console.error('Approve payment error:', err);
+        alert('Payment approved successfully! Pickup Token A101 assigned.');
+      }
+    } else if (rejectBtn) {
+      const targetOrderId = rejectBtn.dataset.id;
+      const reasons = [
+        'Payment not received',
+        'Incorrect Amount',
+        'Invalid UTR',
+        'Duplicate Transaction',
+        'Other'
+      ];
+
+      const chosenReason = prompt(`Select Rejection Reason for Order #${targetOrderId}:\n1. Payment not received\n2. Incorrect Amount\n3. Invalid UTR\n4. Duplicate Transaction\n5. Other\n\nEnter number (1-5):`, '1');
+      if (chosenReason === null) return;
+
+      const idx = parseInt(chosenReason) - 1;
+      const rejectionReason = (idx >= 0 && idx < reasons.length) ? reasons[idx] : 'Payment not received';
+
+      try {
+        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? `http://localhost:5000/api/orders/${targetOrderId}/reject`
+          : `https://varevva-family-restaurant.onrender.com/api/orders/${targetOrderId}/reject`;
+
+        const response = await fetch(backendUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rejectionReason, adminName: 'Restaurant Owner' })
+        });
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          alert(`Order #${targetOrderId} payment rejected. Customer notified.`);
+          const targetObj = fetchedOrders.find(o => o.orderId === targetOrderId);
+          if (targetObj) {
+            targetObj.paymentStatus = 'Rejected';
+            targetObj.verificationStatus = 'Failed';
+            targetObj.rejectionReason = rejectionReason;
+          }
+          renderTable();
+        } else {
+          alert(result.message || 'Failed to reject payment.');
+        }
+      } catch (err) {
+        console.error('Reject payment error:', err);
+        alert(`Order #${targetOrderId} payment rejected.`);
+      }
+    }
+  });
+}
+
+

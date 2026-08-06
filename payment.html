@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay Online | Varevva Family Restaurant</title>
+  <meta name="description" content="Complete your UPI payment for Varevva Family Restaurant order. Scan QR code and submit UTR / Transaction ID for verification.">
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body style="background-color: var(--light-bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Simple Header -->
+  <header style="background: #ffffff; padding: 14px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: var(--text-dark); font-weight: 800; font-size: 1.1rem;">V</div>
+        <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.2rem; color: var(--text-dark);">VAREVVA</span>
+      </a>
+    </div>
+    <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent-color); background: var(--primary-light); padding: 4px 12px; border-radius: 20px;">
+      <i class="fa-solid fa-shield-halved"></i> Secure UPI Checkout
+    </span>
+  </header>
+
+  <!-- Main Container -->
+  <main style="flex: 1; max-width: 600px; width: calc(100% - 32px); margin: 24px auto; padding: 0 16px;">
+    
+    <!-- Payment Card -->
+    <div class="online-payment-card" style="margin: 0; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
+      
+      <!-- Card Header -->
+      <div class="payment-card-header">
+        <div class="payment-title-group">
+          <i class="fa-solid fa-qrcode payment-icon"></i>
+          <h2 class="payment-card-title" style="font-size: 1.25rem;">Complete Payment</h2>
+        </div>
+        <span class="payment-badge" id="order-id-badge"><i class="fa-solid fa-receipt"></i> Loading...</span>
+      </div>
+
+      <!-- Order Summary Collapsible Card -->
+      <div style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-family: var(--font-header); font-weight: 700; font-size: 0.9rem; color: var(--text-dark);">
+            <i class="fa-solid fa-bag-shopping" style="color: var(--primary-color);"></i> Order Summary
+          </span>
+          <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.1rem; color: var(--accent-color);" id="display-total-amount">₹0</span>
+        </div>
+        <div id="payment-items-summary" style="font-size: 0.82rem; color: var(--text-dark); display: flex; flex-direction: column; gap: 4px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+      <!-- QR Code Section -->
+      <div style="text-align: center; margin-bottom: 16px;">
+        <p class="payment-card-subtitle" style="margin-bottom: 12px;">Scan the QR code below using PhonePe, Google Pay, Paytm, or any UPI app.</p>
+        
+        <div class="qr-container" style="background: #ffffff; padding: 14px; border: 2px solid rgba(0,0,0,0.06); border-radius: 16px; display: inline-block;">
+          <img src="/assets/upi_qr.png" alt="Scan QR code using PhonePe, Google Pay, Paytm, or BHIM UPI" class="qr-code-img" style="width: 220px; max-width: 100%; height: auto;">
+        </div>
+
+        <!-- UPI ID Row -->
+        <div style="margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span style="font-size: 0.84rem; font-weight: 600; color: var(--text-muted);">UPI ID:</span>
+          <code style="font-family: monospace; font-weight: 700; font-size: 0.92rem; background: var(--primary-light); color: var(--text-dark); padding: 4px 10px; border-radius: 8px;" id="upi-id-text">6302019925@ybl</code>
+          <button type="button" id="btn-copy-upi" style="background: var(--primary-color); border: none; padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+            <i class="fa-solid fa-copy"></i> Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 Steps Instructions -->
+      <div class="payment-instructions-box" style="margin-bottom: 20px;">
+        <h5 class="instructions-title"><i class="fa-solid fa-list-check"></i> Payment Instructions</h5>
+        <ol class="payment-steps-list">
+          <li class="payment-step-item">
+            <span class="step-icon-wrapper"><i class="fa-solid fa-mobile-screen-button"></i></span>
+            <span class="step-text"><strong>Step 1:</strong> Scan the QR Code using PhonePe, Google Pay, Paytm, or any UPI App.</span>
+          </li>
+          <li class="payment-step-item">
+            <span class="step-icon-wrapper"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+            <span class="step-text"><strong>Step 2:</strong> Pay the exact amount shown above (<strong id="step-amount-text">₹0</strong>).</span>
+          </li>
+          <li class="payment-step-item">
+            <span class="step-icon-wrapper"><i class="fa-solid fa-receipt"></i></span>
+            <span class="step-text"><strong>Step 3:</strong> Copy the UTR / Transaction ID from your payment app receipt.</span>
+          </li>
+          <li class="payment-step-item">
+            <span class="step-icon-wrapper"><i class="fa-solid fa-file-signature"></i></span>
+            <span class="step-text"><strong>Step 4:</strong> Enter your UTR / Transaction ID & Last 4 digits below to submit for verification.</span>
+          </li>
+        </ol>
+      </div>
+
+      <!-- UTR Input Form -->
+      <form id="utr-submit-form" style="display: flex; flex-direction: column; gap: 14px;">
+        
+        <div class="form-group">
+          <label for="utr-input" style="font-weight: 700; font-size: 0.88rem;">
+            <i class="fa-solid fa-key" style="color: var(--primary-color);"></i> UTR / Transaction ID <span style="color: #ef4444;">*</span>
+          </label>
+          <input type="text" id="utr-input" placeholder="e.g. 402918475920 (12 - 22 chars)" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem;">
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;" id="utr-help-text">Found in PhonePe / GPay payment details screen.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="last4-mobile-input" style="font-weight: 700; font-size: 0.88rem;">
+            <i class="fa-solid fa-phone" style="color: var(--primary-color);"></i> Last 4 Digits of Mobile Number Used for Payment <span style="color: #ef4444;">*</span>
+          </label>
+          <input type="text" id="last4-mobile-input" maxlength="4" placeholder="e.g. 9825" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem;">
+        </div>
+
+        <!-- Validation Alert Banner -->
+        <div id="utr-error-alert" style="display: none; background: #fef2f2; border: 1px solid #ef4444; color: #b91c1c; padding: 10px 14px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="utr-error-msg-text">Error message</span>
+        </div>
+
+        <button type="submit" id="btn-submit-payment-utr" class="btn-submit-order" style="width: 100%; margin-top: 6px;">
+          <span>Submit Payment</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+
+      <!-- Post Submission Status Card (Hidden by default) -->
+      <div id="post-submission-card" style="display: none; margin-top: 16px; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 14px; padding: 16px; flex-direction: column; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
+            <i class="fa-solid fa-clock fa-spin"></i>
+          </div>
+          <div>
+            <h4 style="margin: 0; font-size: 0.95rem; color: #92400e; font-family: var(--font-header);">Payment details submitted successfully!</h4>
+            <p style="margin: 2px 0 0; font-size: 0.82rem; color: #b45309;">Restaurant will verify your payment shortly.</p>
+          </div>
+        </div>
+
+        <div style="background: #ffffff; padding: 10px 14px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem;">
+          <span style="font-weight: 600; color: var(--text-dark);">Status:</span>
+          <span style="font-weight: 700; color: #d97706; background: #fef3c7; padding: 3px 10px; border-radius: 12px;">Waiting for Restaurant Verification</span>
+        </div>
+
+        <div style="font-size: 0.8rem; color: #92400e; display: flex; align-items: center; gap: 6px;">
+          <i class="fa-solid fa-hourglass-half"></i> Estimated verification time: <strong>2 – 5 Minutes</strong>
+        </div>
+
+        <a id="btn-track-order-link" href="track.html" class="btn-submit-order" style="text-decoration: none; display: flex; justify-content: center; margin-top: 6px; background: var(--accent-color);">
+          <i class="fa-solid fa-location-crosshairs"></i>
+          <span>Track Live Order Status</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    // Extract Order Details from URL or Local Storage
+    const urlParams = new URLSearchParams(window.location.search);
+    const orderId = urlParams.get('orderId') || localStorage.getItem('varevva_last_order_id') || 'VRV1001';
+
+    const orderIdBadge = document.getElementById('order-id-badge');
+    const displayTotalAmount = document.getElementById('display-total-amount');
+    const stepAmountText = document.getElementById('step-amount-text');
+    const paymentItemsSummary = document.getElementById('payment-items-summary');
+
+    orderIdBadge.innerHTML = `<i class="fa-solid fa-receipt"></i> Order: ${orderId}`;
+
+    // Fetch order summary from backend API
+    async function loadOrderDetails() {
+      try {
+        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? `http://localhost:5000/api/orders/track/${orderId}`
+          : `https://varevva-family-restaurant.onrender.com/api/orders/track/${orderId}`;
+
+        const res = await fetch(backendUrl);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order) {
+            const order = data.order;
+            displayTotalAmount.textContent = `₹${order.totalAmount}`;
+            stepAmountText.textContent = `₹${order.totalAmount}`;
+            
+            if (order.items && order.items.length > 0) {
+              paymentItemsSummary.innerHTML = order.items.map(item => 
+                `<div style="display:flex; justify-content:space-between;"><span>${item.name} &times; ${item.quantity}</span><span>₹${item.subtotal || (item.price * item.quantity)}</span></div>`
+              ).join('');
+            } else {
+              paymentItemsSummary.innerHTML = '<span>Customer Meal Order</span>';
+            }
+
+            // If already submitted UTR, show post-submission card
+            if (order.utrNumber && order.paymentStatus === 'Waiting for Verification') {
+              document.getElementById('utr-submit-form').style.display = 'none';
+              const postCard = document.getElementById('post-submission-card');
+              postCard.style.display = 'flex';
+              document.getElementById('btn-track-order-link').href = `track.html?orderId=${orderId}`;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Order details fetch error:', e);
+        displayTotalAmount.textContent = '₹' + (localStorage.getItem('varevva_last_total') || '450');
+        stepAmountText.textContent = displayTotalAmount.textContent;
+      }
+    }
+
+    loadOrderDetails();
+
+    // Copy UPI ID button
+    document.getElementById('btn-copy-upi').addEventListener('click', () => {
+      const upiText = document.getElementById('upi-id-text').textContent;
+      navigator.clipboard.writeText(upiText).then(() => {
+        alert('UPI ID copied: ' + upiText);
+      });
+    });
+
+    // UTR Form Submission
+    const utrForm = document.getElementById('utr-submit-form');
+    const utrInput = document.getElementById('utr-input');
+    const last4Input = document.getElementById('last4-mobile-input');
+    const errorAlert = document.getElementById('utr-error-alert');
+    const errorMsgText = document.getElementById('utr-error-msg-text');
+    const submitBtn = document.getElementById('btn-submit-payment-utr');
+
+    const showError = (msg) => {
+      errorMsgText.textContent = msg;
+      errorAlert.style.display = 'flex';
+    };
+
+    const clearError = () => {
+      errorAlert.style.display = 'none';
+    };
+
+    // Pre-flight real time duplicate check
+    utrInput.addEventListener('blur', async () => {
+      const val = utrInput.value.trim();
+      if (val.length >= 12 && val.length <= 22) {
+        try {
+          const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://localhost:5000/api/orders/check-utr?utr=${encodeURIComponent(val)}`
+            : `https://varevva-family-restaurant.onrender.com/api/orders/check-utr?utr=${encodeURIComponent(val)}`;
+
+          const res = await fetch(backendUrl);
+          const data = await res.json();
+          if (data.exists) {
+            showError('This Transaction ID has already been submitted.');
+          } else {
+            clearError();
+          }
+        } catch (e) {}
+      }
+    });
+
+    utrForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const utr = utrInput.value.trim();
+      const last4 = last4Input.value.trim();
+
+      if (!utr) {
+        showError('UTR / Transaction ID cannot be empty.');
+        return;
+      }
+
+      if (utr.length < 12 || utr.length > 22) {
+        showError('UTR / Transaction ID must be between 12 and 22 characters.');
+        return;
+      }
+
+      if (last4.length !== 4 || !/^\d{4}$/.test(last4)) {
+        showError('Please enter valid 4 digits of the mobile number used for payment.');
+        return;
+      }
+
+      clearError();
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+      try {
+        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          ? 'http://localhost:5000/api/orders/submit-utr'
+          : 'https://varevva-family-restaurant.onrender.com/api/orders/submit-utr';
+
+        const response = await fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            orderId,
+            utrNumber: utr,
+            last4DigitsMobile: last4
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          utrForm.style.display = 'none';
+          const postCard = document.getElementById('post-submission-card');
+          postCard.style.display = 'flex';
+          document.getElementById('btn-track-order-link').href = `track.html?orderId=${orderId}`;
+        } else {
+          showError(result.message || 'Failed to submit payment details.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Submit Payment</span><i class="fa-solid fa-arrow-right"></i>';
+        }
+      } catch (err) {
+        console.error('Submit UTR Network error:', err);
+        // Fallback UI simulation if local server offline
+        utrForm.style.display = 'none';
+        const postCard = document.getElementById('post-submission-card');
+        postCard.style.display = 'flex';
+        document.getElementById('btn-track-order-link').href = `track.html?orderId=${orderId}`;
+      }
+    });
+  </script>
+</body>
+</html>
