@@ -2476,11 +2476,11 @@ export async function openAdminOrdersModal() {
   const overlay = document.createElement('div');
   overlay.className = 'order-modal-overlay admin-orders-overlay';
   overlay.innerHTML = `
-    <div class="order-modal-card admin-orders-card" style="max-width: 1100px; width: 95%;">
+    <div class="order-modal-card admin-orders-card" style="max-width: 1150px; width: 95%;">
       <div class="order-modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-shield-halved" style="color: var(--accent-color); font-size: 1.4rem;"></i>
-          <h3 style="margin: 0; font-size: 1.25rem; font-family: var(--font-header);">Manual Payment Verification Dashboard</h3>
+          <i class="fa-solid fa-receipt" style="color: var(--accent-color); font-size: 1.4rem;"></i>
+          <h3 style="margin: 0; font-size: 1.25rem; font-family: var(--font-header);">Payment Records & Orders Dashboard</h3>
         </div>
         <button class="btn-close-modal" id="btn-close-admin-orders">&times;</button>
       </div>
@@ -2491,11 +2491,11 @@ export async function openAdminOrdersModal() {
         <!-- Filter Tabs -->
         <div class="admin-orders-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
           <button class="admin-tab-btn active" data-filter="all">All Orders</button>
-          <button class="admin-tab-btn" data-filter="Waiting for Verification">Pending Verification</button>
+          <button class="admin-tab-btn" data-filter="UPI QR Payment">UPI Payments</button>
+          <button class="admin-tab-btn" data-filter="Cash on Delivery">Cash on Delivery</button>
           <button class="admin-tab-btn" data-filter="Preparing Food">Preparing</button>
           <button class="admin-tab-btn" data-filter="Ready for Pickup">Ready for Pickup</button>
-          <button class="admin-tab-btn" data-filter="Paid">Verified & Paid</button>
-          <button class="admin-tab-btn" data-filter="Rejected">Rejected</button>
+          <button class="admin-tab-btn" data-filter="Completed">Completed</button>
         </div>
 
         <!-- Live Search Box -->
@@ -2515,19 +2515,19 @@ export async function openAdminOrdersModal() {
               <th style="padding: 12px; font-weight: 700;">Mobile</th>
               <th style="padding: 12px; font-weight: 700;">Items Summary</th>
               <th style="padding: 12px; font-weight: 700;">Amount</th>
+              <th style="padding: 12px; font-weight: 700;">Payment Method</th>
               <th style="padding: 12px; font-weight: 700;">UTR Number</th>
               <th style="padding: 12px; font-weight: 700;">Last 4 Digits</th>
-              <th style="padding: 12px; font-weight: 700;">Order Time</th>
+              <th style="padding: 12px; font-weight: 700;">Payment Time</th>
               <th style="padding: 12px; font-weight: 700;">Token</th>
               <th style="padding: 12px; font-weight: 700;">Status</th>
-              <th style="padding: 12px; font-weight: 700; text-align: center;">Actions</th>
             </tr>
           </thead>
           <tbody id="admin-orders-table-body">
             <tr>
               <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
-                <p style="margin: 0;">Loading payment verification data...</p>
+                <p style="margin: 0;">Loading payment records...</p>
               </td>
             </tr>
           </tbody>
@@ -2557,14 +2557,12 @@ export async function openAdminOrdersModal() {
     let list = fetchedOrders;
 
     // Apply Filter Tab
-    if (currentFilter === 'Waiting for Verification') {
-      list = list.filter(o => o.paymentStatus === 'Waiting for Verification' || o.paymentStatus === 'Pending');
-    } else if (currentFilter === 'Paid') {
-      list = list.filter(o => o.paymentStatus === 'Paid' || o.paymentStatus === 'Verified & Paid');
-    } else if (currentFilter === 'Rejected') {
-      list = list.filter(o => o.paymentStatus === 'Rejected');
+    if (currentFilter === 'UPI QR Payment') {
+      list = list.filter(o => o.paymentMethod === 'UPI QR Payment');
+    } else if (currentFilter === 'Cash on Delivery') {
+      list = list.filter(o => o.paymentMethod === 'Cash on Delivery');
     } else if (currentFilter !== 'all') {
-      list = list.filter(o => o.orderStage === currentFilter);
+      list = list.filter(o => o.orderStage === currentFilter || o.paymentStatus === currentFilter);
     }
 
     // Apply Live Search Query
@@ -2583,7 +2581,7 @@ export async function openAdminOrdersModal() {
         <tr>
           <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
             <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
-            <p style="margin: 0; font-weight: 600;">No payment verification records found.</p>
+            <p style="margin: 0; font-weight: 600;">No payment records found matching this filter.</p>
           </td>
         </tr>
       `;
@@ -2591,12 +2589,8 @@ export async function openAdminOrdersModal() {
     }
 
     tableBody.innerHTML = list.map(order => {
-      const statusColor = order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' ? '#059669' :
-                         (order.paymentStatus === 'Rejected' ? '#dc2626' : '#d97706');
-      const statusBg = order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' ? '#ecfdf5' :
-                       (order.paymentStatus === 'Rejected' ? '#fef2f2' : '#fffbeb');
-
       const itemsText = (order.items || []).map(i => `${i.name} (${i.quantity})`).join(', ');
+      const paymentTimeStr = new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.createdAt).toLocaleDateString();
 
       return `
         <tr style="border-bottom: 1px solid rgba(0,0,0,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='transparent'">
@@ -2605,29 +2599,19 @@ export async function openAdminOrdersModal() {
           <td style="padding: 10px 12px; color: var(--text-muted);">${order.customerPhone}</td>
           <td style="padding: 10px 12px; max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsText}">${itemsText || 'Meal Order'}</td>
           <td style="padding: 10px 12px; font-weight: 700; color: var(--accent-color);">₹${order.totalAmount}</td>
-          <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #1e293b;">${order.utrNumber || '<em style="color:#94a3b8">Pending</em>'}</td>
-          <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark); text-align: center;">${order.last4DigitsMobile ? `**** ${order.last4DigitsMobile}` : '-'}</td>
-          <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-          <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
           <td style="padding: 10px 12px;">
-            <span style="background-color: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}40; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid ${order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' ? 'fa-circle-check' : (order.paymentStatus === 'Rejected' ? 'fa-circle-xmark' : 'fa-clock')}"></i>
-              ${order.paymentStatus}
+            <span style="background: var(--light-bg); padding: 3px 8px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; color: var(--text-dark);">
+              ${order.paymentMethod === 'UPI QR Payment' ? '<i class="fa-solid fa-qrcode" style="color:#059669"></i> UPI QR' : '<i class="fa-solid fa-money-bill-wave"></i> Cash'}
             </span>
           </td>
-          <td style="padding: 10px 12px; text-align: center;">
-            ${(order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid') ? `
-              <span style="color: #059669; font-weight: 700; font-size: 0.78rem;"><i class="fa-solid fa-check-double"></i> Verified</span>
-            ` : `
-              <div style="display: flex; gap: 6px; justify-content: center;">
-                <button type="button" class="btn-admin-order-action btn-approve-pay" data-id="${order.orderId}" style="background-color: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer;">
-                  <i class="fa-solid fa-check"></i> Approve
-                </button>
-                <button type="button" class="btn-admin-order-action btn-reject-pay-modal" data-id="${order.orderId}" style="background-color: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer;">
-                  <i class="fa-solid fa-xmark"></i> Reject
-                </button>
-              </div>
-            `}
+          <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #1e293b;">${order.utrNumber || '<em style="color:#94a3b8">Submitted</em>'}</td>
+          <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark); text-align: center;">${order.last4DigitsMobile ? `**** ${order.last4DigitsMobile}` : '-'}</td>
+          <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${paymentTimeStr}</td>
+          <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
+          <td style="padding: 10px 12px;">
+            <span style="background-color: #ecfdf5; color: #059669; border: 1px solid #10b98140; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fa-solid fa-circle-check"></i> ${order.paymentStatus || 'Order Confirmed'}
+            </span>
           </td>
         </tr>
       `;
@@ -2655,10 +2639,10 @@ export async function openAdminOrdersModal() {
         items: [{ name: 'Spl Telangana Chicken Curry', quantity: 2, price: 340, subtotal: 680 }],
         totalAmount: 680,
         paymentMethod: 'UPI QR Payment',
-        paymentStatus: 'Waiting for Verification',
+        paymentStatus: 'Order Confirmed',
         utrNumber: '402918475920',
         last4DigitsMobile: '3210',
-        pickupToken: null,
+        pickupToken: 'A101',
         createdAt: new Date()
       }
     ];
@@ -2680,91 +2664,6 @@ export async function openAdminOrdersModal() {
       currentFilter = btn.dataset.filter;
       renderTable();
     });
-  });
-
-  // Handle Approve / Reject click actions
-  tableBody.addEventListener('click', async (e) => {
-    const approveBtn = e.target.closest('.btn-approve-pay');
-    const rejectBtn = e.target.closest('.btn-reject-pay-modal');
-
-    if (approveBtn) {
-      const targetOrderId = approveBtn.dataset.id;
-      if (!confirm(`Are you sure you want to approve payment for Order #${targetOrderId}?`)) return;
-
-      try {
-        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? `http://localhost:5000/api/orders/${targetOrderId}/approve`
-          : `https://varevva-family-restaurant.onrender.com/api/orders/${targetOrderId}/approve`;
-
-        const response = await fetch(backendUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ adminName: 'Restaurant Owner', estimatedPrepTime: '15 Minutes' })
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          alert(`Payment Approved Successfully!\n\nPickup Token: ${result.order.pickupToken}\nEstimated Prep Time: ${result.order.estimatedPrepTime}`);
-          const targetObj = fetchedOrders.find(o => o.orderId === targetOrderId);
-          if (targetObj) {
-            targetObj.paymentStatus = 'Paid';
-            targetObj.verificationStatus = 'Verified';
-            targetObj.orderStage = 'Preparing Food';
-            targetObj.pickupToken = result.order.pickupToken;
-          }
-          renderTable();
-        } else {
-          alert(result.message || 'Failed to approve payment.');
-        }
-      } catch (err) {
-        console.error('Approve payment error:', err);
-        alert('Payment approved successfully! Pickup Token A101 assigned.');
-      }
-    } else if (rejectBtn) {
-      const targetOrderId = rejectBtn.dataset.id;
-      const reasons = [
-        'Payment not received',
-        'Incorrect Amount',
-        'Invalid UTR',
-        'Duplicate Transaction',
-        'Other'
-      ];
-
-      const chosenReason = prompt(`Select Rejection Reason for Order #${targetOrderId}:\n1. Payment not received\n2. Incorrect Amount\n3. Invalid UTR\n4. Duplicate Transaction\n5. Other\n\nEnter number (1-5):`, '1');
-      if (chosenReason === null) return;
-
-      const idx = parseInt(chosenReason) - 1;
-      const rejectionReason = (idx >= 0 && idx < reasons.length) ? reasons[idx] : 'Payment not received';
-
-      try {
-        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? `http://localhost:5000/api/orders/${targetOrderId}/reject`
-          : `https://varevva-family-restaurant.onrender.com/api/orders/${targetOrderId}/reject`;
-
-        const response = await fetch(backendUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rejectionReason, adminName: 'Restaurant Owner' })
-        });
-        const result = await response.json();
-
-        if (response.ok && result.success) {
-          alert(`Order #${targetOrderId} payment rejected. Customer notified.`);
-          const targetObj = fetchedOrders.find(o => o.orderId === targetOrderId);
-          if (targetObj) {
-            targetObj.paymentStatus = 'Rejected';
-            targetObj.verificationStatus = 'Failed';
-            targetObj.rejectionReason = rejectionReason;
-          }
-          renderTable();
-        } else {
-          alert(result.message || 'Failed to reject payment.');
-        }
-      } catch (err) {
-        console.error('Reject payment error:', err);
-        alert(`Order #${targetOrderId} payment rejected.`);
-      }
-    }
   });
 }
 
