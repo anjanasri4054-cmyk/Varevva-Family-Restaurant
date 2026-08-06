@@ -2518,11 +2518,11 @@ export async function openAdminOrdersModal() {
               <th style="padding: 12px; font-weight: 700;">Order ID</th>
               <th style="padding: 12px; font-weight: 700;">Customer</th>
               <th style="padding: 12px; font-weight: 700;">Mobile</th>
+              <th style="padding: 12px; font-weight: 700;">Items</th>
               <th style="padding: 12px; font-weight: 700;">Amount</th>
               <th style="padding: 12px; font-weight: 700;">UTR Number</th>
               <th style="padding: 12px; font-weight: 700;">Last 4 Digits</th>
               <th style="padding: 12px; font-weight: 700;">Submission Time</th>
-              <th style="padding: 12px; font-weight: 700;">PhonePe Comparison</th>
               <th style="padding: 12px; font-weight: 700;">Status</th>
               <th style="padding: 12px; font-weight: 700; text-align: center;">Actions</th>
             </tr>
@@ -2600,6 +2600,14 @@ export async function openAdminOrdersModal() {
     }
 
     tableBody.innerHTML = list.map(order => {
+      const itemsText = (order.items || []).map(i => {
+        let name = i.name || i.title || 'Meal Item';
+        if (/^[a-f0-9]{24}$/i.test(name.trim())) {
+          name = i.title || 'Special Dish';
+        }
+        return `${name} (${i.quantity || 1})`;
+      }).join(', ');
+
       const submissionTimeStr = new Date(order.updatedAt || order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.updatedAt || order.createdAt).toLocaleDateString();
       const statusText = order.paymentStatus || 'Waiting for Verification';
 
@@ -2616,21 +2624,11 @@ export async function openAdminOrdersModal() {
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark);">${order.orderId}</td>
           <td style="padding: 10px 12px; font-weight: 600;">${order.customerName}</td>
           <td style="padding: 10px 12px; color: var(--text-muted);">${order.customerPhone}</td>
+          <td style="padding: 10px 12px; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsText}">${itemsText || 'Meal Order'}</td>
           <td style="padding: 10px 12px; font-weight: 700; color: var(--accent-color);">₹${order.totalAmount}</td>
           <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #1e293b;">${order.utrNumber || '<em style="color:#94a3b8">Submitted</em>'}</td>
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark); text-align: center;">${order.last4DigitsMobile ? `**** ${order.last4DigitsMobile}` : '-'}</td>
           <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${submissionTimeStr}</td>
-          
-          <!-- PhonePe Comparison Checklist Badge -->
-          <td style="padding: 10px 12px;">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 3px; font-size: 0.72rem; font-weight: 700; color: #047857;">
-              <span><i class="fa-solid fa-check" style="color:#10b981"></i> Amount</span>
-              <span><i class="fa-solid fa-check" style="color:#10b981"></i> UTR</span>
-              <span><i class="fa-solid fa-check" style="color:#10b981"></i> Time</span>
-              <span><i class="fa-solid fa-check" style="color:#10b981"></i> Last 4</span>
-            </div>
-          </td>
-
           <td style="padding: 10px 12px;">
             <span style="background-color: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}40; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
               <i class="fa-solid ${statusIcon}"></i> ${statusText}
