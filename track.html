@@ -57,11 +57,11 @@
 
       <div class="tracking-timeline-container" id="tracking-timeline">
         <!-- Stage 1 -->
-        <div class="timeline-step done" data-stage="Order Placed">
-          <div class="timeline-icon-circle"><i class="fa-solid fa-receipt"></i></div>
+        <div class="timeline-step done" data-stage="Order Confirmed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
           <div class="timeline-content">
-            <span class="timeline-title">Order Placed & Confirmed</span>
-            <span class="timeline-sub">Order registered and confirmed in restaurant system</span>
+            <span class="timeline-title">Order Confirmed</span>
+            <span class="timeline-sub">Payment details saved & order confirmed</span>
           </div>
         </div>
 
@@ -117,7 +117,7 @@
     trackOrderId.textContent = orderId;
 
     const stagesOrder = [
-      'Order Placed',
+      'Order Confirmed',
       'Preparing Food',
       'Ready for Pickup',
       'Completed'

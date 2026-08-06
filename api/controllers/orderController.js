@@ -23,7 +23,7 @@ export const createOrder = async (req, res) => {
     const orderId = `VRV${1001 + orderCount}`;
 
     const isCod = paymentMethod === 'Cash on Delivery';
-    const initialPaymentStatus = isCod ? 'COD' : 'Paid';
+    const initialPaymentStatus = isCod ? 'COD' : 'Order Confirmed';
     const pickupToken = `A${tokenCounter++}`;
 
     const newOrder = new Order({
@@ -39,7 +39,7 @@ export const createOrder = async (req, res) => {
       paymentMethod: paymentMethod || 'UPI QR Payment',
       paymentStatus: initialPaymentStatus,
       verificationStatus: 'Verified',
-      orderStage: 'Preparing Food',
+      orderStage: 'Order Confirmed',
       pickupToken: pickupToken,
       estimatedPrepTime: '15 Minutes',
       auditLogs: [{
@@ -118,12 +118,12 @@ export const submitUtr = async (req, res) => {
       order.pickupToken = `A${tokenCounter++}`;
     }
 
-    // Update Order Payment Details to Confirmed & Preparing Food immediately
+    // Update Order Details to Order Confirmed immediately
     order.utrNumber = cleanUtr;
     order.last4DigitsMobile = cleanLast4;
-    order.paymentStatus = 'Paid';
+    order.paymentStatus = 'Order Confirmed';
     order.verificationStatus = 'Verified';
-    order.orderStage = 'Preparing Food';
+    order.orderStage = 'Order Confirmed';
     order.estimatedPrepTime = '15 Minutes';
     
     order.auditLogs.push({
@@ -137,7 +137,7 @@ export const submitUtr = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Payment details received and order confirmed!',
+      message: 'Payment details saved and order confirmed!',
       order
     });
   } catch (error) {
