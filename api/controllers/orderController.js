@@ -127,18 +127,20 @@ export const submitUtr = async (req, res) => {
       });
     }
 
-    // Create payment verification record immediately (Token remains null until approved)
+    // Create payment verification record immediately (Pickup Token & Prep Time remain NULL until approved)
     order.utrNumber = cleanUtr;
     order.last4DigitsMobile = cleanLast4;
     order.paymentStatus = 'Waiting for Verification';
+    order.verificationStatus = 'Pending';
     order.orderStage = 'Waiting for Verification';
-    order.estimatedPrepTime = '15 Minutes';
+    order.pickupToken = null;
+    order.estimatedPrepTime = null;
     
     order.auditLogs.push({
       adminName: 'Customer',
       action: 'PAYMENT_SUBMITTED_WAITING_VERIFICATION',
       time: new Date(),
-      reason: `UTR ${cleanUtr} submitted. Status set to Waiting for Verification.`
+      reason: `UTR ${cleanUtr} submitted. Payment Status: Waiting for Verification, Verification Status: Pending. Token & Prep Time set to NULL until approval.`
     });
 
     await order.save();
@@ -205,7 +207,7 @@ export const approvePayment = async (req, res) => {
     }
 
     // Prevent duplicate order approvals
-    if (order.paymentStatus === 'Paid' || order.paymentStatus === 'Verified & Paid' || order.orderStage === 'Preparing Food' || order.orderStage === 'Ready for Pickup' || order.orderStage === 'Completed') {
+    if (order.paymentStatus === 'Paid' || order.verificationStatus === 'Verified' || order.orderStage === 'Preparing Food' || order.orderStage === 'Ready for Pickup' || order.orderStage === 'Completed') {
       return res.status(400).json({
         success: false,
         message: `Order #${order.orderId} has already been approved and verified.`
@@ -236,6 +238,7 @@ export const approvePayment = async (req, res) => {
     }
 
     order.paymentStatus = 'Paid';
+    order.verificationStatus = 'Verified';
     order.orderStage = 'Preparing Food';
     order.estimatedPrepTime = '15 Minutes';
     order.verifiedBy = adminName;
@@ -245,7 +248,7 @@ export const approvePayment = async (req, res) => {
       adminName,
       action: 'APPROVAL',
       time: new Date(),
-      reason: `Payment verified in PhonePe by owner. Token ${order.pickupToken} assigned.`,
+      reason: `Payment verified in PhonePe by owner. Permanent Pickup Token ${order.pickupToken} & Prep Time generated.`,
       ipAddress: clientIp
     });
 
