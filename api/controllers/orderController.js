@@ -108,7 +108,7 @@ export const submitUtr = async (req, res) => {
       if (expectedLast4 && cleanLast4 !== expectedLast4) {
         return res.status(400).json({
           success: false,
-          message: 'The last four digits do not match the registered mobile number.'
+          message: 'The last four digits do not match your registered mobile number.'
         });
       }
     }
