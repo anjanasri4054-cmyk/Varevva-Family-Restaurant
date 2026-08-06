@@ -125,33 +125,6 @@
         </button>
       </form>
 
-      <!-- Post Submission Status Card (Hidden by default) -->
-      <div id="post-submission-card" style="display: none; margin-top: 16px; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 14px; padding: 16px; flex-direction: column; gap: 10px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="width: 38px; height: 38px; border-radius: 50%; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;">
-            <i class="fa-solid fa-clock fa-spin"></i>
-          </div>
-          <div>
-            <h4 style="margin: 0; font-size: 0.95rem; color: #92400e; font-family: var(--font-header);">Payment details submitted successfully!</h4>
-            <p style="margin: 2px 0 0; font-size: 0.82rem; color: #b45309;">Restaurant will verify your payment shortly.</p>
-          </div>
-        </div>
-
-        <div style="background: #ffffff; padding: 10px 14px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.84rem;">
-          <span style="font-weight: 600; color: var(--text-dark);">Status:</span>
-          <span style="font-weight: 700; color: #d97706; background: #fef3c7; padding: 3px 10px; border-radius: 12px;">Waiting for Restaurant Verification</span>
-        </div>
-
-        <div style="font-size: 0.8rem; color: #92400e; display: flex; align-items: center; gap: 6px;">
-          <i class="fa-solid fa-hourglass-half"></i> Estimated verification time: <strong>2 – 5 Minutes</strong>
-        </div>
-
-        <a id="btn-track-order-link" href="track.html" class="btn-submit-order" style="text-decoration: none; display: flex; justify-content: center; margin-top: 6px; background: var(--accent-color);">
-          <i class="fa-solid fa-location-crosshairs"></i>
-          <span>Track Live Order Status</span>
-        </a>
-      </div>
-
     </div>
   </main>
 
@@ -190,12 +163,9 @@
               paymentItemsSummary.innerHTML = '<span>Customer Meal Order</span>';
             }
 
-            // If already submitted UTR, show post-submission card
-            if (order.utrNumber && order.paymentStatus === 'Waiting for Verification') {
-              document.getElementById('utr-submit-form').style.display = 'none';
-              const postCard = document.getElementById('post-submission-card');
-              postCard.style.display = 'flex';
-              document.getElementById('btn-track-order-link').href = `track.html?orderId=${orderId}`;
+            // If already submitted UTR, proceed directly to track page
+            if (order.utrNumber) {
+              window.location.href = `track.html?orderId=${orderId}`;
             }
           }
         }
@@ -295,10 +265,7 @@
         const result = await response.json();
 
         if (response.ok && result.success) {
-          utrForm.style.display = 'none';
-          const postCard = document.getElementById('post-submission-card');
-          postCard.style.display = 'flex';
-          document.getElementById('btn-track-order-link').href = `track.html?orderId=${orderId}`;
+          window.location.href = `track.html?orderId=${orderId}`;
         } else {
           showError(result.message || 'Failed to submit payment details.');
           submitBtn.disabled = false;
@@ -306,11 +273,7 @@
         }
       } catch (err) {
         console.error('Submit UTR Network error:', err);
-        // Fallback UI simulation if local server offline
-        utrForm.style.display = 'none';
-        const postCard = document.getElementById('post-submission-card');
-        postCard.style.display = 'flex';
-        document.getElementById('btn-track-order-link').href = `track.html?orderId=${orderId}`;
+        window.location.href = `track.html?orderId=${orderId}`;
       }
     });
   </script>
