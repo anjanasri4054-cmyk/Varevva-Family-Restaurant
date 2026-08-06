@@ -4,8 +4,6 @@ import {
   submitUtr,
   getOrderStatus,
   checkUtrAvailability,
-  approvePayment,
-  rejectPayment,
   updateOrderStage,
   getAllOrders
 } from '../controllers/orderController.js';
@@ -17,8 +15,6 @@ router.post('/submit-utr', submitUtr);
 router.get('/track/:orderId', getOrderStatus);
 router.get('/check-utr', checkUtrAvailability);
 router.get('/', getAllOrders);
-router.put('/:id/approve', approvePayment);
-router.put('/:id/reject', rejectPayment);
 router.put('/:id/stage', updateOrderStage);
 
 export default router;

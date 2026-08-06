@@ -47,18 +47,13 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['Waiting for Verification', 'Order Confirmed', 'Paid', 'Rejected', 'COD'],
-    default: 'Waiting for Verification',
-  },
-  verificationStatus: {
-    type: String,
-    enum: ['Pending', 'Verified', 'Rejected'],
-    default: 'Pending',
+    enum: ['Order Confirmed', 'Paid', 'COD'],
+    default: 'Order Confirmed',
   },
   orderStage: {
     type: String,
-    enum: ['Order Placed', 'Waiting for Verification', 'Payment Verified', 'Preparing Food', 'Ready for Pickup', 'Completed', 'Payment Verification Failed'],
-    default: 'Waiting for Verification',
+    enum: ['Order Placed', 'Preparing Food', 'Ready for Pickup', 'Completed'],
+    default: 'Preparing Food',
   },
   utrNumber: {
     type: String,
@@ -76,13 +71,6 @@ const orderSchema = new mongoose.Schema({
   estimatedPrepTime: {
     type: String,
     default: '',
-  },
-  verifiedBy: {
-    type: String,
-    default: '',
-  },
-  verificationTime: {
-    type: Date,
   },
   auditLogs: [{
     adminName: String,

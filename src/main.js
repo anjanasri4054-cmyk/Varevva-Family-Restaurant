@@ -2479,8 +2479,8 @@ export async function openAdminOrdersModal() {
     <div class="order-modal-card admin-orders-card" style="max-width: 1180px; width: 95%;">
       <div class="order-modal-header" style="border-bottom: 1px solid rgba(0,0,0,0.08); padding-bottom: 14px;">
         <div style="display: flex; align-items: center; gap: 10px;">
-          <i class="fa-solid fa-shield-halved" style="color: var(--accent-color); font-size: 1.4rem;"></i>
-          <h3 style="margin: 0; font-size: 1.25rem; font-family: var(--font-header);">Manual Payment Verification Dashboard</h3>
+          <i class="fa-solid fa-receipt" style="color: var(--accent-color); font-size: 1.4rem;"></i>
+          <h3 style="margin: 0; font-size: 1.25rem; font-family: var(--font-header);">Orders & Payment Dashboard</h3>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
           <span style="font-size: 0.76rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 12px; border: 1px solid #10b98140;">
@@ -2496,10 +2496,10 @@ export async function openAdminOrdersModal() {
         <!-- Filter Tabs -->
         <div class="admin-orders-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
           <button class="admin-tab-btn active" data-filter="all">All Orders</button>
-          <button class="admin-tab-btn" data-filter="Waiting for Verification">Waiting for Verification</button>
           <button class="admin-tab-btn" data-filter="UPI QR Payment">UPI Payments</button>
           <button class="admin-tab-btn" data-filter="Cash on Delivery">Cash on Delivery</button>
           <button class="admin-tab-btn" data-filter="Preparing Food">Preparing</button>
+          <button class="admin-tab-btn" data-filter="Ready for Pickup">Ready for Pickup</button>
           <button class="admin-tab-btn" data-filter="Completed">Completed</button>
         </div>
 
@@ -2520,18 +2520,19 @@ export async function openAdminOrdersModal() {
               <th style="padding: 12px; font-weight: 700;">Mobile</th>
               <th style="padding: 12px; font-weight: 700;">Items</th>
               <th style="padding: 12px; font-weight: 700;">Amount</th>
+              <th style="padding: 12px; font-weight: 700;">Payment Method</th>
               <th style="padding: 12px; font-weight: 700;">UTR Number</th>
               <th style="padding: 12px; font-weight: 700;">Last 4 Digits</th>
               <th style="padding: 12px; font-weight: 700;">Submission Time</th>
+              <th style="padding: 12px; font-weight: 700;">Token</th>
               <th style="padding: 12px; font-weight: 700;">Status</th>
-              <th style="padding: 12px; font-weight: 700; text-align: center;">Actions</th>
             </tr>
           </thead>
           <tbody id="admin-orders-table-body">
             <tr>
-              <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
-                <p style="margin: 0;">Loading payment verification records...</p>
+                <p style="margin: 0;">Loading payment records...</p>
               </td>
             </tr>
           </tbody>
@@ -2566,9 +2567,7 @@ export async function openAdminOrdersModal() {
     let list = fetchedOrders;
 
     // Apply Filter Tab
-    if (currentFilter === 'Waiting for Verification') {
-      list = list.filter(o => o.paymentStatus === 'Waiting for Verification' || o.orderStage === 'Waiting for Verification' || !o.paymentStatus);
-    } else if (currentFilter === 'UPI QR Payment') {
+    if (currentFilter === 'UPI QR Payment') {
       list = list.filter(o => o.paymentMethod === 'UPI QR Payment');
     } else if (currentFilter === 'Cash on Delivery') {
       list = list.filter(o => o.paymentMethod === 'Cash on Delivery');
@@ -2590,9 +2589,9 @@ export async function openAdminOrdersModal() {
     if (list.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="10" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
             <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
-            <p style="margin: 0; font-weight: 600;">No payment verification records found.</p>
+            <p style="margin: 0; font-weight: 600;">No orders found matching this filter.</p>
           </td>
         </tr>
       `;
@@ -2609,15 +2608,7 @@ export async function openAdminOrdersModal() {
       }).join(', ');
 
       const submissionTimeStr = new Date(order.updatedAt || order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.updatedAt || order.createdAt).toLocaleDateString();
-      const statusText = order.paymentStatus || 'Waiting for Verification';
-
-      const isWaiting = statusText === 'Waiting for Verification' || statusText === 'Pending';
-      const isApproved = statusText === 'Paid' || statusText === 'Verified & Paid' || order.orderStage === 'Preparing Food' || order.orderStage === 'Ready for Pickup' || order.orderStage === 'Completed';
-      const isRejected = statusText === 'Rejected';
-
-      const statusBg = isApproved ? '#ecfdf5' : (isRejected ? '#fef2f2' : '#fffbeb');
-      const statusColor = isApproved ? '#059669' : (isRejected ? '#dc2626' : '#d97706');
-      const statusIcon = isApproved ? 'fa-circle-check' : (isRejected ? 'fa-circle-xmark' : 'fa-clock');
+      const statusText = order.paymentStatus || 'Order Confirmed';
 
       return `
         <tr style="border-bottom: 1px solid rgba(0,0,0,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='transparent'">
@@ -2626,31 +2617,19 @@ export async function openAdminOrdersModal() {
           <td style="padding: 10px 12px; color: var(--text-muted);">${order.customerPhone}</td>
           <td style="padding: 10px 12px; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsText}">${itemsText || 'Meal Order'}</td>
           <td style="padding: 10px 12px; font-weight: 700; color: var(--accent-color);">₹${order.totalAmount}</td>
+          <td style="padding: 10px 12px;">
+            <span style="background: var(--light-bg); padding: 3px 8px; border-radius: 6px; font-size: 0.76rem; font-weight: 600; color: var(--text-dark);">
+              ${order.paymentMethod === 'UPI QR Payment' ? '<i class="fa-solid fa-qrcode" style="color:#059669"></i> UPI QR' : '<i class="fa-solid fa-money-bill-wave"></i> Cash'}
+            </span>
+          </td>
           <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #1e293b;">${order.utrNumber || '<em style="color:#94a3b8">Submitted</em>'}</td>
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark); text-align: center;">${order.last4DigitsMobile ? `**** ${order.last4DigitsMobile}` : '-'}</td>
           <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${submissionTimeStr}</td>
+          <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
           <td style="padding: 10px 12px;">
-            <span style="background-color: ${statusBg}; color: ${statusColor}; border: 1px solid ${statusColor}40; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid ${statusIcon}"></i> ${statusText}
+            <span style="background-color: #ecfdf5; color: #059669; border: 1px solid #10b98140; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+              <i class="fa-solid fa-circle-check"></i> ${statusText}
             </span>
-          </td>
-
-          <!-- Actions Column: Approve / Reject -->
-          <td style="padding: 10px 12px; text-align: center;">
-            ${isApproved ? `
-              <span style="color: #059669; font-weight: 800; font-size: 0.78rem;"><i class="fa-solid fa-circle-check"></i> Approved</span>
-            ` : (isRejected ? `
-              <span style="color: #dc2626; font-weight: 800; font-size: 0.78rem;"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>
-            ` : `
-              <div style="display: flex; gap: 6px; justify-content: center;">
-                <button type="button" class="btn-approve-payment" data-id="${order.orderId}" data-amount="${order.totalAmount}" data-utr="${order.utrNumber || ''}" data-mobile="${order.last4DigitsMobile || ''}" data-name="${order.customerName}" style="background-color: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <i class="fa-solid fa-check"></i> Approve Payment
-                </button>
-                <button type="button" class="btn-reject-payment" data-id="${order.orderId}" style="background-color: #ef4444; color: white; border: none; padding: 6px 10px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                  <i class="fa-solid fa-xmark"></i> Reject
-                </button>
-              </div>
-            `)}
           </td>
         </tr>
       `;
@@ -2695,128 +2674,6 @@ export async function openAdminOrdersModal() {
       currentFilter = btn.dataset.filter;
       renderTable();
     });
-  });
-
-  // Handle Approve Payment Confirmation Modal & Reject Payment Actions
-  tableBody.addEventListener('click', async (e) => {
-    const approveBtn = e.target.closest('.btn-approve-payment');
-    const rejectBtn = e.target.closest('.btn-reject-payment');
-
-    if (approveBtn) {
-      const targetId = approveBtn.dataset.id;
-      const targetName = approveBtn.dataset.name;
-      const targetAmount = approveBtn.dataset.amount;
-      const targetUtr = approveBtn.dataset.utr;
-      const targetMobile = approveBtn.dataset.mobile;
-
-      // Show Custom PhonePe Verification Confirmation Dialog
-      const confirmOverlay = document.createElement('div');
-      confirmOverlay.className = 'order-modal-overlay';
-      confirmOverlay.style.zIndex = '10000';
-      confirmOverlay.innerHTML = `
-        <div class="order-modal-card" style="max-width: 480px; width: 90%; text-align: center; padding: 24px;">
-          <div style="width: 50px; height: 50px; border-radius: 50%; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin: 0 auto 14px;">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-          </div>
-
-          <h3 style="font-family: var(--font-header); font-size: 1.2rem; font-weight: 800; color: var(--text-dark); margin: 0 0 10px;">
-            Have you verified this payment in PhonePe?
-          </h3>
-
-          <div style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 14px; text-align: left; font-size: 0.84rem; margin-bottom: 20px;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span style="color:var(--text-muted);">Customer:</span>
-              <strong style="color:var(--text-dark);">${targetName}</strong>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span style="color:var(--text-muted);">Order ID:</span>
-              <strong style="color:var(--text-dark);">${targetId}</strong>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span style="color:var(--text-muted);">Order Amount:</span>
-              <strong style="color:var(--accent-color);">₹${targetAmount}</strong>
-            </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-              <span style="color:var(--text-muted);">UTR Number:</span>
-              <code style="font-family:monospace; font-weight:700; color:#1e293b;">${targetUtr || '-'}</code>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-              <span style="color:var(--text-muted);">Last 4 Digits:</span>
-              <strong style="color:var(--text-dark);">${targetMobile ? `**** ${targetMobile}` : '-'}</strong>
-            </div>
-          </div>
-
-          <div style="display: flex; gap: 10px; justify-content: center;">
-            <button id="btn-confirm-cancel" type="button" style="flex:1; background: #e2e8f0; color: var(--text-dark); border: none; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer;">
-              Cancel
-            </button>
-            <button id="btn-confirm-approve" type="button" style="flex:1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 0.9rem; font-weight: 700; cursor: pointer; display:flex; align-items:center; justify-content:center; gap:6px;">
-              <i class="fa-solid fa-check"></i> Approve
-            </button>
-          </div>
-        </div>
-      `;
-
-      document.body.appendChild(confirmOverlay);
-
-      confirmOverlay.querySelector('#btn-confirm-cancel').addEventListener('click', () => confirmOverlay.remove());
-
-      confirmOverlay.querySelector('#btn-confirm-approve').addEventListener('click', async () => {
-        confirmOverlay.remove();
-
-        try {
-          const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? `http://localhost:5000/api/orders/${targetId}/approve`
-            : `https://varevva-family-restaurant.onrender.com/api/orders/${targetId}/approve`;
-
-          const response = await fetch(backendUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminName: 'Restaurant Owner' })
-          });
-
-          const result = await response.json();
-          if (response.ok && result.success) {
-            alert(`Payment Approved Successfully!\n\nPickup Token: ${result.order.pickupToken || 'A101'}`);
-            await fetchOrders();
-          } else {
-            alert(result.message || 'Failed to approve payment.');
-          }
-        } catch (err) {
-          console.error('Approve payment error:', err);
-          alert('Payment approved successfully!');
-          await fetchOrders();
-        }
-      });
-    } else if (rejectBtn) {
-      const targetId = rejectBtn.dataset.id;
-      const rejectionReason = prompt(`Reject payment for Order #${targetId}?\n\nEnter reason (e.g. Payment not received in PhonePe):`, 'Payment not received in PhonePe');
-      if (rejectionReason === null) return;
-
-      try {
-        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? `http://localhost:5000/api/orders/${targetId}/reject`
-          : `https://varevva-family-restaurant.onrender.com/api/orders/${targetId}/reject`;
-
-        const response = await fetch(backendUrl, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ rejectionReason, adminName: 'Restaurant Owner' })
-        });
-
-        const result = await response.json();
-        if (response.ok && result.success) {
-          alert(`Order #${targetId} payment rejected.`);
-          await fetchOrders();
-        } else {
-          alert(result.message || 'Failed to reject payment.');
-        }
-      } catch (err) {
-        console.error('Reject payment error:', err);
-        alert(`Order #${targetId} payment rejected.`);
-        await fetchOrders();
-      }
-    }
   });
 }
 
