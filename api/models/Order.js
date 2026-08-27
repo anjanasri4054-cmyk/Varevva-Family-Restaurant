@@ -47,13 +47,23 @@ const orderSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['Order Confirmed', 'Paid', 'COD'],
-    default: 'Order Confirmed',
+    enum: ['Pending', 'Proof Submitted', 'Order Confirmed', 'Paid', 'COD'],
+    default: 'Pending',
   },
   orderStage: {
     type: String,
-    enum: ['Order Placed', 'Preparing Food', 'Ready for Pickup', 'Completed'],
-    default: 'Preparing Food',
+    enum: ['Order Placed', 'Payment Proof Submitted', 'Order Confirmed', 'Preparing Food', 'Ready for Pickup', 'Completed'],
+    default: 'Order Placed',
+  },
+  orderStatus: {
+    type: String,
+    enum: ['PLACED', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED'],
+    default: 'PLACED',
+  },
+  paymentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Payment',
+    default: null,
   },
   utrNumber: {
     type: String,
@@ -63,6 +73,30 @@ const orderSchema = new mongoose.Schema({
   last4DigitsMobile: {
     type: String,
     default: '',
+  },
+  paymentScreenshot: {
+    type: String,
+    default: '',
+  },
+  detectedAmount: {
+    type: Number,
+    default: 0,
+  },
+  detectedTxnId: {
+    type: String,
+    default: '',
+  },
+  analysisResult: {
+    type: String,
+    default: '',
+  },
+  riskLevel: {
+    type: String,
+    default: '',
+  },
+  submissionTime: {
+    type: Date,
+    default: null,
   },
   pickupToken: {
     type: String,

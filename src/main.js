@@ -311,13 +311,19 @@ function openOrderModal() {
         </div>
 
         <div class="form-group">
-          <label for="payment-method-select">Payment Method</label>
-          <select id="payment-method-select">
-            <option value="online">Online Payment (UPI QR Code)</option>
-            <option value="cod">Cash on Delivery / Pay at Counter</option>
-          </select>
+          <label style="font-weight: 700; margin-bottom: 6px; display: block;">Payment Method</label>
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; font-size: 0.9rem;">
+              <input type="radio" name="payment-method-choice" value="online" checked style="width: auto; margin: 0;">
+              <span>Pay Online (PhonePe QR & Screenshot Verification)</span>
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer; font-size: 0.9rem;">
+              <input type="radio" name="payment-method-choice" value="cod" style="width: auto; margin: 0;">
+              <span>Pay at Restaurant / Cash on Delivery</span>
+            </label>
+          </div>
         </div>
-        
+
         <div id="delivery-fields" style="display: none; flex-direction: column; gap: 12px; margin-top: 12px; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 12px;">
           <div class="form-group">
             <label for="cust-address">Delivery Address</label>
@@ -348,7 +354,7 @@ function openOrderModal() {
         </div>
 
         <button type="submit" class="btn-submit-order" id="btn-submit-order" style="margin-top: 14px;">
-          <span id="submit-btn-text">Proceed to Pay Online (UPI QR)</span>
+          <span id="submit-btn-text">Place Order</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </form>
@@ -360,7 +366,6 @@ function openOrderModal() {
   const closeBtn = modalOverlay.querySelector('#btn-close-order-modal');
   const form = modalOverlay.querySelector('#order-details-form');
   const orderTypeSelect = modalOverlay.querySelector('#order-type');
-  const paymentMethodSelect = modalOverlay.querySelector('#payment-method-select');
   const submitBtnText = modalOverlay.querySelector('#submit-btn-text');
   const summaryContainer = modalOverlay.querySelector('#modal-summary-items-container');
 
@@ -424,15 +429,6 @@ function openOrderModal() {
     } else if (plusBtn) {
       updateQuantity(plusBtn.dataset.name, 1);
       updateModalSummary();
-    }
-  });
-
-  // Toggle button text based on payment selection
-  paymentMethodSelect.addEventListener('change', () => {
-    if (paymentMethodSelect.value === 'online') {
-      submitBtnText.textContent = 'Proceed to Pay Online (UPI QR)';
-    } else {
-      submitBtnText.textContent = 'Place Order (Cash on Delivery)';
     }
   });
 
@@ -527,7 +523,7 @@ function openOrderModal() {
     const name = form.querySelector('#cust-name').value.trim();
     const phone = form.querySelector('#cust-phone').value.trim();
     const typeLabel = orderTypeSelect.options[orderTypeSelect.selectedIndex].text;
-    const paymentVal = paymentMethodSelect ? paymentMethodSelect.value : 'online';
+    const paymentVal = 'cod';
     const address = orderTypeSelect.value === 'delivery' ? form.querySelector('#cust-address').value.trim() : '';
     const pickupTime = form.querySelector('#cust-pickup-time') ? form.querySelector('#cust-pickup-time').value.trim() : '';
     const specialInstructions = form.querySelector('#cust-instructions') ? form.querySelector('#cust-instructions').value.trim() : '';
@@ -537,7 +533,8 @@ function openOrderModal() {
       return;
     }
 
-    let paymentMethodLabel = paymentVal === 'online' ? 'UPI QR Payment' : 'Cash on Delivery';
+    const paymentChoice = form.querySelector('input[name="payment-method-choice"]:checked').value;
+    let paymentMethodLabel = paymentChoice === 'online' ? 'UPI QR Payment' : 'Cash on Delivery';
 
     // Compute cart items & total
     const cart = getCart();
@@ -594,8 +591,8 @@ function openOrderModal() {
     closeOrderModal();
     updateFloatingCartBar();
 
-    // Redirect to Payment Page or Tracking Page
-    if (paymentVal === 'online') {
+    // Redirect to proper destination based on choice
+    if (paymentChoice === 'online') {
       window.location.href = `payment.html?orderId=${assignedOrderId}`;
     } else {
       window.location.href = `track.html?orderId=${assignedOrderId}`;
@@ -2521,16 +2518,18 @@ export async function openAdminOrdersModal() {
               <th style="padding: 12px; font-weight: 700;">Items</th>
               <th style="padding: 12px; font-weight: 700;">Amount</th>
               <th style="padding: 12px; font-weight: 700;">Payment Method</th>
-              <th style="padding: 12px; font-weight: 700;">UTR Number</th>
-              <th style="padding: 12px; font-weight: 700;">Last 4 Digits</th>
+              <th style="padding: 12px; font-weight: 700;">Screenshot</th>
+              <th style="padding: 12px; font-weight: 700;">Analysis Result</th>
+              <th style="padding: 12px; font-weight: 700;">Risk Level</th>
               <th style="padding: 12px; font-weight: 700;">Submission Time</th>
               <th style="padding: 12px; font-weight: 700;">Token</th>
               <th style="padding: 12px; font-weight: 700;">Status</th>
+              <th style="padding: 12px; font-weight: 700; text-align: center;">Actions</th>
             </tr>
           </thead>
           <tbody id="admin-orders-table-body">
             <tr>
-              <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
                 <p style="margin: 0;">Loading payment records...</p>
               </td>
@@ -2589,7 +2588,7 @@ export async function openAdminOrdersModal() {
     if (list.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="11" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
             <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
             <p style="margin: 0; font-weight: 600;">No orders found matching this filter.</p>
           </td>
@@ -2610,6 +2609,43 @@ export async function openAdminOrdersModal() {
       const submissionTimeStr = new Date(order.updatedAt || order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ', ' + new Date(order.updatedAt || order.createdAt).toLocaleDateString();
       const statusText = order.paymentStatus || 'Order Confirmed';
 
+      const hasScreenshot = !!order.paymentScreenshot;
+      const screenshotHTML = hasScreenshot
+        ? `<a href="${order.paymentScreenshot}" target="_blank" style="color: var(--accent-color); font-weight: 700; text-decoration: underline;"><i class="fa-solid fa-image"></i> View Proof</a>`
+        : '<span style="color:#94a3b8">None</span>';
+
+      const matchResult = order.analysisResult || (order.paymentMethod === 'Cash on Delivery' ? 'COD' : '-');
+      const matchHTML = matchResult.includes('✓') || matchResult === 'COD'
+        ? `<span style="color: #059669; font-weight: 700;">${matchResult}</span>`
+        : matchResult.includes('✕')
+          ? `<span style="color: #dc2626; font-weight: 700;">${matchResult}</span>`
+          : `<span style="color: #d97706; font-weight: 700;">${matchResult}</span>`;
+
+      const risk = order.riskLevel || (order.paymentMethod === 'Cash on Delivery' ? '-' : 'Low');
+      let badgeStyle = "background-color: #ecfdf5; color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);";
+      if (risk === 'Medium') {
+        badgeStyle = "background-color: #fffbeb; color: #d97706; border: 1px solid rgba(245, 158, 11, 0.2);";
+      } else if (risk === 'High') {
+        badgeStyle = "background-color: #fef2f2; color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.2);";
+      }
+      const riskHTML = order.paymentMethod === 'Cash on Delivery'
+        ? '<span style="color:#94a3b8">-</span>'
+        : `<span style="${badgeStyle} padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">${risk} Risk</span>`;
+
+      let actionsHTML = '<span style="color:#94a3b8">-</span>';
+      if (order.paymentMethod === 'UPI QR Payment' && order.paymentStatus === 'Proof Submitted') {
+        actionsHTML = `
+          <div style="display: flex; gap: 6px; justify-content: center;">
+            <button class="btn-admin-approve-payment" data-id="${order.orderId}" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s;">Approve</button>
+            <button class="btn-admin-reject-payment" data-id="${order.orderId}" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s;">Reject</button>
+          </div>
+        `;
+      } else if (order.paymentMethod === 'UPI QR Payment' && order.paymentStatus === 'Paid') {
+        actionsHTML = `<span style="color:#10b981; font-weight:700;">Approved</span>`;
+      } else if (order.paymentMethod === 'UPI QR Payment' && order.paymentStatus === 'Pending' && (order.auditLogs || []).some(l => l.action === 'PAYMENT_REJECTED')) {
+        actionsHTML = `<span style="color:#ef4444; font-weight:700;">Rejected</span>`;
+      }
+
       return `
         <tr style="border-bottom: 1px solid rgba(0,0,0,0.06); transition: background 0.15s ease;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='transparent'">
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark);">${order.orderId}</td>
@@ -2622,8 +2658,9 @@ export async function openAdminOrdersModal() {
               ${order.paymentMethod === 'UPI QR Payment' ? '<i class="fa-solid fa-qrcode" style="color:#059669"></i> UPI QR' : '<i class="fa-solid fa-money-bill-wave"></i> Cash'}
             </span>
           </td>
-          <td style="padding: 10px 12px; font-family: monospace; font-weight: 700; color: #1e293b;">${order.utrNumber || '<em style="color:#94a3b8">Submitted</em>'}</td>
-          <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark); text-align: center;">${order.last4DigitsMobile ? `**** ${order.last4DigitsMobile}` : '-'}</td>
+          <td style="padding: 10px 12px;">${screenshotHTML}</td>
+          <td style="padding: 10px 12px;">${matchHTML}</td>
+          <td style="padding: 10px 12px;">${riskHTML}</td>
           <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${submissionTimeStr}</td>
           <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
           <td style="padding: 10px 12px;">
@@ -2631,6 +2668,7 @@ export async function openAdminOrdersModal() {
               <i class="fa-solid fa-circle-check"></i> ${statusText}
             </span>
           </td>
+          <td style="padding: 10px 12px; text-align: center;">${actionsHTML}</td>
         </tr>
       `;
     }).join('');
@@ -2674,6 +2712,66 @@ export async function openAdminOrdersModal() {
       currentFilter = btn.dataset.filter;
       renderTable();
     });
+  });
+
+  // Table row click delegation for Approve and Reject payment buttons
+  tableBody.addEventListener('click', async (e) => {
+    const approveBtn = e.target.closest('.btn-admin-approve-payment');
+    const rejectBtn = e.target.closest('.btn-admin-reject-payment');
+    const token = sessionStorage.getItem('varevva_admin_token');
+
+    if (approveBtn) {
+      const orderId = approveBtn.dataset.id;
+      if (confirm(`Are you sure you want to approve payment for order ${orderId}?`)) {
+        try {
+          const url = `/api/payments/${orderId}/approve`;
+          const res = await fetch(url, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (res.ok) {
+            alert(`Payment for order ${orderId} approved successfully!`);
+            fetchOrders();
+          } else {
+            const data = await res.json();
+            alert(`Approval failed: ${data.message}`);
+          }
+        } catch (err) {
+          alert(`Connection error: ${err.message}`);
+        }
+      }
+    } else if (rejectBtn) {
+      const orderId = rejectBtn.dataset.id;
+      const reason = prompt('Please enter the reason for rejecting this payment proof:');
+      if (reason === null) return;
+      if (!reason.trim()) {
+        alert('Rejection reason is required.');
+        return;
+      }
+      try {
+        const url = `/api/payments/${orderId}/reject`;
+        const res = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ reason: reason.trim() })
+        });
+        if (res.ok) {
+          alert(`Payment for order ${orderId} rejected successfully.`);
+          fetchOrders();
+        } else {
+          const data = await res.json();
+          alert(`Rejection failed: ${data.message}`);
+        }
+      } catch (err) {
+        alert(`Connection error: ${err.message}`);
+      }
+    }
   });
 }
 

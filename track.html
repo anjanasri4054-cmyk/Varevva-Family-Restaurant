@@ -43,6 +43,17 @@
         </div>
       </div>
 
+      <!-- Rejection Alert Box -->
+      <div id="rejection-alert" style="display: none; background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 14px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; flex-direction: column; gap: 8px;">
+        <div>
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem; vertical-align: middle; margin-right: 6px;"></i>
+          <span style="vertical-align: middle;">Payment Proof Rejected: <span id="rejection-reason" style="font-weight: 500;">-</span></span>
+        </div>
+        <button id="btn-reupload-proof" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; max-width: 180px; font-size: 0.8rem; margin-top: 4px; transition: 0.2s;">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i> Re-submit Proof
+        </button>
+      </div>
+
       <!-- Itemized Receipt Section -->
       <div style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
         <h5 style="font-family: var(--font-header); font-weight: 700; font-size: 0.88rem; margin: 0 0 10px; color: var(--text-dark);">
@@ -54,7 +65,7 @@
       </div>
 
       <!-- Pickup Token Card -->
-      <div id="token-card-section" style="display: flex; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
+      <div id="token-card-section" style="display: none; flex-direction: column; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
         <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Order Confirmed & Pickup Token Issued</span>
         <div style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; color: #065f46; margin: 4px 0;" id="display-pickup-token">A101</div>
         <span style="font-size: 0.88rem; font-weight: 600; color: #047857;" id="display-prep-time">Estimated Preparation Time: 15 Minutes</span>
@@ -67,24 +78,42 @@
 
       <div class="tracking-timeline-container" id="tracking-timeline">
         <!-- Stage 1 -->
-        <div class="timeline-step done" data-stage="Order Placed">
+        <div class="timeline-step pending" data-stage="Order Placed">
           <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
           <div class="timeline-content">
             <span class="timeline-title">Order Placed</span>
-            <span class="timeline-sub">Customer order placed & confirmed</span>
+            <span class="timeline-sub">Customer order details registered</span>
           </div>
         </div>
 
         <!-- Stage 2 -->
-        <div class="timeline-step preparing" data-stage="Preparing Food">
-          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner fa-bounce"></i></div>
+        <div class="timeline-step pending" data-stage="Payment Proof Submitted">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-receipt"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Payment Proof Submitted</span>
+            <span class="timeline-sub">Proof of payment uploaded & scanned</span>
+          </div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="timeline-step pending" data-stage="Order Confirmed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-check-double"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Order Confirmed</span>
+            <span class="timeline-sub">Order is confirmed and token assigned</span>
+          </div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="timeline-step pending" data-stage="Preparing Food">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner"></i></div>
           <div class="timeline-content">
             <span class="timeline-title">Preparing Food</span>
             <span class="timeline-sub">Chef is preparing your meal</span>
           </div>
         </div>
 
-        <!-- Stage 3 -->
+        <!-- Stage 5 -->
         <div class="timeline-step pending" data-stage="Ready for Pickup">
           <div class="timeline-icon-circle"><i class="fa-solid fa-bell-concierge"></i></div>
           <div class="timeline-content">
@@ -93,7 +122,7 @@
           </div>
         </div>
 
-        <!-- Stage 4 -->
+        <!-- Stage 6 -->
         <div class="timeline-step pending" data-stage="Completed">
           <div class="timeline-icon-circle"><i class="fa-solid fa-house-flag"></i></div>
           <div class="timeline-content">
@@ -129,6 +158,8 @@
 
     const stagesOrder = [
       'Order Placed',
+      'Payment Proof Submitted',
+      'Order Confirmed',
       'Preparing Food',
       'Ready for Pickup',
       'Completed'
@@ -191,15 +222,36 @@
         `;
       }
 
-      const currentStage = order.orderStage || 'Preparing Food';
+      const currentStage = order.orderStage || 'Order Placed';
+
+      // Check payment rejection
+      const rejectionLog = (order.auditLogs || []).slice().reverse().find(l => l.action === 'PAYMENT_REJECTED');
+      const rejectionAlert = document.getElementById('rejection-alert');
+      const rejectionReason = document.getElementById('rejection-reason');
+
+      if (rejectionLog) {
+        rejectionAlert.style.display = 'flex';
+        rejectionReason.textContent = rejectionLog.reason || 'Invalid screenshot or transaction mismatch.';
+        
+        const reuploadBtn = document.getElementById('btn-reupload-proof');
+        reuploadBtn.onclick = () => {
+          window.location.href = `payment.html?orderId=${order.orderId}`;
+        };
+      } else {
+        rejectionAlert.style.display = 'none';
+      }
 
       // Pickup Token Display Card
-      tokenCardSection.style.display = 'flex';
-      displayPickupToken.textContent = order.pickupToken || 'A101';
-      displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
+      if (order.pickupToken) {
+        tokenCardSection.style.display = 'flex';
+        displayPickupToken.textContent = order.pickupToken;
+        displayPrepTime.textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
+      } else {
+        tokenCardSection.style.display = 'none';
+      }
 
       // Update Timeline Nodes dynamically
-      const currentIdx = stagesOrder.indexOf(currentStage) !== -1 ? stagesOrder.indexOf(currentStage) : 1;
+      const currentIdx = stagesOrder.indexOf(currentStage) !== -1 ? stagesOrder.indexOf(currentStage) : 0;
       const stepNodes = document.querySelectorAll('.timeline-step');
 
       stepNodes.forEach(node => {
@@ -210,22 +262,30 @@
           node.className = 'timeline-step done';
           node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
         } else if (idx === currentIdx) {
-          if (stageName === 'Preparing Food') {
-            node.className = 'timeline-step preparing';
+          node.className = 'timeline-step preparing';
+          if (stageName === 'Order Placed') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check fa-bounce"></i>';
+          } else if (stageName === 'Payment Proof Submitted') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-receipt fa-bounce"></i>';
+          } else if (stageName === 'Order Confirmed') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-check-double fa-bounce"></i>';
+          } else if (stageName === 'Preparing Food') {
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner fa-bounce"></i>';
           } else if (stageName === 'Ready for Pickup') {
-            node.className = 'timeline-step preparing';
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-bell-concierge fa-bounce"></i>';
           } else if (stageName === 'Completed') {
             node.className = 'timeline-step done';
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-house-flag"></i>';
-          } else {
-            node.className = 'timeline-step done';
-            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
           }
         } else {
           node.className = 'timeline-step pending';
-          if (stageName === 'Preparing Food') {
+          if (stageName === 'Order Placed') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+          } else if (stageName === 'Payment Proof Submitted') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-receipt"></i>';
+          } else if (stageName === 'Order Confirmed') {
+            node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-check-double"></i>';
+          } else if (stageName === 'Preparing Food') {
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-fire-burner"></i>';
           } else if (stageName === 'Ready for Pickup') {
             node.querySelector('.timeline-icon-circle').innerHTML = '<i class="fa-solid fa-bell-concierge"></i>';

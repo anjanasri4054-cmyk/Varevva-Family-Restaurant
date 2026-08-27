@@ -144,6 +144,70 @@ function renderSuccess(container, payload) {
       </div>
     </div>
   `;
+
+  // Fetch online payment verification status if orderId is provided
+  const urlParams = new URLSearchParams(window.location.search);
+  const orderId = urlParams.get('orderId');
+  if (orderId) {
+    const dbStatusContainer = document.createElement('div');
+    dbStatusContainer.id = 'verify-db-status';
+    dbStatusContainer.style.marginTop = '16px';
+    dbStatusContainer.style.borderTop = '1px dashed rgba(0,0,0,0.08)';
+    dbStatusContainer.style.paddingTop = '16px';
+    dbStatusContainer.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Checking live payment verification...`;
+
+    const verifyDetails = container.querySelector('.verify-details');
+    const verifyFooter = container.querySelector('.verify-footer');
+    if (verifyDetails && verifyFooter) {
+      verifyDetails.insertBefore(dbStatusContainer, verifyFooter);
+    }
+
+    setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/orders/track/${orderId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order) {
+            const order = data.order;
+            dbStatusContainer.innerHTML = `
+              <h3 style="font-family: var(--font-header); font-size: 0.95rem; margin: 0 0 10px 0; color: var(--text-dark); text-align: left;">Live Payment Status</h3>
+              <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.8rem; text-align: left;">
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Order Reference ID:</span>
+                  <span style="font-weight: 700; color: var(--text-dark);">${order.orderId}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Payment Method:</span>
+                  <span style="font-weight: 600; color: var(--text-dark);">${order.paymentMethod}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Payment Status:</span>
+                  <span style="font-weight: 700; color: ${order.paymentStatus === 'Paid' ? '#059669' : '#d97706'};">${order.paymentStatus}</span>
+                </div>
+                ${order.utrNumber ? `
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Transaction / UTR ID:</span>
+                  <span style="font-family: monospace; font-weight: 700; color: var(--text-dark);">${order.utrNumber}</span>
+                </div>` : ''}
+                <div style="display: flex; justify-content: space-between;">
+                  <span style="color: var(--text-muted);">Verification Status:</span>
+                  <span style="font-weight: 700; color: ${order.orderStage === 'Order Confirmed' || order.orderStage === 'Preparing Food' || order.orderStage === 'Ready for Pickup' || order.orderStage === 'Completed' ? '#059669' : '#d97706'};">
+                    ${order.orderStage === 'Order Confirmed' || order.orderStage === 'Preparing Food' || order.orderStage === 'Ready for Pickup' || order.orderStage === 'Completed' ? '✓ VERIFIED' : 'PENDING'}
+                  </span>
+                </div>
+              </div>
+            `;
+          } else {
+            dbStatusContainer.remove();
+          }
+        } else {
+          dbStatusContainer.remove();
+        }
+      } catch (err) {
+        dbStatusContainer.remove();
+      }
+    }, 100);
+  }
 }
 
 function renderError(container, message) {

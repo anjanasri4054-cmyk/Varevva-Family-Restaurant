@@ -4,21 +4,230 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pay Online | Varevva Family Restaurant</title>
-  <meta name="description" content="Complete your UPI payment for Varevva Family Restaurant order. Scan QR code and submit UTR / Transaction ID to confirm order.">
+  <meta name="description" content="Complete your UPI payment for Varevva Family Restaurant. Scan the QR code and upload a screenshot of your payment proof.">
   <link rel="stylesheet" href="/src/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #f59e0b;
+      --primary-light: #fef3c7;
+      --accent-color: #d97706;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --light-bg: #f8fafc;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      background-color: var(--light-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+    }
+
+    .main-wrapper {
+      max-width: 600px;
+      width: calc(100% - 32px);
+      margin: 24px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      background-color: #ecfdf5;
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      margin-top: 4px;
+    }
+
+    .receipt-table th {
+      border-bottom: 1.5px solid rgba(0, 0, 0, 0.1);
+      color: var(--text-muted);
+      text-align: left;
+      padding: 6px 0;
+      font-weight: 600;
+    }
+
+    .receipt-table td {
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+    }
+
+    .amount-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--light-bg);
+      border: 1.5px solid rgba(245, 158, 11, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+    }
+
+    .amount-banner-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .amount-banner-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent-color);
+    }
+
+    .upi-pill {
+      background: var(--light-bg);
+      border: 1px solid rgba(0,0,0,0.06);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-action {
+      background: var(--primary-color);
+      border: none;
+      color: var(--text-dark);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition-smooth);
+      width: 100%;
+    }
+
+    .btn-action:hover {
+      background: var(--accent-color);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .btn-action:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      background: #e2e8f0;
+      color: var(--text-muted);
+    }
+
+    .result-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .result-badge.low {
+      background-color: #ecfdf5;
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .result-badge.medium {
+      background-color: #fffbeb;
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .result-badge.high {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+
+    .proof-upload-error-box {
+      display: none;
+      background: #fef2f2 !important;
+      border: 1.5px solid #ef4444 !important;
+      color: #b91c1c !important;
+      padding: 12px 16px !important;
+      border-radius: 10px !important;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      text-align: left !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin-top: 10px !important;
+    }
+  </style>
 </head>
-<body style="background-color: var(--light-bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column;">
+<body>
 
   <!-- Simple Header -->
   <header style="background: #ffffff; padding: 14px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06);">
     <div style="display: flex; align-items: center; gap: 12px;">
       <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
         <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: var(--text-dark); font-weight: 800; font-size: 1.1rem;">V</div>
-        <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.2rem; color: var(--text-dark);">VAREVVA</span>
+        <span style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text-dark);">VAREVVA</span>
       </a>
     </div>
     <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent-color); background: var(--primary-light); padding: 4px 12px; border-radius: 20px;">
@@ -26,137 +235,352 @@
     </span>
   </header>
 
-  <!-- Main Container -->
-  <main style="flex: 1; max-width: 600px; width: calc(100% - 32px); margin: 24px auto; padding: 0 16px;">
+  <!-- Flow 1: Active Payment & Upload Screen -->
+  <div id="payment-flow-container" class="main-wrapper">
     
-    <!-- Payment Card -->
-    <div class="online-payment-card" style="margin: 0; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
-      
-      <!-- Card Header -->
-      <div class="payment-card-header">
-        <div class="payment-title-group">
-          <i class="fa-solid fa-qrcode payment-icon"></i>
-          <h2 class="payment-card-title" style="font-size: 1.25rem;">Complete Payment</h2>
+    <!-- Header Title Info -->
+    <div class="card" style="padding: 16px 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Checkout Order</span>
+          <h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800;" id="display-order-id">VRVXXXX</h2>
         </div>
-        <span class="payment-badge" id="order-id-badge"><i class="fa-solid fa-receipt"></i> Loading...</span>
+        <span class="badge" id="order-status-badge">Awaiting Payment</span>
       </div>
+    </div>
 
-      <!-- Order Summary Collapsible Card -->
-      <div style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <span style="font-family: var(--font-header); font-weight: 700; font-size: 0.9rem; color: var(--text-dark);">
-            <i class="fa-solid fa-bag-shopping" style="color: var(--primary-color);"></i> Order Summary
-          </span>
-          <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.1rem; color: var(--accent-color);" id="display-total-amount"><i class="fa-solid fa-spinner fa-spin"></i></span>
-        </div>
-        <div id="payment-items-summary" style="font-size: 0.82rem; color: var(--text-dark); display: flex; flex-direction: column; gap: 4px;">
-          <!-- Dynamically populated -->
+    <!-- Order Items Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-utensils" style="color: var(--primary-color);"></i> Ordered Items</h3>
+      </div>
+      <div id="payment-items-list">
+        <!-- Dynamically populated -->
+        <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+          <i class="fa-solid fa-spinner fa-spin"></i> Loading ordered items...
         </div>
       </div>
+    </div>
 
-      <!-- QR Code Section -->
-      <div style="text-align: center; margin-bottom: 16px;">
-        <p class="payment-card-subtitle" style="margin-bottom: 12px;">Scan the QR code below using PhonePe, Google Pay, Paytm, or any UPI app.</p>
+    <!-- Scan & Pay Details -->
+    <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px;">
+      <div style="width: 100%;">
+        <h3 class="card-title" style="justify-content: center; font-size: 1.25rem;"><i class="fa-solid fa-qrcode" style="color: var(--primary-color);"></i> Scan & Pay</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 4px 0 0 0;">Please scan the restaurant QR code and complete your payment.</p>
+      </div>
+
+      <!-- Static QR Image -->
+      <div style="background: #ffffff; padding: 12px; border: 2px solid rgba(0, 0, 0, 0.06); border-radius: 16px; margin: 4px 0;">
+        <img src="/assets/upi_qr.png" alt="Varevva UPI QR Code" style="width: 200px; max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px;">
+      </div>
+
+      <!-- Copy UPI ID -->
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; width: 100%;">
+        <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">UPI ID:</span>
+        <code style="font-family: monospace; font-weight: 700; font-size: 0.88rem; background: var(--primary-light); color: var(--accent-color); padding: 4px 10px; border-radius: 8px;" id="upi-id-text">6302019925@ybl</code>
+        <button type="button" id="btn-copy-upi" style="background: var(--primary-color); border: none; padding: 5px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; transition: var(--transition-smooth);">
+          <i class="fa-solid fa-copy"></i> Copy UPI
+        </button>
+      </div>
+
+      <!-- Supported Apps -->
+      <div style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 12px; width: 100%;">
+        <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Supported Apps</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+          <span class="upi-pill"><i class="fa-solid fa-mobile-screen-button" style="color:#5f259f"></i> PhonePe</span>
+          <span class="upi-pill"><i class="fa-solid fa-credit-card" style="color:#2563eb"></i> Google Pay</span>
+          <span class="upi-pill"><i class="fa-solid fa-wallet" style="color:#00baf2"></i> Paytm</span>
+          <span class="upi-pill"><i class="fa-solid fa-building-columns" style="color:#f59e0b"></i> BHIM UPI</span>
+          <span class="upi-pill"><i class="fa-solid fa-ellipsis" style="color:var(--text-muted)"></i> Others</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step-by-Step Payment Instructions -->
+    <div class="card" style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.05);">
+      <h4 style="margin: 0 0 12px 0; font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-list-check" style="color: var(--primary-color);"></i> Payment Steps
+      </h4>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.82rem; line-height: 1.45;">
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">1</span>
+          <span>Scan the Varevva QR code using any UPI app.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">2</span>
+          <span>Pay the exact amount shown above.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">3</span>
+          <span>Complete the payment.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">4</span>
+          <span>Open the successful payment/transaction screen.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">5</span>
+          <span>Take a screenshot showing the payment details.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">6</span>
+          <span>Upload the screenshot below.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload screenshot proof card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary-color);"></i> Upload Payment Screenshot</h3>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin: -4px 0 16px 0;">Upload a screenshot of your successful UPI payment.</p>
+
+      <form id="screenshot-upload-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <input type="file" id="proof-file-input" accept=".jpg,.jpeg,.png,.webp,image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1; overflow: hidden;">
         
-        <div class="qr-container" style="background: #ffffff; padding: 14px; border: 2px solid rgba(0,0,0,0.06); border-radius: 16px; display: inline-block;">
-          <img src="/assets/upi_qr.png" alt="Scan QR code using PhonePe, Google Pay, Paytm, or BHIM UPI" class="qr-code-img" style="width: 220px; max-width: 100%; height: auto;">
-        </div>
-
-        <!-- UPI ID Row -->
-        <div style="margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-          <span style="font-size: 0.84rem; font-weight: 600; color: var(--text-muted);">UPI ID:</span>
-          <code style="font-family: monospace; font-weight: 700; font-size: 0.92rem; background: var(--primary-light); color: var(--text-dark); padding: 4px 10px; border-radius: 8px;" id="upi-id-text">6302019925@ybl</code>
-          <button type="button" id="btn-copy-upi" style="background: var(--primary-color); border: none; padding: 4px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
-            <i class="fa-solid fa-copy"></i> Copy
-          </button>
-        </div>
-      </div>
-
-      <!-- 4 Steps Instructions -->
-      <div class="payment-instructions-box" style="margin-bottom: 20px;">
-        <h5 class="instructions-title"><i class="fa-solid fa-list-check"></i> Payment Instructions</h5>
-        <ol class="payment-steps-list">
-          <li class="payment-step-item">
-            <span class="step-icon-wrapper"><i class="fa-solid fa-mobile-screen-button"></i></span>
-            <span class="step-text"><strong>Step 1:</strong> Scan the QR Code using PhonePe, Google Pay, Paytm, or any UPI App.</span>
-          </li>
-          <li class="payment-step-item">
-            <span class="step-icon-wrapper"><i class="fa-solid fa-indian-rupee-sign"></i></span>
-            <span class="step-text"><strong>Step 2:</strong> Pay the exact amount shown above (<strong id="step-amount-text">...</strong>).</span>
-          </li>
-          <li class="payment-step-item">
-            <span class="step-icon-wrapper"><i class="fa-solid fa-receipt"></i></span>
-            <span class="step-text"><strong>Step 3:</strong> Copy the UTR / Transaction ID from your payment app receipt.</span>
-          </li>
-          <li class="payment-step-item">
-            <span class="step-icon-wrapper"><i class="fa-solid fa-file-signature"></i></span>
-            <span class="step-text"><strong>Step 4:</strong> Enter your UTR / Transaction ID & Last 4 digits below to submit payment details.</span>
-          </li>
-        </ol>
-      </div>
-
-      <!-- UTR Input Form -->
-      <form id="utr-submit-form" style="display: flex; flex-direction: column; gap: 14px;">
-        
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label for="utr-input" style="font-weight: 700; font-size: 0.88rem; margin: 0;">
-              <i class="fa-solid fa-key" style="color: var(--primary-color);"></i> UTR / Transaction ID <span style="color: #ef4444;">*</span>
-            </label>
-            <span id="utr-live-badge" style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">12-22 chars</span>
+        <!-- Drag & Drop container -->
+        <div id="proof-dropzone" style="border: 2px dashed rgba(0,0,0,0.15); border-radius: 12px; padding: 30px 16px; text-align: center; background: var(--light-bg); cursor: pointer; transition: var(--transition-smooth); display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative;">
+          
+          <!-- Custom scanning spinner overlay -->
+          <div id="proof-loading" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.2rem; color: var(--primary-color);"></i>
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark);" id="proof-loading-text">Verifying payment screenshot...</span>
           </div>
-          <input type="text" id="utr-input" maxlength="22" placeholder="Example: ************" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem; font-family: monospace; text-transform: uppercase;">
-          <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;" id="utr-help-text">Found in PhonePe, GPay or Paytm payment receipt screen.</span>
-        </div>
 
-        <div class="form-group">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-            <label for="last4-mobile-input" style="font-weight: 700; font-size: 0.88rem; margin: 0;">
-              <i class="fa-solid fa-phone" style="color: var(--primary-color);"></i> Last 4 Digits of Mobile Used for Payment <span style="color: #ef4444;">*</span>
-            </label>
-            <span id="mobile-hint-badge" style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted);">Matches registered mobile</span>
+          <!-- Prompt prompt -->
+          <div id="dropzone-prompt" style="display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; width: 100%;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary-color);"></i>
+            <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-dark);">Drag & drop screenshot here or <span style="color: var(--accent-color); text-decoration: underline;">Browse</span></span>
+            <span style="font-size: 0.74rem; color: var(--text-muted); font-weight: 500;">Supports PNG, JPG, JPEG, WEBP (Max 5MB)</span>
           </div>
-          <input type="text" id="last4-mobile-input" maxlength="4" placeholder="Example: ****" required style="padding: 12px; border-radius: 10px; border: 1.5px solid rgba(0,0,0,0.15); font-size: 0.95rem; font-family: monospace;">
+
+          <!-- Preview & Action Container -->
+          <div id="proof-preview-container" style="display: none; flex-direction: column; align-items: center; gap: 12px; width: 100%;">
+            <img id="proof-img-preview" src="" alt="Payment Screenshot Preview" style="max-height: 180px; max-width: 100%; border-radius: 8px; object-fit: contain; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.08);">
+            
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+              <button type="button" id="btn-change-proof" style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.15); padding: 6px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; color: var(--text-dark); display: flex; align-items: center; gap: 4px; transition: var(--transition-smooth);">
+                <i class="fa-solid fa-arrows-rotate"></i> Replace
+              </button>
+              <button type="button" id="btn-remove-proof" style="background: #fef2f2; border: 1px solid rgba(239,68,68,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; color: #ef4444; display: flex; align-items: center; gap: 4px; transition: var(--transition-smooth);">
+                <i class="fa-solid fa-trash-can"></i> Remove
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Validation Alert Banner -->
-        <div id="utr-error-alert" style="display: none; background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 10px 14px; border-radius: 10px; font-size: 0.84rem; font-weight: 600; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-circle-exclamation" style="font-size: 1rem; flex-shrink: 0;"></i>
-          <span id="utr-error-msg-text">Error message</span>
+        <!-- Custom Upload Validation Alert -->
+        <div id="proof-upload-error" class="proof-upload-error-box">
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 1.1rem; color: #b91c1c !important; margin-right: 6px; vertical-align: middle;"></i>
+          <span id="proof-upload-error-text" style="color: #b91c1c !important; vertical-align: middle; line-height: 1.4;">File error details</span>
         </div>
 
-        <!-- Validation Success Banner -->
-        <div id="utr-success-alert" style="display: none; background: #ecfdf5; border: 1.5px solid #10b981; color: #047857; padding: 10px 14px; border-radius: 10px; font-size: 0.84rem; font-weight: 700; align-items: center; gap: 8px;">
-          <i class="fa-solid fa-circle-check" style="font-size: 1rem; flex-shrink: 0;"></i>
-          <span>Valid UTR & Registered Mobile Suffix Matched! Ready to submit.</span>
+        <!-- Manual UTR / Transaction ID Input Field -->
+        <div class="form-group" id="utr-input-container" style="display: flex; flex-direction: column; gap: 6px; text-align: left; margin-top: 10px;">
+          <label for="customer-utr-input" style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark);">UPI Transaction ID / UTR Number (12 Digits)</label>
+          <input type="text" id="customer-utr-input" placeholder="e.g. 621935820148" pattern="[a-zA-Z0-9]{12,22}" title="Please enter a valid 12 to 22 digit Transaction ID / UTR" required style="padding: 10px 12px; border-radius: 8px; border: 1.5px solid rgba(0,0,0,0.12); outline: none; font-family: monospace; font-size: 0.95rem; width: 100%; box-sizing: border-box; background: var(--light-bg);">
+          <p style="font-size: 0.74rem; color: var(--text-muted); margin: 0;">
+            Note: Enter the 12-digit transaction ID or UTR from your PhonePe success screen.
+          </p>
         </div>
 
-        <button type="submit" id="btn-submit-payment-utr" class="btn-submit-order" disabled style="width: 100%; margin-top: 6px; opacity: 0.6; cursor: not-allowed;">
-          <span>Submit Payment</span>
+        <!-- Automated Verification / Analysis results display -->
+        <div id="proof-analysis-panel" style="display: none; background: var(--light-bg); border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 16px; flex-direction: column; gap: 10px;">
+          <h4 style="margin: 0; font-size: 0.88rem; font-weight: 800; color: var(--text-dark); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-shield-check" style="color: var(--primary-color);"></i> Payment Scan Results
+          </h4>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; margin-top: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Success Confirmation:</span>
+              <span id="analysis-success-status" style="font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">UTR / Txn ID:</span>
+              <span id="analysis-txn-detected" style="font-family: monospace; font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Recipient Match:</span>
+              <span id="analysis-recipient-match" style="font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Detected Amount:</span>
+              <span id="analysis-detected-amount" style="font-weight: 700; color: var(--text-dark);">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Amount Match:</span>
+              <span id="analysis-amount-match" style="font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 8px; margin-top: 4px;">
+              <span style="color: var(--text-dark); font-weight: 800; font-size: 0.86rem;">Verification Decision:</span>
+              <span id="analysis-decision" style="font-weight: 800; font-size: 0.86rem;">Analyzing...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Fraud Risk Level:</span>
+              <span id="analysis-risk-level" class="result-badge low">Low</span>
+            </div>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.35; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 8px;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Note: This automated analysis performs a visual verification check. Screenshot proof does not guarantee restaurant bank clearance.
+          </p>
+        </div>
+
+        <button type="submit" id="btn-submit-payment-proof" class="btn-action" disabled style="opacity: 0.6; cursor: not-allowed; margin-top: 6px;">
+          <span>Submit Payment Proof</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </form>
-
     </div>
-  </main>
+
+  </div>
+
+  <!-- Flow 2: Customer Success View & Receipt -->
+  <div id="success-flow-container" class="main-wrapper" style="display: none;">
+    
+    <!-- Success Banner -->
+    <div class="card" style="text-align: center; padding: 30px 20px; border: 2px solid #10b981; background: #f0fdf4;">
+      <div style="width: 54px; height: 54px; border-radius: 50%; background: #10b981; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 12px auto; box-shadow: 0 4px 10px rgba(16,185,129,0.2);">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h2 style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.45rem; color: #065f46; margin: 0 0 6px 0;">✓ Payment Proof Submitted</h2>
+      <p style="font-size: 0.88rem; color: #047857; line-height: 1.4; margin: 0 auto; max-width: 400px;">
+        Your payment screenshot has been submitted successfully.
+      </p>
+    </div>
+
+    <!-- Pickup Token Section -->
+    <div class="card" style="background: var(--light-bg); border: 2.5px solid var(--accent-color); text-align: center; padding: 24px 20px;">
+      <span style="font-size: 0.78rem; font-weight: 800; color: var(--accent-color); letter-spacing: 1px; text-transform: uppercase;">AWAITING VERIFICATION</span>
+      <h3 style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; margin: 4px 0 0 0;">PICKUP TOKEN (PENDING CONFIRMATION)</h3>
+      <div style="font-family: 'Outfit', sans-serif; font-size: 3.4rem; font-weight: 800; color: var(--text-dark); margin: 6px 0;" id="success-pickup-token">----</div>
+      <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-dark); background: var(--primary-light); padding: 4px 14px; border-radius: 20px; display: inline-block;" id="success-prep-time">Estimated Preparation Time: 15 Minutes</span>
+    </div>
+
+    <!-- Screenshot Summary Panel -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-color);"></i> Screenshot Analysis Result</h3>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Payment Proof Status</span>
+          <span style="font-weight: 700; color: #059669;"><i class="fa-solid fa-circle-check"></i> Submitted</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Screenshot Analysis</span>
+          <span style="font-weight: 700; color: var(--text-dark);">Completed</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Amount Match</span>
+          <span style="font-weight: 700; color: #059669;" id="success-amount-match">✓ Yes</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Detected Amount</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-detected-amount">₹0</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Detected Txn ID</span>
+          <span style="font-family: monospace; font-weight: 700; color: var(--text-dark);" id="success-detected-txn">-</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+          <span style="color: var(--text-muted);">Image Risk Check</span>
+          <span id="success-risk-badge" class="result-badge low">Low Risk</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Items Receipt Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-receipt" style="color: var(--primary-color);"></i> Order Details Receipt</h3>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.84rem; border-bottom: 1.5px solid rgba(0,0,0,0.08); padding-bottom: 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Order ID</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-order-id">VRVXXXX</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Customer Name</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-customer-name">...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Customer Mobile</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-customer-phone">...</span>
+        </div>
+      </div>
+      
+      <!-- Table of items -->
+      <table class="receipt-table" id="success-receipt-table">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Item</th>
+            <th style="text-align: center;">Qty</th>
+            <th style="text-align: right;">Price</th>
+            <th style="text-align: right;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+
+      <!-- Total banner -->
+      <div class="amount-banner" style="margin-top: 16px; padding: 12px 16px; border-color: rgba(16, 185, 129, 0.15); background: #f9fbf9;">
+        <span class="amount-banner-title" style="color: #047857;">Total Amount Paid</span>
+        <span class="amount-banner-value" style="color: #059669; font-size: 1.45rem;" id="success-total-paid">₹0</span>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <a href="index.html" class="btn-action" style="text-decoration: none; flex: 1;">
+          <i class="fa-solid fa-house"></i> Return to Menu
+        </a>
+        <button type="button" id="btn-success-track" class="btn-action" style="background: var(--light-bg); border: 1.5px solid rgba(0,0,0,0.12); color: var(--text-dark); flex: 1;">
+          <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Track Order Timeline
+        </button>
+      </div>
+    </div>
+
+  </div>
 
   <script type="module">
-    // Extract Order Details from URL or Local Storage
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('orderId') || localStorage.getItem('varevva_last_order_id') || 'VRV1001';
 
-    const orderIdBadge = document.getElementById('order-id-badge');
-    const displayTotalAmount = document.getElementById('display-total-amount');
-    const stepAmountText = document.getElementById('step-amount-text');
-    const paymentItemsSummary = document.getElementById('payment-items-summary');
-    const mobileHintBadge = document.getElementById('mobile-hint-badge');
+    // Dom selectors
+    const displayOrderId = document.getElementById('display-order-id');
+    const paymentItemsList = document.getElementById('payment-items-list');
+    
+    // File inputs & preview elements
+    const fileInput = document.getElementById('proof-file-input');
+    const dropzone = document.getElementById('proof-dropzone');
+    const promptDiv = document.getElementById('dropzone-prompt');
+    const previewContainer = document.getElementById('proof-preview-container');
+    const imgPreview = document.getElementById('proof-img-preview');
+    const uploadError = document.getElementById('proof-upload-error');
+    const uploadErrorText = document.getElementById('proof-upload-error-text');
+    const analysisPanel = document.getElementById('proof-analysis-panel');
+    const submitBtn = document.getElementById('btn-submit-payment-proof');
+    
+    // Analysis fields
+    const analysisDetectedAmount = document.getElementById('analysis-detected-amount');
+    const analysisAmountMatch = document.getElementById('analysis-amount-match');
+    const analysisRiskLevel = document.getElementById('analysis-risk-level');
 
-    orderIdBadge.innerHTML = `<i class="fa-solid fa-receipt"></i> Order: ${orderId}`;
+    displayOrderId.textContent = orderId;
 
-    let registeredCustomerPhone = '';
-    let expectedLast4 = '';
+    let orderTotalAmount = 0;
+    let orderDetails = null;
+    let uploadedProofFile = null;
 
-    // Fetch order summary from backend API
+    // OCR scanning parsed state
+    let extractedDetails = {
+      amount: 0,
+      txnId: '',
+      riskLevel: 'Low',
+      analysisResult: 'No Proof Uploaded'
+    };
+
+    // Load order sum
     async function loadOrderDetails() {
       try {
         const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -167,68 +591,101 @@
         if (res.ok) {
           const data = await res.json();
           if (data.order) {
-            const order = data.order;
-            displayTotalAmount.textContent = `₹${order.totalAmount}`;
-            stepAmountText.textContent = `₹${order.totalAmount}`;
-            
-            registeredCustomerPhone = order.customerPhone || '';
-            const cleanPhone = registeredCustomerPhone.replace(/\D/g, '');
-            expectedLast4 = cleanPhone.length >= 4 ? cleanPhone.slice(-4) : '';
+            orderDetails = data.order;
+            orderTotalAmount = parseFloat(orderDetails.totalAmount || 0);
 
-            if (registeredCustomerPhone) {
-              mobileHintBadge.textContent = `Mobile: ****${expectedLast4}`;
-            }
-
-            if (order.items && order.items.length > 0) {
-              paymentItemsSummary.innerHTML = `
-                <table style="width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 4px;">
-                  <thead style="border-bottom: 1.5px solid rgba(0,0,0,0.1); color: var(--text-muted);">
-                    <tr>
-                      <th style="text-align: left; padding: 4px 0;">Item Name</th>
-                      <th style="text-align: center; padding: 4px 0;">Qty</th>
-                      <th style="text-align: right; padding: 4px 0;">Unit Price</th>
-                      <th style="text-align: right; padding: 4px 0;">Subtotal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${order.items.map(item => {
-                      let name = item.name || item.title || 'Menu Item';
-                      if (/^[a-f0-9]{24}$/i.test(name.trim())) {
-                        name = item.title || 'Special Dish';
-                      }
-                      const qty = item.quantity || 1;
-                      const price = item.price || (item.subtotal ? Math.round(item.subtotal / qty) : 0);
-                      const subtotal = item.subtotal || (price * qty);
-                      return `
-                        <tr style="border-bottom: 1px dashed rgba(0,0,0,0.06);">
-                          <td style="padding: 5px 0; font-weight: 600;">${name}</td>
-                          <td style="padding: 5px 0; text-align: center; font-weight: 700;">${qty}</td>
-                          <td style="padding: 5px 0; text-align: right; color: var(--text-muted);">₹${price}</td>
-                          <td style="padding: 5px 0; text-align: right; font-weight: 700; color: var(--accent-color);">₹${subtotal}</td>
-                        </tr>
-                      `;
-                    }).join('')}
-                  </tbody>
-                </table>
+            if (!orderTotalAmount || orderTotalAmount <= 0) {
+              paymentItemsList.innerHTML = `
+                <div style="background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+                  <span><i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i> Invalid Order Amount (₹${orderTotalAmount || 0}). Payment cannot be processed.</span>
+                </div>
               `;
-            } else {
-              paymentItemsSummary.innerHTML = '<span>Customer Meal Order</span>';
+              dropzone.style.opacity = '0.5';
+              dropzone.style.pointerEvents = 'none';
+              return;
             }
 
-            // If already submitted UTR, proceed directly to track page
-            if (order.utrNumber) {
-              window.location.href = `track.html?orderId=${orderId}`;
+            renderOrderItems(orderDetails);
+
+            // If order already has paymentScreenshot and is COD or Paid, skip checkout or redirect
+            if (orderDetails.paymentStatus === 'Proof Submitted' || orderDetails.paymentStatus === 'Paid') {
+              displaySuccessFlow(orderDetails);
             }
           }
         }
-      } catch (e) {
-        console.warn('Order details fetch error:', e);
+      } catch (err) {
+        console.warn('Failed to load order:', err);
         const cachedTotal = localStorage.getItem('varevva_last_total');
-        if (cachedTotal) {
-          displayTotalAmount.textContent = `₹${cachedTotal}`;
-          stepAmountText.textContent = `₹${cachedTotal}`;
+        if (cachedTotal && parseFloat(cachedTotal) > 0) {
+          orderTotalAmount = parseFloat(cachedTotal);
+          paymentItemsList.innerHTML = `
+            <div class="amount-banner">
+              <span class="amount-banner-title">Total Amount to Pay (Cached)</span>
+              <span class="amount-banner-value">₹${orderTotalAmount}</span>
+            </div>
+            <div style="background: #fffbeb; border: 1px solid #f59e0b40; color: #b45309; padding: 10px; border-radius: 8px; font-size: 0.76rem; margin-top: 8px; font-weight: 600;">
+              <i class="fa-solid fa-triangle-exclamation"></i> Working offline. Using cached order total. Some payment validation features might be restricted.
+            </div>
+          `;
+        } else {
+          orderTotalAmount = 0;
+          paymentItemsList.innerHTML = `
+            <div style="background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; text-align: center; display: flex; flex-direction: column; gap: 10px;">
+              <span><i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i> Failed to retrieve order details from the server.</span>
+              <button type="button" onclick="window.location.reload()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; max-width: 150px; margin: 0 auto; transition: 0.2s;">
+                <i class="fa-solid fa-arrows-rotate"></i> Retry Loading
+              </button>
+            </div>
+          `;
+          dropzone.style.opacity = '0.5';
+          dropzone.style.pointerEvents = 'none';
         }
       }
+    }
+
+    function renderOrderItems(order) {
+      if (!order.items || order.items.length === 0) {
+        paymentItemsList.innerHTML = `
+          <div class="amount-banner">
+            <span class="amount-banner-title">Total Amount to Pay</span>
+            <span class="amount-banner-value">₹${order.totalAmount}</span>
+          </div>
+        `;
+        return;
+      }
+
+      paymentItemsList.innerHTML = `
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th style="text-align: center;">Qty</th>
+              <th style="text-align: right;">Price</th>
+              <th style="text-align: right;">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${order.items.map(item => {
+              const name = item.name || item.title || 'Special Item';
+              const qty = item.quantity || 1;
+              const price = item.price || 0;
+              const subtotal = item.subtotal || (price * qty);
+              return `
+                <tr>
+                  <td style="font-weight: 600;">${name}</td>
+                  <td style="text-align: center; font-weight: 700;">${qty}</td>
+                  <td style="text-align: right; color: var(--text-muted);">₹${price}</td>
+                  <td style="text-align: right; font-weight: 700; color: var(--accent-color);">₹${subtotal}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+        <div class="amount-banner">
+          <span class="amount-banner-title">Total Amount to Pay</span>
+          <span class="amount-banner-value">₹${order.totalAmount}</span>
+        </div>
+      `;
     }
 
     loadOrderDetails();
@@ -241,183 +698,789 @@
       });
     });
 
-    // Elements & State Variables
-    const utrForm = document.getElementById('utr-submit-form');
-    const utrInput = document.getElementById('utr-input');
-    const last4Input = document.getElementById('last4-mobile-input');
-    const utrLiveBadge = document.getElementById('utr-live-badge');
-    const errorAlert = document.getElementById('utr-error-alert');
-    const errorMsgText = document.getElementById('utr-error-msg-text');
-    const successAlert = document.getElementById('utr-success-alert');
-    const submitBtn = document.getElementById('btn-submit-payment-utr');
-
-    let utrDuplicateError = '';
-    let isCheckingDuplicate = false;
-    let checkTimeout = null;
-
-    const showError = (msg) => {
-      errorMsgText.textContent = msg;
-      errorAlert.style.display = 'flex';
-      successAlert.style.display = 'none';
-    };
-
-    const showSuccess = () => {
-      errorAlert.style.display = 'none';
-      successAlert.style.display = 'flex';
-    };
-
-    const clearStatusBanners = () => {
-      errorAlert.style.display = 'none';
-      successAlert.style.display = 'none';
-    };
-
-    // Master Form Validation Function
-    const validateForm = () => {
-      const utrVal = utrInput.value;
-      const last4Val = last4Input.value;
-
-      let utrError = '';
-      let last4Error = '';
-
-      // UTR Validation Rules
-      if (!utrVal) {
-        utrError = 'UTR / Transaction ID is required.';
-      } else if (utrVal.length < 12) {
-        utrError = `UTR Number must be at least 12 characters (currently ${utrVal.length}/12).`;
-      } else if (utrVal.length > 22) {
-        utrError = 'UTR Number cannot exceed 22 characters.';
-      } else if (!/^[A-Z0-9]{12,22}$/.test(utrVal)) {
-        utrError = 'UTR must contain only uppercase letters (A-Z) and numbers (0-9).';
-      } else if (utrDuplicateError) {
-        utrError = utrDuplicateError;
-      }
-
-      // Last 4 Digits Mobile Validation Rules
-      if (!last4Val) {
-        last4Error = 'Last 4 digits of mobile number is required.';
-      } else if (last4Val.length !== 4 || !/^\d{4}$/.test(last4Val)) {
-        last4Error = 'Please enter exactly 4 numeric digits.';
-      } else if (expectedLast4 && last4Val !== expectedLast4) {
-        last4Error = 'The last four digits do not match your registered mobile number.';
-      }
-
-      // Live Badge Updates
-      if (!utrVal) {
-        utrLiveBadge.textContent = 'Required (12-22 chars)';
-        utrLiveBadge.style.color = 'var(--text-muted)';
-      } else if (utrError) {
-        utrLiveBadge.textContent = `${utrVal.length}/12-22 chars`;
-        utrLiveBadge.style.color = '#ef4444';
-      } else {
-        utrLiveBadge.textContent = '✓ Valid Format';
-        utrLiveBadge.style.color = '#10b981';
-      }
-
-      // Update Error/Success Banners & Submit Button State
-      if (utrError) {
-        showError(utrError);
-        submitBtn.disabled = true;
-        submitBtn.style.opacity = '0.6';
-        submitBtn.style.cursor = 'not-allowed';
-      } else if (last4Error) {
-        showError(last4Error);
-        submitBtn.disabled = true;
-        submitBtn.style.opacity = '0.6';
-        submitBtn.style.cursor = 'not-allowed';
-      } else {
-        showSuccess();
-        submitBtn.disabled = false;
-        submitBtn.style.opacity = '1';
-        submitBtn.style.cursor = 'pointer';
-      }
-    };
-
-    // Live Formatting & Check for UTR Input
-    utrInput.addEventListener('input', () => {
-      // 1. Remove spaces & convert to uppercase
-      let val = utrInput.value.replace(/\s+/g, '').toUpperCase();
-      // 2. Reject special characters (Keep A-Z and 0-9 only)
-      val = val.replace(/[^A-Z0-9]/g, '');
-      utrInput.value = val;
-
-      utrDuplicateError = '';
-
-      clearTimeout(checkTimeout);
-      if (val.length >= 12 && val.length <= 22) {
-        // Debounced Live Duplicate Check
-        checkTimeout = setTimeout(async () => {
-          try {
-            const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-              ? `http://localhost:5000/api/orders/check-utr?utr=${encodeURIComponent(val)}`
-              : `https://varevva-family-restaurant.onrender.com/api/orders/check-utr?utr=${encodeURIComponent(val)}`;
-
-            const res = await fetch(backendUrl);
-            const data = await res.json();
-            if (data.exists) {
-              utrDuplicateError = 'This Transaction ID has already been submitted.';
-            } else {
-              utrDuplicateError = '';
-            }
-          } catch (e) {
-            utrDuplicateError = '';
-          }
-          validateForm();
-        }, 300);
-      }
-
-      validateForm();
+    // --- Drag and Drop File Upload Event Listeners ---
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (uploadedProofFile) return;
+        dropzone.style.borderColor = 'var(--primary-color)';
+        dropzone.style.backgroundColor = 'var(--primary-light)';
+      }, false);
     });
 
-    // Live Formatting & Check for Last 4 Digits Mobile Input
-    last4Input.addEventListener('input', () => {
-      // Strip non-numeric characters
-      last4Input.value = last4Input.value.replace(/\D/g, '');
-      validateForm();
+    ['dragleave'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (uploadedProofFile) return;
+        dropzone.style.borderColor = 'rgba(0,0,0,0.15)';
+        dropzone.style.backgroundColor = 'var(--light-bg)';
+      }, false);
     });
 
-    // Form Submit Event
-    utrForm.addEventListener('submit', async (e) => {
+    dropzone.addEventListener('drop', (e) => {
       e.preventDefault();
-      const utr = utrInput.value.trim().replace(/\s+/g, '').toUpperCase();
-      const last4 = last4Input.value.trim().replace(/\D/g, '');
+      e.stopPropagation();
+      if (uploadedProofFile) return;
 
-      if (submitBtn.disabled) return;
+      dropzone.style.borderColor = 'rgba(0,0,0,0.15)';
+      dropzone.style.backgroundColor = 'var(--light-bg)';
 
-      clearStatusBanners();
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files && files.length > 0) {
+        handleFileSelection(files[0]);
+      }
+    });
+
+    dropzone.addEventListener('click', (e) => {
+      if (e.target.closest('#btn-change-proof') || e.target.closest('#btn-remove-proof')) {
+        return;
+      }
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files.length > 0) {
+        handleFileSelection(fileInput.files[0]);
+      }
+    });
+
+    // Client OCR scanner using Tesseract.js
+    const handleFileSelection = async (file) => {
+      uploadError.style.display = 'none';
+      uploadError.textContent = '';
+      promptDiv.style.display = 'none';
+      previewContainer.style.display = 'none';
+      imgPreview.style.display = 'none';
+      analysisPanel.style.display = 'none';
+
+      if (!file) return;
+
+      if (!orderTotalAmount || orderTotalAmount <= 0) {
+        showUploadError('Cannot upload proof: Order amount is invalid or failed to load. Please reload the page.');
+        return;
+      }
+
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      const fileType = file.type;
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      const isAllowedType = allowedTypes.includes(fileType) || ['jpg', 'jpeg', 'png', 'webp'].includes(fileExtension);
+
+      if (!isAllowedType) {
+        showUploadError('Invalid file format. Please upload PNG, JPG, JPEG, or WEBP.');
+        return;
+      }
+
+      const maxSizeInBytes = 5 * 1024 * 1024;
+      if (file.size > maxSizeInBytes) {
+        showUploadError('File is too large. Maximum size allowed is 5MB.');
+        return;
+      }
+
+      // Show loader
+      const loadingDiv = document.getElementById('proof-loading');
+      const loadingText = document.getElementById('proof-loading-text');
+      loadingDiv.style.display = 'flex';
+      dropzone.style.pointerEvents = 'none';
 
       try {
-        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? 'http://localhost:5000/api/orders/submit-utr'
-          : 'https://varevva-family-restaurant.onrender.com/api/orders/submit-utr';
+        // Preprocess image to improve clarity for OCR
+        loadingText.textContent = 'Enhancing image clarity...';
+        const clearImageBlob = await preprocessImageForOcr(file);
 
-        const response = await fetch(backendUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            orderId,
-            utrNumber: utr,
-            last4DigitsMobile: last4
-          })
+        if (typeof Tesseract === 'undefined') {
+          loadingText.textContent = 'Loading verification engine...';
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+
+        // DUAL-PASS OCR: Scan both original AND enhanced image for maximum accuracy
+        loadingText.textContent = 'Scanning payment screenshot (Pass 1)...';
+        const worker1 = await Tesseract.createWorker('eng');
+        const ret1 = await worker1.recognize(file);
+        const textOriginal = (ret1.data.text || '').toLowerCase();
+        await worker1.terminate();
+
+        loadingText.textContent = 'Scanning payment screenshot (Pass 2)...';
+        const worker2 = await Tesseract.createWorker('eng');
+        const ret2 = await worker2.recognize(clearImageBlob);
+        const textEnhanced = (ret2.data.text || '').toLowerCase();
+        await worker2.terminate();
+
+        // Merge both OCR results for comprehensive text analysis
+        const text = textOriginal + '\n' + textEnhanced;
+        console.log('--- OCR Pass 1 (Original) ---\n', textOriginal);
+        console.log('--- OCR Pass 2 (Enhanced) ---\n', textEnhanced);
+
+        // 1. UPI transaction keywords check (scam check)
+        const keywords = [
+          'phonepe', 'gpay', 'google pay', 'paytm', 'bhim', 'upi', 'utr', 
+          'transaction', 'success', 'completed', 'paid', 'transfer', 'sent', 
+          'successful', 'debited', 'ref no', 'upi ref', 'txn', 'payment', 'state bank',
+          'hdfc', 'icici', 'axis', 'bank', 'rupees', 'received', 'merchant'
+        ];
+        
+        let matchCount = 0;
+        keywords.forEach(kw => {
+          if (text.includes(kw)) matchCount++;
         });
 
-        const result = await response.json();
+        // 1. Success Status Check
+        const successKeywords = ['successful', 'success', 'completed', 'paid', 'sent', 'transferred', 'received', 'done'];
+        const hasSuccess = successKeywords.some(kw => text.includes(kw));
 
-        if (response.ok && result.success) {
-          window.location.href = `track.html?orderId=${orderId}`;
+        // 2. Recipient / Merchant Check
+        const merchantKeywords = ['varevva', 'restaurant', 'anjanasri', '6302019925', 'family'];
+        const hasMerchant = merchantKeywords.some(kw => text.includes(kw));
+
+        // 3. Transaction ID / UTR Check
+        const txnId = parseTxnIdFromText(text);
+        const hasTxn = txnId && txnId.length >= 12;
+
+        // Perform dynamic duplicate check on the server
+        let isDuplicate = false;
+        if (hasTxn) {
+          try {
+            const utrCheckUrl = `/api/payments/verify?utr=${txnId}&orderId=${orderId}`;
+            
+            const checkRes = await fetch(utrCheckUrl);
+            if (checkRes.ok) {
+              const checkData = await checkRes.json();
+              if (checkData.exists) {
+                isDuplicate = true;
+              }
+            }
+          } catch (err) {
+            console.warn('Duplicate UTR check failed:', err);
+          }
+        }
+
+        // 4. Amount Matching Check
+        const detectedAmount = parseAmountFromText(text, orderTotalAmount);
+        const amountMatches = detectedAmount === orderTotalAmount;
+
+        // Populate Audit UI elements
+        const successStatusEl = document.getElementById('analysis-success-status');
+        const txnDetectedEl = document.getElementById('analysis-txn-detected');
+        const recipientMatchEl = document.getElementById('analysis-recipient-match');
+        const amountMatchEl = document.getElementById('analysis-amount-match');
+        const decisionEl = document.getElementById('analysis-decision');
+        const riskLevelEl = document.getElementById('analysis-risk-level');
+
+        if (analysisDetectedAmount) {
+          analysisDetectedAmount.textContent = detectedAmount ? `₹${detectedAmount}` : 'Not Found';
+        }
+
+        if (hasSuccess) {
+          successStatusEl.innerHTML = '<span style="color: #059669; font-weight: 700;">✓ Confirmed (Success)</span>';
         } else {
-          showError(result.message || 'Failed to submit payment details.');
+          successStatusEl.innerHTML = '<span style="color: #dc2626; font-weight: 700;">✕ Missing/Failed Status</span>';
+        }
+
+        if (isDuplicate) {
+          txnDetectedEl.innerHTML = `<span style="color: #dc2626; font-weight: 700;">✕ Duplicate (Already Used)</span>`;
+        } else if (hasTxn) {
+          txnDetectedEl.innerHTML = `<span style="color: #059669; font-weight: 700;">✓ ${txnId}</span>`;
+        } else {
+          txnDetectedEl.innerHTML = '<span style="color: #dc2626; font-weight: 700;">✕ Not Found</span>';
+        }
+
+        if (hasMerchant) {
+          recipientMatchEl.innerHTML = '<span style="color: #059669; font-weight: 700;">✓ Recipient Verified</span>';
+        } else {
+          recipientMatchEl.innerHTML = '<span style="color: #d97706; font-weight: 700;">⚠ Recipient Unlisted</span>';
+        }
+
+        let matchResultText = '';
+        if (amountMatches) {
+          matchResultText = `<span style="color: #059669; font-weight: 700;">✓ Matched</span>`;
+        } else if (detectedAmount) {
+          matchResultText = `<span style="color: #dc2626; font-weight: 700;">✕ Mismatch</span>`;
+        } else {
+          matchResultText = '<span style="color: #d97706; font-weight: 700;">⚠ Not Found</span>';
+        }
+        amountMatchEl.innerHTML = matchResultText;
+
+        // Image-risk fraud check
+        const risk = calculateRiskLevel(text, file, orderTotalAmount, detectedAmount);
+        const aiCheck = detectAiGeneratedScreenshot(text);
+        
+        riskLevelEl.textContent = `${risk} Risk`;
+        riskLevelEl.className = `result-badge ${risk.toLowerCase()}`;
+
+        // Decision logic: Strict validation check of all points
+        let approved = false;
+        let rejectReason = "";
+
+        if (aiCheck.isLikelyAi) {
+          rejectReason = "Rejected: Fake/AI-generated screenshot detected. Please upload a genuine screenshot of your actual payment from your UPI app.";
+        } else if (!hasSuccess) {
+          rejectReason = "Rejected: No transaction status confirmation found in the image. Please upload a clear payment success screenshot.";
+        } else if (!hasTxn) {
+          rejectReason = "Rejected: Missing valid UPI transaction ID (UTR). Make sure the UTR number is visible.";
+        } else if (isDuplicate) {
+          rejectReason = "Rejected: Duplicate Transaction ID detected. This payment screenshot has already been used for another order.";
+        } else if (!amountMatches && detectedAmount) {
+          rejectReason = `Rejected: Payment amount mismatch. Screenshot shows ₹${detectedAmount}, but order total is ₹${orderTotalAmount}.`;
+        } else if (!amountMatches) {
+          rejectReason = `Rejected: Could not read payment amount. Make sure the paid amount (₹${orderTotalAmount}) is clearly visible.`;
+        } else if (risk === 'High') {
+          rejectReason = "Rejected: High Risk details detected. Please upload a genuine payment confirmation receipt.";
+        } else {
+          approved = true;
+        }
+
+        if (approved) {
+          decisionEl.innerHTML = '<span style="color: #059669; font-weight: 800; background: #ecfdf5; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(16,185,129,0.2);">✓ APPROVED</span>';
+          
+          extractedDetails = {
+            amount: detectedAmount || 0,
+            txnId: txnId || '',
+            riskLevel: risk,
+            analysisResult: '✓ Yes'
+          };
+          document.getElementById('customer-utr-input').value = txnId || '';
+
+          uploadedProofFile = file;
+
+          // Render image thumbnail preview
+          promptDiv.style.display = 'none';
+          previewContainer.style.display = 'flex';
+          dropzone.style.cursor = 'default';
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imgPreview.src = e.target.result;
+            imgPreview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+
+          // Enable submit button
           submitBtn.disabled = false;
           submitBtn.style.opacity = '1';
           submitBtn.style.cursor = 'pointer';
-          submitBtn.innerHTML = '<span>Submit Payment</span><i class="fa-solid fa-arrow-right"></i>';
+        } else {
+          decisionEl.innerHTML = '<span style="color: #dc2626; font-weight: 800; background: #fef2f2; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(220,38,38,0.2);">✕ REJECTED</span>';
+          
+          showUploadError(rejectReason);
+
+          uploadedProofFile = null;
+          previewContainer.style.display = 'flex';
+          promptDiv.style.display = 'none';
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            imgPreview.src = e.target.result;
+            imgPreview.style.display = 'block';
+          };
+          reader.readAsDataURL(file);
+
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.6';
+          submitBtn.style.cursor = 'not-allowed';
+        }
+
+        analysisPanel.style.display = 'flex';
+
+      } catch (ocrErr) {
+        console.warn('OCR error, bypassing details validation:', ocrErr);
+        extractedDetails = {
+          amount: 0,
+          txnId: '',
+          riskLevel: 'Medium',
+          analysisResult: '⚠ Unable to read payment amount'
+        };
+        document.getElementById('analysis-success-status').innerHTML = '<span style="color: #d97706; font-weight: 700;">⚠ Verification Bypassed</span>';
+        document.getElementById('analysis-txn-detected').innerHTML = '<span style="color: #94a3b8">Unread</span>';
+        document.getElementById('analysis-recipient-match').innerHTML = '<span style="color: #94a3b8">Unread</span>';
+        document.getElementById('analysis-amount-match').innerHTML = '<span style="color: #94a3b8">Unread</span>';
+        document.getElementById('analysis-decision').innerHTML = '<span style="color: #d97706; font-weight: 800; background: #fffbeb; padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(245,158,11,0.2);">⚠ MANUAL REVIEW</span>';
+        
+        riskLevelEl.textContent = 'Medium Risk';
+        riskLevelEl.className = 'result-badge medium';
+        analysisPanel.style.display = 'flex';
+
+        uploadedProofFile = file;
+
+        // Render image thumbnail preview
+        promptDiv.style.display = 'none';
+        previewContainer.style.display = 'flex';
+        dropzone.style.cursor = 'default';
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imgPreview.src = e.target.result;
+          imgPreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        // Allow submit
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+      } finally {
+        loadingDiv.style.display = 'none';
+        dropzone.style.pointerEvents = 'auto';
+      }
+    };
+
+    function showUploadError(msg) {
+      // Direct innerHTML writing guarantees the children exist and are rendered
+      uploadError.innerHTML = `
+        <i class="fa-solid fa-circle-exclamation" style="font-size: 1.1rem; color: #b91c1c !important; margin-right: 6px; vertical-align: middle; display: inline-block !important;"></i>
+        <span style="color: #b91c1c !important; vertical-align: middle; line-height: 1.4; display: inline-block !important; text-align: left !important;">${msg}</span>
+      `;
+      
+      // Force explicit styling in JS to guarantee visibility & styling
+      uploadError.style.setProperty('display', 'block', 'important');
+      uploadError.style.setProperty('background-color', '#fef2f2', 'important');
+      uploadError.style.setProperty('border', '1.5px solid #ef4444', 'important');
+      uploadError.style.setProperty('color', '#b91c1c', 'important');
+      uploadError.style.setProperty('padding', '12px 16px', 'important');
+      uploadError.style.setProperty('border-radius', '10px', 'important');
+      uploadError.style.setProperty('margin-top', '10px', 'important');
+      uploadError.style.setProperty('box-sizing', 'border-box', 'important');
+      uploadError.style.setProperty('width', '100%', 'important');
+      uploadError.style.setProperty('min-height', '44px', 'important');
+      
+      promptDiv.style.display = 'flex';
+      uploadedProofFile = null;
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.6';
+      submitBtn.style.cursor = 'not-allowed';
+    }
+
+    const removeFile = () => {
+      uploadedProofFile = null;
+      fileInput.value = '';
+      promptDiv.style.display = 'flex';
+      previewContainer.style.display = 'none';
+      imgPreview.src = '';
+      imgPreview.style.display = 'none';
+      analysisPanel.style.display = 'none';
+      document.getElementById('customer-utr-input').value = '';
+      
+      uploadError.innerHTML = '';
+      uploadError.style.setProperty('display', 'none', 'important');
+      
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = '0.6';
+      submitBtn.style.cursor = 'not-allowed';
+    };
+
+    const btnRemove = document.getElementById('btn-remove-proof');
+    const btnChange = document.getElementById('btn-change-proof');
+
+    btnRemove.addEventListener('click', (e) => {
+      e.stopPropagation();
+      removeFile();
+    });
+
+    btnChange.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+
+    function normalizeNumbers(text) {
+      let cleaned = text;
+
+      // 1. Correct common OCR letter-to-digit translation errors inside alphanumeric tokens
+      // E.g. "2OO" -> "200", "l00" -> "100", "I50" -> "150"
+      cleaned = cleaned.replace(/[a-z0-9il|]+/gi, (token) => {
+        if (/\d/.test(token)) {
+          return token
+            .replace(/[il|]/gi, '1')
+            .replace(/[oo]/gi, '0');
+        }
+        return token;
+      });
+      
+      // 2. Remove spaces around dots and commas inside digits
+      // e.g. "200 . 00" -> "200.00", "1 , 200" -> "1,200"
+      cleaned = cleaned.replace(/(\d+)\s*([\.\,])\s*(\d+)/g, '$1$2$3');
+      
+      // 3. Identify commas used as decimal points:
+        // If a comma is followed by exactly 2 digits, we change it to a dot.
+      cleaned = cleaned.replace(/,(\d{2})\b/g, '.$1');
+      
+      // 4. Remove standard thousand separator commas
+      // If a comma is followed by exactly 3 digits, we remove it.
+      cleaned = cleaned.replace(/,(\d{3})/g, '$1');
+      
+      return cleaned;
+    }
+
+    async function preprocessImageForOcr(file) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Scale up small images for better OCR accuracy
+            const scale = Math.max(1, Math.min(2, 1500 / Math.max(img.width, img.height)));
+            canvas.width = Math.round(img.width * scale);
+            canvas.height = Math.round(img.height * scale);
+            
+            // Use high-quality image scaling
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+            
+            // Gentle contrast boost (not aggressive binarization)
+            // This preserves digit shapes while making text clearer
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i];
+              const g = data[i+1];
+              const b = data[i+2];
+              
+              // Convert to grayscale
+              const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+              
+              // Apply gentle S-curve contrast (not hard binarization)
+              // This preserves digit details while boosting contrast
+              const contrast = 1.5; // Mild contrast boost
+              const factor = (259 * (contrast * 100 + 255)) / (255 * (259 - contrast * 100));
+              let enhanced = factor * (gray - 128) + 128;
+              enhanced = Math.max(0, Math.min(255, enhanced));
+              
+              data[i] = enhanced;
+              data[i+1] = enhanced;
+              data[i+2] = enhanced;
+            }
+            ctx.putImageData(imgData, 0, 0);
+            
+            canvas.toBlob((blob) => {
+              resolve(blob || file);
+            }, 'image/png');
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function isValidAmountCandidate(val, strVal) {
+      if (isNaN(val)) return false;
+      if (val < 10) return false; // Ignore quantities (1, 2, 3), hours, days
+      if (val >= 100000) return false; // Ignore large transaction numbers
+      if (strVal.length >= 10) return false; // Ignore phone numbers and UTRs
+      if (val >= 2020 && val <= 2035) return false; // Ignore calendar years
+      return true;
+    }
+
+    // Custom OCR amount parsers
+    function parseAmountFromText(text, totalAmount) {
+      // 1. Normalize number formatting in the scanned text
+      let cleaned = normalizeNumbers(text.toLowerCase());
+      
+      // 2. Extract all numbers from the text
+      const numPattern = /\b\d+(?:\.\d{1,2})?\b/g;
+      let matches = cleaned.match(numPattern) || [];
+      
+      // Parse matches to unique floats using validation rules
+      let candidates = [];
+      for (const m of matches) {
+        const val = parseFloat(m);
+        if (isValidAmountCandidate(val, m)) {
+          if (!candidates.includes(val)) {
+            candidates.push(val);
+          }
+        }
+      }
+      
+      // 3. Check if any candidate exactly matches totalAmount
+      if (candidates.includes(totalAmount)) {
+        return totalAmount;
+      }
+      
+      // 4. Check for approximate matches (float rounding differences)
+      for (const val of candidates) {
+        if (Math.abs(val - totalAmount) < 0.05) {
+          return val;
+        }
+      }
+      
+      // 5. Look for numbers preceded/followed by currency symbols or paid keywords
+      const regexes = [
+        /(?:[₹\=\§\?fz]|inr|rs\.?)\s*(\d+(?:\.\d{1,2})?)/gi, // Matches ₹200, rs 200, =200, f200, z200, but ignores decimals in date/time
+        /amount[\s\:\-]*(\d+(?:\.\d{1,2})?)/gi,
+        /paid[\s\:\-]*(\d+(?:\.\d{1,2})?)/gi,
+        /total[\s\:\-]*(\d+(?:\.\d{1,2})?)/gi,
+        /transferred[\s\:\-]*(\d+(?:\.\d{1,2})?)/gi,
+        /(\d+(?:\.\d{1,2})?)\s*(paid|sent|successful)/gi,
+        /(\d+(?:\.\d{1,2})?)\s*rupees/gi
+      ];
+      
+      let detectedList = [];
+      for (const regex of regexes) {
+        let match;
+        regex.lastIndex = 0;
+        while ((match = regex.exec(cleaned)) !== null) {
+          const val = parseFloat(match[1]);
+          if (isValidAmountCandidate(val, match[1])) {
+            if (!detectedList.includes(val)) {
+              detectedList.push(val);
+            }
+          }
+        }
+      }
+
+      if (detectedList.length > 0) {
+        return detectedList[0];
+      }
+      
+      // 6. Final fallbacks
+      if (cleaned.includes(totalAmount.toString())) {
+        return totalAmount;
+      }
+      
+      // 7. Candidate Scoring Fallback: extract the most probable numeric value
+      let bestCandidate = null;
+      let highestScore = -999;
+      
+      for (const val of candidates) {
+        let score = 0;
+        if (val === 30 || val === 45 || val === 15) score -= 10; // Common time penalty
+        if (Number.isInteger(val) && val >= 1000 && val <= 9999) score -= 30; // Bank card/suffix penalty
+        
+        // Match proximity bonus
+        const diff = Math.abs(val - totalAmount);
+        score += (100 - Math.min(diff, 100));
+        
+        if (score > highestScore) {
+          highestScore = score;
+          bestCandidate = val;
+        }
+      }
+      
+      return bestCandidate;
+    }
+
+    function parseTxnIdFromText(text) {
+      const regexes = [
+        /upi transaction id\s*[:\-\s]*([a-z0-9]{12,22})/gi,
+        /transaction id\s*[:\-\s]*([a-z0-9]{12,22})/gi,
+        /utr\s*[:\-\s]*([a-z0-9]{12,22})/gi,
+        /ref no\s*[:\-\s]*([a-z0-9]{12,22})/gi,
+        /ref\s+no\s*[:\-\s]*([a-z0-9]{12,22})/gi,
+        /txn\s*id\s*[:\-\s]*([a-z0-9]{12,22})/gi,
+        /upi\s*ref\s*[:\-\s]*([a-z0-9]{12,22})/gi,
+        /\b(\d{12})\b/g
+      ];
+      for (const regex of regexes) {
+        const match = regex.exec(text);
+        if (match && match[1]) return match[1].toUpperCase();
+      }
+      return '';
+    }
+
+    function detectAiGeneratedScreenshot(text) {
+      // Detect AI-generated/ChatGPT fake payment screenshots
+      let aiScore = 0;
+      const aiReasons = [];
+      
+      // 1. Check for AI/ChatGPT watermark or artifacts in OCR text
+      const aiKeywords = ['chatgpt', 'openai', 'generated', 'artificial', 'ai generated', 
+                          'sample', 'demo', 'test', 'example', 'mock', 'dummy', 'fake',
+                          'template', 'placeholder', 'lorem', 'ipsum'];
+      for (const kw of aiKeywords) {
+        if (text.includes(kw)) {
+          aiScore += 5;
+          aiReasons.push(`Suspicious keyword "${kw}" found`);
+        }
+      }
+      
+      // 2. Check for impossible/fake UPI app names  
+      const realApps = ['phonepe', 'google pay', 'gpay', 'paytm', 'bhim', 'amazon pay', 
+                        'whatsapp', 'cred', 'mobikwik', 'freecharge', 'airtel', 'jio'];
+      const hasRealApp = realApps.some(app => text.includes(app));
+      if (!hasRealApp) {
+        aiScore += 2;
+        aiReasons.push('No recognized UPI app name found');
+      }
+      
+      // 3. Check for conflicting amounts (multiple different ₹ values)
+      const amountMatches = text.match(/[₹]?\s*\d+(?:\.\d{1,2})?/g) || [];
+      const uniqueAmounts = [...new Set(amountMatches.map(a => parseFloat(a.replace(/[₹\s]/g, ''))).filter(v => !isNaN(v) && v >= 10 && v < 100000))];
+      if (uniqueAmounts.length > 3) {
+        aiScore += 2;
+        aiReasons.push('Too many different amounts detected');
+      }
+      
+      // 4. Check for suspicious formatting patterns common in AI-generated text
+      const suspiciousPatterns = [
+        /transaction id\s*:\s*[a-z]{5,}/i,  // AI often generates alphabetic transaction IDs
+        /utr\s*:\s*[a-z]{5,}/i,
+        /ref\s*:\s*[a-z]{5,}/i,
+      ];
+      for (const pat of suspiciousPatterns) {
+        if (pat.test(text)) {
+          aiScore += 3;
+          aiReasons.push('Suspicious transaction ID format');
+        }
+      }
+      
+      // 5. Check for overly perfect/structured text (AI receipts tend to be very uniform)
+      const lines = text.split('\n').filter(l => l.trim().length > 0);
+      if (lines.length > 3) {
+        const colonLines = lines.filter(l => l.includes(':'));
+        // If nearly every line has a colon separator, it looks AI-structured
+        if (colonLines.length / lines.length > 0.7 && lines.length > 8) {
+          aiScore += 2;
+          aiReasons.push('Overly structured text formatting');
+        }
+      }
+      
+      return { aiScore, aiReasons, isLikelyAi: aiScore >= 5 };
+    }
+
+    function calculateRiskLevel(text, file, totalAmount, detectedAmount) {
+      let riskPoints = 0;
+      
+      // Standard UPI verification checks
+      const upiKeywords = ['phonepe', 'gpay', 'google pay', 'paytm', 'bhim', 'upi', 'successful', 'completed', 'paid', 'sent'];
+      const hasUpiKeywords = upiKeywords.some(kw => text.includes(kw));
+      if (!hasUpiKeywords) riskPoints += 4;
+      
+      if (detectedAmount && detectedAmount !== totalAmount) riskPoints += 3;
+      
+      const hasTxn = /txn|transaction|utr|ref|id/i.test(text) || /\b\d{12}\b/.test(text);
+      if (!hasTxn) riskPoints += 2;
+      
+      // AI-generated screenshot detection
+      const aiCheck = detectAiGeneratedScreenshot(text);
+      riskPoints += aiCheck.aiScore;
+
+      if (riskPoints >= 8) return 'High';
+      if (riskPoints >= 4) return 'Medium';
+      return 'Low';
+    }
+
+    function getMatchHTML(result) {
+      if (result.includes('✓')) {
+        return `<span style="color: #059669; font-weight: 800;">${result}</span>`;
+      } else if (result.includes('✕')) {
+        return `<span style="color: #dc2626; font-weight: 800;">${result}</span>`;
+      }
+      return `<span style="color: #d97706; font-weight: 800;">${result}</span>`;
+    }
+
+    // Submit Action
+    document.getElementById('screenshot-upload-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!uploadedProofFile) return;
+
+      const utrVal = document.getElementById('customer-utr-input').value.trim();
+      if (!utrVal || utrVal.length < 12) {
+        alert('Please enter a valid UPI Transaction ID / UTR (minimum 12 digits).');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting payment proof...';
+
+      // Ensure amount is validated. If OCR couldn't detect, fallback to order total.
+      const finalAmount = extractedDetails.amount || orderTotalAmount;
+
+      const formData = new FormData();
+      formData.append('orderId', orderId);
+      formData.append('screenshot', uploadedProofFile);
+      formData.append('detectedAmount', finalAmount);
+      formData.append('detectedTxnId', utrVal);
+      formData.append('riskLevel', extractedDetails.riskLevel);
+      formData.append('analysisResult', extractedDetails.analysisResult);
+
+      try {
+        const backendUrl = '/api/payments/upload-proof';
+
+        const response = await fetch(backendUrl, {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        if (response.ok && result.success) {
+          displaySuccessFlow(result.order);
+        } else {
+          alert(result.message || 'Failed to submit payment screenshot.');
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Submit Payment Proof</span><i class="fa-solid fa-arrow-right"></i>';
         }
       } catch (err) {
-        console.error('Submit UTR Network error:', err);
-        window.location.href = `track.html?orderId=${orderId}`;
+        console.error('Submit screenshot error:', err);
+        alert('Network connection error. Failed to reach server.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Submit Payment Proof</span><i class="fa-solid fa-arrow-right"></i>';
       }
     });
+
+    // Show Customer Receipt View on success
+    function displaySuccessFlow(order) {
+      document.getElementById('payment-flow-container').style.display = 'none';
+      
+      // Populate fields
+      document.getElementById('success-pickup-token').textContent = order.pickupToken || 'A101';
+      document.getElementById('success-prep-time').textContent = `Estimated Preparation Time: ${order.estimatedPrepTime || '15 Minutes'}`;
+      
+      document.getElementById('success-amount-match').innerHTML = getMatchHTML(order.analysisResult || '✓ Yes');
+      document.getElementById('success-detected-amount').textContent = `₹${order.detectedAmount || order.totalAmount}`;
+      document.getElementById('success-detected-txn').textContent = order.detectedTxnId || order.utrNumber || 'N/A';
+      
+      const riskBadge = document.getElementById('success-risk-badge');
+      const risk = order.riskLevel || 'Low';
+      riskBadge.textContent = `${risk} Risk`;
+      riskBadge.className = `result-badge ${risk.toLowerCase()}`;
+
+      document.getElementById('success-order-id').textContent = order.orderId;
+      document.getElementById('success-customer-name').textContent = order.customerName;
+      document.getElementById('success-customer-phone').textContent = order.customerPhone;
+      document.getElementById('success-total-paid').textContent = `₹${order.totalAmount}`;
+
+      // Populate Success Receipt Table
+      const receiptTbody = document.querySelector('#success-receipt-table tbody');
+      if (order.items && order.items.length > 0) {
+        receiptTbody.innerHTML = order.items.map(item => {
+          const name = item.name || item.title || 'Meal Order';
+          const qty = item.quantity || 1;
+          const price = item.price || 0;
+          const subtotal = item.subtotal || (price * qty);
+          return `
+            <tr>
+              <td style="font-weight: 600;">${name}</td>
+              <td style="text-align: center; font-weight: 700;">${qty}</td>
+              <td style="text-align: right; color: var(--text-muted);">₹${price}</td>
+              <td style="text-align: right; font-weight: 700; color: var(--accent-color);">₹${subtotal}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        receiptTbody.innerHTML = `
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 10px 0; color: var(--text-muted);">Customer Meal Item</td>
+          </tr>
+        `;
+      }
+
+      document.getElementById('success-flow-container').style.display = 'flex';
+
+      // Attach success flow buttons events
+      document.getElementById('btn-success-track').addEventListener('click', () => {
+        window.location.href = `track.html?orderId=${order.orderId}`;
+      });
+    }
   </script>
 </body>
 </html>

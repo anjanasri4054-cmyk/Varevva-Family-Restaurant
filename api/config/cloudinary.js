@@ -19,13 +19,36 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'varevva_menu',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
     transformation: [{ quality: 'auto', fetch_format: 'auto' }], // q_auto, f_auto optimization
   },
 });
 
 const upload = multer({
   storage: storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // Max 5MB file size validation
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|webp|pdf/;
+    const mimetype = filetypes.test(file.mimetype);
+    if (mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Only JPG, JPEG, PNG, WEBP, and PDF formats are supported!'));
+  }
+});
+
+// Setup Multer Storage Engine for Cloudinary Payment Proofs
+const paymentStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'vtr/payment-proofs',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ quality: 'auto', fetch_format: 'auto' }], // q_auto, f_auto optimization
+  },
+});
+
+const uploadPayment = multer({
+  storage: paymentStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // Max 5MB file size validation
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|webp/;
@@ -37,4 +60,4 @@ const upload = multer({
   }
 });
 
-export { cloudinary, upload };
+export { cloudinary, upload, uploadPayment };

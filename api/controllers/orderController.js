@@ -1,7 +1,18 @@
 import Order from '../models/Order.js';
+import Payment from '../models/Payment.js';
 
-// Sequential Pickup Token counter memory helper
-let tokenCounter = 101;
+// Generate sequential pickup token: find last token, e.g. A101, A102...
+async function getNextPickupToken() {
+  const lastTokenOrder = await Order.findOne({ pickupToken: { $regex: /^A\d+$/ } }).sort({ createdAt: -1 });
+  let nextTokenNumber = 101;
+  if (lastTokenOrder && lastTokenOrder.pickupToken) {
+    const match = lastTokenOrder.pickupToken.match(/^A(\d+)$/);
+    if (match) {
+      nextTokenNumber = parseInt(match[1], 10) + 1;
+    }
+  }
+  return `A${nextTokenNumber}`;
+}
 
 // 1. Create New Order (Customer Checkout)
 export const createOrder = async (req, res) => {
@@ -23,8 +34,10 @@ export const createOrder = async (req, res) => {
     const orderId = `VRV${1001 + orderCount}`;
 
     const isCod = paymentMethod === 'Cash on Delivery';
-    const initialPaymentStatus = isCod ? 'COD' : 'Order Confirmed';
-    const pickupToken = `A${tokenCounter++}`;
+    const initialPaymentStatus = isCod ? 'COD' : 'Pending';
+    const initialOrderStage = isCod ? 'Preparing Food' : 'Order Placed';
+    const pickupToken = isCod ? await getNextPickupToken() : null;
+    const estPrepTime = isCod ? '15 Minutes' : '';
 
     const newOrder = new Order({
       orderId,
@@ -38,14 +51,14 @@ export const createOrder = async (req, res) => {
       totalAmount,
       paymentMethod: paymentMethod || 'UPI QR Payment',
       paymentStatus: initialPaymentStatus,
-      orderStage: 'Preparing Food',
+      orderStage: initialOrderStage,
       pickupToken: pickupToken,
-      estimatedPrepTime: '15 Minutes',
+      estimatedPrepTime: estPrepTime,
       auditLogs: [{
         adminName: 'System',
-        action: 'ORDER_CONFIRMED',
+        action: 'ORDER_PLACED',
         time: new Date(),
-        reason: 'Order placed & confirmed immediately'
+        reason: isCod ? 'COD Order placed & confirmed immediately' : 'Online order placed. Awaiting payment proof.'
       }]
     });
 
@@ -53,7 +66,7 @@ export const createOrder = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Order placed and confirmed successfully!',
+      message: 'Order created successfully!',
       order: newOrder
     });
   } catch (error) {
@@ -65,34 +78,15 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// 2. Submit UTR & Last 4 Digits Mobile (Payment Details Submission)
+// 2. Submit Payment Screenshot & Details (Screenshot Submission Flow)
 export const submitUtr = async (req, res) => {
   try {
-    const { orderId, utrNumber, last4DigitsMobile } = req.body;
+    const { orderId, detectedAmount, detectedTxnId, riskLevel, analysisResult } = req.body;
 
-    if (!orderId || !utrNumber || !last4DigitsMobile) {
+    if (!orderId) {
       return res.status(400).json({
         success: false,
-        message: 'Order ID, UTR Number, and Last 4 Digits of Mobile are required.'
-      });
-    }
-
-    const cleanUtr = utrNumber.toString().trim().replace(/\s+/g, '').toUpperCase();
-    const cleanLast4 = last4DigitsMobile.toString().trim().replace(/\D/g, '');
-
-    // 1. UTR Format Validation (A-Z, 0-9, 12-22 chars)
-    if (!/^[A-Z0-9]{12,22}$/.test(cleanUtr)) {
-      return res.status(400).json({
-        success: false,
-        message: 'UTR must be between 12 and 22 uppercase alphanumeric characters (A-Z, 0-9).'
-      });
-    }
-
-    // 2. Last 4 Digits Format Validation (Exactly 4 digits)
-    if (cleanLast4.length !== 4 || !/^\d{4}$/.test(cleanLast4)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please enter exactly 4 numeric digits for mobile suffix.'
+        message: 'Order ID is required.'
       });
     }
 
@@ -101,55 +95,53 @@ export const submitUtr = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found.' });
     }
 
-    // 3. Registered Mobile Suffix Match Validation
-    if (order.customerPhone) {
-      const registeredDigits = order.customerPhone.replace(/\D/g, '');
-      const expectedLast4 = registeredDigits.slice(-4);
-
-      if (expectedLast4 && cleanLast4 !== expectedLast4) {
-        return res.status(400).json({
-          success: false,
-          message: 'The last four digits do not match your registered mobile number.'
-        });
-      }
-    }
-
-    // 4. Duplicate UTR Check
-    const duplicateUtrOrder = await Order.findOne({
-      utrNumber: cleanUtr,
-      orderId: { $ne: orderId }
-    });
-
-    if (duplicateUtrOrder) {
+    // 1. Prevent duplicate screenshot submissions for the same order
+    if (order.paymentScreenshot || order.paymentStatus === 'Proof Submitted') {
       return res.status(400).json({
         success: false,
-        isDuplicate: true,
-        message: 'This Transaction ID has already been submitted.'
+        message: 'Payment proof screenshot has already been submitted for this order.'
       });
     }
 
-    if (!order.pickupToken) {
-      order.pickupToken = `A${tokenCounter++}`;
+    // 2. Validate uploaded files
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload your payment screenshot.'
+      });
     }
 
-    order.utrNumber = cleanUtr;
-    order.last4DigitsMobile = cleanLast4;
-    order.paymentStatus = 'Order Confirmed';
-    order.orderStage = 'Preparing Food';
+    // 3. Store the payment image and analysis results
+    order.paymentScreenshot = req.file.path;
+    order.detectedAmount = Number(detectedAmount) || 0;
+    order.detectedTxnId = detectedTxnId || '';
+    order.riskLevel = riskLevel || 'Low';
+    order.analysisResult = analysisResult || '';
+    order.submissionTime = new Date();
+
+    // 4. Update statuses and stages sequentially
+    order.paymentStatus = 'Proof Submitted';
+    order.orderStage = 'Preparing Food'; // Placed -> Proof Submitted -> Confirmed -> Preparing Food
     order.estimatedPrepTime = '15 Minutes';
-    
+    order.paymentMethod = 'UPI QR Payment';
+
+    // 5. Generate a unique sequential pickup token (prevent duplicates)
+    if (!order.pickupToken) {
+      order.pickupToken = await getNextPickupToken();
+    }
+
     order.auditLogs.push({
       adminName: 'Customer',
-      action: 'PAYMENT_SUBMITTED',
+      action: 'PAYMENT_PROOF_SUBMITTED',
       time: new Date(),
-      reason: `UTR ${cleanUtr} submitted. Order confirmed & token ${order.pickupToken} assigned.`
+      reason: `Payment proof screenshot submitted. OCR Amount: ₹${order.detectedAmount}. Risk: ${order.riskLevel}. Token ${order.pickupToken} assigned.`
     });
 
     await order.save();
 
     return res.status(200).json({
       success: true,
-      message: 'Payment details submitted! Order confirmed.',
+      message: 'Payment proof submitted successfully!',
       order
     });
   } catch (error) {
@@ -175,17 +167,23 @@ export const getOrderStatus = async (req, res) => {
 // 4. Check UTR Availability (Pre-flight duplicate check)
 export const checkUtrAvailability = async (req, res) => {
   try {
-    const { utr } = req.query;
+    const { utr, orderId } = req.query;
     if (!utr) return res.status(400).json({ exists: false });
 
-    const existing = await Order.findOne({ utrNumber: utr.trim() });
+    const cleanUtr = utr.trim();
+    const duplicatePayment = await Payment.findOne({ utrNumber: cleanUtr });
+    const duplicateOrder = await Order.findOne({ utrNumber: cleanUtr, orderId: { $ne: orderId } });
+    
+    const exists = !!(duplicatePayment || duplicateOrder);
     return res.status(200).json({
-      exists: !!existing,
-      message: existing ? 'This Transaction ID has already been submitted.' : 'UTR is unique.'
+      exists,
+      message: exists ? 'This Transaction ID has already been submitted.' : 'UTR is unique.'
     });
   } catch (error) {
     return res.status(500).json({ exists: false, message: error.message });
   }
+};
+
 // 5. Update Order Stage (Preparing Food -> Ready for Pickup -> Completed)
 export const updateOrderStage = async (req, res) => {
   try {

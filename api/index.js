@@ -6,6 +6,7 @@ import menuRoutes from './routes/menuRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 
 // Connect to MongoDB
 connectDB();
@@ -35,6 +36,7 @@ app.use('/api/menu', menuRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Error Handler Middleware
 app.use((err, req, res, next) => {
