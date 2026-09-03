@@ -595,6 +595,29 @@ function openOrderModal() {
     if (paymentChoice === 'online') {
       window.location.href = `payment.html?orderId=${assignedOrderId}`;
     } else {
+      let waMessage = `*🍽️ VAREVYA TELANGANA RUCHULU - NEW ORDER*\n\n`;
+      waMessage += `*Order ID:* ${assignedOrderId}\n`;
+      waMessage += `*Customer:* ${name}\n`;
+      waMessage += `*Phone:* ${phone}\n`;
+      waMessage += `*Option:* ${typeLabel}\n`;
+      waMessage += `*Payment Method:* Cash on Delivery\n`;
+      if (address) waMessage += `*Delivery Address:* ${address}\n`;
+      waMessage += `\n-------------------------\n*Items Ordered:*\n`;
+      orderItems.forEach((item, idx) => {
+        waMessage += `${idx + 1}. ${item.name} x ${item.quantity} - ₹${item.subtotal}\n`;
+      });
+      waMessage += `-------------------------\n`;
+      waMessage += `*Total Amount:* ₹${cartTotal}\n\n`;
+      const verifyLink = `${window.location.origin}/verify.html?orderId=${assignedOrderId}`;
+      waMessage += `*Verify Bill & Live Status:*\n${verifyLink}\n\n`;
+      waMessage += `Please confirm my order. Thank you!`;
+
+      const waUrl = `https://wa.me/916302019925?text=${encodeURIComponent(waMessage)}`;
+      try {
+        window.open(waUrl, '_blank');
+      } catch (e) {
+        console.warn('Popup blocked:', e);
+      }
       window.location.href = `track.html?orderId=${assignedOrderId}`;
     }
   });

@@ -134,7 +134,11 @@
 
     </div>
 
-    <div style="text-align: center; margin-top: 20px;">
+    <div style="text-align: center; margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+      <a id="btn-track-whatsapp" href="https://wa.me/916302019925" target="_blank" style="background: #25D366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+        <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i>
+        <span>Send / Share Order on WhatsApp</span>
+      </a>
       <a href="index.html" style="color: var(--text-dark); font-weight: 600; text-decoration: none; font-size: 0.88rem;">
         <i class="fa-solid fa-arrow-left"></i> Return to Restaurant Menu
       </a>
@@ -186,6 +190,19 @@
     function updateUI(order) {
       trackCustomerName.textContent = `Customer: ${order.customerName} (${order.customerPhone})`;
       trackTotalAmount.textContent = `₹${order.totalAmount}`;
+
+      // Populate WhatsApp Link
+      const waTrackBtn = document.getElementById('btn-track-whatsapp');
+      if (waTrackBtn) {
+        let msg = `*🍽️ VAREVYA TELANGANA RUCHULU - ORDER TRACKING*\n\n`;
+        msg += `*Order ID:* ${order.orderId}\n`;
+        if (order.pickupToken) msg += `*Token:* ${order.pickupToken}\n`;
+        msg += `*Customer:* ${order.customerName} (${order.customerPhone})\n`;
+        msg += `*Status / Stage:* ${order.orderStage || 'Order Placed'}\n`;
+        msg += `*Total Amount:* ₹${order.totalAmount}\n`;
+        msg += `\n*Track Live:* ${window.location.href}`;
+        waTrackBtn.href = `https://wa.me/916302019925?text=${encodeURIComponent(msg)}`;
+      }
 
       // Render Itemized Order Receipt
       if (trackItemsSummary && order.items && order.items.length > 0) {

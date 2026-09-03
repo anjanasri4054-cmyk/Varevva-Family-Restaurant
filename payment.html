@@ -530,13 +530,20 @@
         <span class="amount-banner-value" style="color: #059669; font-size: 1.45rem;" id="success-total-paid">₹0</span>
       </div>
 
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <a href="index.html" class="btn-action" style="text-decoration: none; flex: 1;">
-          <i class="fa-solid fa-house"></i> Return to Menu
+      <!-- Action Buttons -->
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+        <a id="btn-success-whatsapp" href="#" target="_blank" class="btn-action" style="background: #25D366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); border: none;">
+          <i class="fa-brands fa-whatsapp" style="font-size: 1.3rem;"></i>
+          <span>Send Order & Proof on WhatsApp</span>
         </a>
-        <button type="button" id="btn-success-track" class="btn-action" style="background: var(--light-bg); border: 1.5px solid rgba(0,0,0,0.12); color: var(--text-dark); flex: 1;">
-          <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Track Order Timeline
-        </button>
+        <div style="display: flex; gap: 10px;">
+          <a href="index.html" class="btn-action" style="text-decoration: none; flex: 1;">
+            <i class="fa-solid fa-house"></i> Return to Menu
+          </a>
+          <button type="button" id="btn-success-track" class="btn-action" style="background: var(--light-bg); border: 1.5px solid rgba(0,0,0,0.12); color: var(--text-dark); flex: 1;">
+            <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Track Order
+          </button>
+        </div>
       </div>
     </div>
 
@@ -1475,6 +1482,42 @@
       }
 
       document.getElementById('success-flow-container').style.display = 'flex';
+
+      // Build WhatsApp URL with order details & proof
+      let waMessage = `*🍽️ VAREVYA TELANGANA RUCHULU - ORDER DETAILS*\n\n`;
+      waMessage += `*Order ID:* ${order.orderId}\n`;
+      if (order.pickupToken) waMessage += `*Pickup Token:* ${order.pickupToken}\n`;
+      waMessage += `*Customer:* ${order.customerName}\n`;
+      waMessage += `*Phone:* ${order.customerPhone}\n`;
+      waMessage += `*Option:* ${order.diningPreference || 'Takeaway'}\n`;
+      waMessage += `*Payment Method:* ${order.paymentMethod || 'UPI QR Payment'}\n`;
+      waMessage += `*Total Amount:* ₹${order.totalAmount}\n`;
+      if (order.utrNumber) waMessage += `*Transaction ID / UTR:* ${order.utrNumber}\n`;
+      if (order.paymentScreenshot) waMessage += `*Payment Screenshot:* ${order.paymentScreenshot}\n`;
+      waMessage += `\n-------------------------\n*Items Ordered:*\n`;
+      (order.items || []).forEach((item, idx) => {
+        const name = item.name || item.title || 'Meal Item';
+        const qty = item.quantity || 1;
+        const sub = item.subtotal || (item.price * qty) || 0;
+        waMessage += `${idx + 1}. ${name} x ${qty} - ₹${sub}\n`;
+      });
+      waMessage += `-------------------------\n\n`;
+      const verifyLink = `${window.location.origin}/verify.html?orderId=${order.orderId}`;
+      waMessage += `*Verify Bill & Status:*\n${verifyLink}\n\n`;
+      waMessage += `Please confirm my payment & order. Thank you!`;
+
+      const waUrl = `https://wa.me/916302019925?text=${encodeURIComponent(waMessage)}`;
+      const waBtn = document.getElementById('btn-success-whatsapp');
+      if (waBtn) {
+        waBtn.href = waUrl;
+      }
+
+      // Automatically open WhatsApp in new tab for customer
+      try {
+        window.open(waUrl, '_blank');
+      } catch (e) {
+        console.warn('Popup blocked, customer can click the WhatsApp button:', e);
+      }
 
       // Attach success flow buttons events
       document.getElementById('btn-success-track').addEventListener('click', () => {
