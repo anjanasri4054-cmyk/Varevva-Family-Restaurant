@@ -2635,15 +2635,33 @@ export async function openAdminOrdersModal() {
       let actionsHTML = '<span style="color:#94a3b8">-</span>';
       if (order.paymentMethod === 'UPI QR Payment' && order.paymentStatus === 'Proof Submitted') {
         actionsHTML = `
-          <div style="display: flex; gap: 6px; justify-content: center;">
-            <button class="btn-admin-approve-payment" data-id="${order.orderId}" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s;">Approve</button>
-            <button class="btn-admin-reject-payment" data-id="${order.orderId}" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s;">Reject</button>
+          <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+            <button class="btn-admin-approve-payment" data-id="${order.orderId}" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap;">Approve</button>
+            <button class="btn-admin-reject-payment" data-id="${order.orderId}" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap;">Reject</button>
           </div>
         `;
-      } else if (order.paymentMethod === 'UPI QR Payment' && order.paymentStatus === 'Paid') {
-        actionsHTML = `<span style="color:#10b981; font-weight:700;">Approved</span>`;
-      } else if (order.paymentMethod === 'UPI QR Payment' && order.paymentStatus === 'Pending' && (order.auditLogs || []).some(l => l.action === 'PAYMENT_REJECTED')) {
-        actionsHTML = `<span style="color:#ef4444; font-weight:700;">Rejected</span>`;
+      } else if (order.orderStage === 'Order Confirmed') {
+        actionsHTML = `
+          <button class="btn-admin-update-stage" data-id="${order.orderId}" data-stage="Preparing Food" style="background: #f59e0b; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-fire-burner"></i> Start Cooking
+          </button>
+        `;
+      } else if (order.orderStage === 'Preparing Food') {
+        actionsHTML = `
+          <button class="btn-admin-update-stage" data-id="${order.orderId}" data-stage="Ready for Pickup" style="background: #3b82f6; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-bell-concierge"></i> Mark Ready
+          </button>
+        `;
+      } else if (order.orderStage === 'Ready for Pickup') {
+        actionsHTML = `
+          <button class="btn-admin-update-stage" data-id="${order.orderId}" data-stage="Completed" style="background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-check"></i> Complete Order
+          </button>
+        `;
+      } else if (order.orderStage === 'Completed') {
+        actionsHTML = `<span style="color: #059669; font-weight: 700; font-size: 0.76rem;"><i class="fa-solid fa-circle-check"></i> Finished</span>`;
+      } else if (order.paymentStatus === 'Pending' && (order.auditLogs || []).some(l => l.action === 'PAYMENT_REJECTED')) {
+        actionsHTML = `<span style="color: #ef4444; font-weight: 700; font-size: 0.76rem;">Rejected</span>`;
       }
 
       return `
@@ -2767,6 +2785,31 @@ export async function openAdminOrdersModal() {
         } else {
           const data = await res.json();
           alert(`Rejection failed: ${data.message}`);
+        }
+      } catch (err) {
+        alert(`Connection error: ${err.message}`);
+      }
+    }
+
+    const updateStageBtn = e.target.closest('.btn-admin-update-stage');
+    if (updateStageBtn) {
+      const orderId = updateStageBtn.dataset.id;
+      const stage = updateStageBtn.dataset.stage;
+      try {
+        const url = `/api/orders/${orderId}/stage`;
+        const res = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ orderStage: stage })
+        });
+        if (res.ok) {
+          fetchOrders();
+        } else {
+          const data = await res.json();
+          alert(`Stage update failed: ${data.message}`);
         }
       } catch (err) {
         alert(`Connection error: ${err.message}`);

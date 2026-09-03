@@ -200,7 +200,18 @@ export const updateOrderStage = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
 
-    if (orderStage) order.orderStage = orderStage;
+    if (orderStage) {
+      order.orderStage = orderStage;
+      if (orderStage === 'Preparing Food') order.orderStatus = 'PREPARING';
+      if (orderStage === 'Ready for Pickup') order.orderStatus = 'READY';
+      if (orderStage === 'Completed') order.orderStatus = 'COMPLETED';
+      order.auditLogs.push({
+        adminName: 'Admin',
+        action: `STAGE_${orderStage.toUpperCase().replace(/\s+/g, '_')}`,
+        time: new Date(),
+        reason: `Order stage updated to ${orderStage}`
+      });
+    }
     await order.save();
 
     return res.status(200).json({

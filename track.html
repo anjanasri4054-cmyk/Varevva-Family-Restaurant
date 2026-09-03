@@ -224,12 +224,13 @@
 
       const currentStage = order.orderStage || 'Order Placed';
 
-      // Check payment rejection
+      // Check payment rejection (only show if currently rejected and not paid/confirmed)
+      const isCurrentlyRejected = order.paymentStatus !== 'Paid' && order.orderStatus === 'CANCELLED';
       const rejectionLog = (order.auditLogs || []).slice().reverse().find(l => l.action === 'PAYMENT_REJECTED');
       const rejectionAlert = document.getElementById('rejection-alert');
       const rejectionReason = document.getElementById('rejection-reason');
 
-      if (rejectionLog) {
+      if (isCurrentlyRejected && rejectionLog) {
         rejectionAlert.style.display = 'flex';
         rejectionReason.textContent = rejectionLog.reason || 'Invalid screenshot or transaction mismatch.';
         
