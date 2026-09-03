@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 
@@ -190,7 +191,11 @@ export const updateOrderStage = async (req, res) => {
     const { id } = req.params;
     const { orderStage } = req.body;
 
-    const order = await Order.findOne({ $or: [{ _id: id }, { orderId: id }] });
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { $or: [{ _id: id }, { orderId: id }] }
+      : { orderId: id };
+
+    const order = await Order.findOne(query);
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }

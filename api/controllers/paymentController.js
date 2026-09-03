@@ -1,12 +1,32 @@
+import mongoose from 'mongoose';
 import Payment from '../models/Payment.js';
 import Order from '../models/Order.js';
 import { sendOrderMessage, sendPaymentProof } from '../services/whatsappService.js';
+
+// Sequential pickup token generator
+async function getNextPickupToken() {
+  const lastTokenOrder = await Order.findOne({ pickupToken: { $regex: /^A\d+$/ } }).sort({ createdAt: -1 });
+  let nextTokenNumber = 101;
+  if (lastTokenOrder && lastTokenOrder.pickupToken) {
+    const match = lastTokenOrder.pickupToken.match(/^A(\d+)$/);
+    if (match) {
+      nextTokenNumber = parseInt(match[1], 10) + 1;
+    }
+  }
+  return `A${nextTokenNumber}`;
+}
+
+function buildIdQuery(id) {
+  return mongoose.Types.ObjectId.isValid(id)
+    ? { $or: [{ _id: id }, { orderId: id }] }
+    : { orderId: id };
+}
 
 // 1. Get Single Payment details
 export const getPayment = async (req, res) => {
   try {
     const { id } = req.params;
-    const payment = await Payment.findOne({ $or: [{ _id: id }, { orderId: id }] });
+    const payment = await Payment.findOne(buildIdQuery(id));
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment record not found.' });
     }
@@ -87,6 +107,10 @@ export const uploadProof = async (req, res) => {
     order.paymentStatus = 'Proof Submitted';
     order.orderStage = 'Payment Proof Submitted';
     order.submissionTime = new Date();
+    if (!order.pickupToken) {
+      order.pickupToken = await getNextPickupToken();
+      order.estimatedPrepTime = '15 Minutes';
+    }
 
     await order.save();
 
@@ -126,22 +150,30 @@ export const approvePayment = async (req, res) => {
     const { id } = req.params;
     const { reason } = req.body;
 
-    const payment = await Payment.findOne({ $or: [{ _id: id }, { orderId: id }] });
-    if (!payment) {
-      return res.status(404).json({ success: false, message: 'Payment record not found.' });
+    const query = buildIdQuery(id);
+    const payment = await Payment.findOne(query);
+    const order = await Order.findOne(query);
+
+    if (!order && !payment) {
+      return res.status(404).json({ success: false, message: 'Order / Payment record not found.' });
     }
 
-    payment.paymentStatus = 'SUCCESS';
-    payment.verificationStatus = 'VERIFIED';
-    payment.verificationMessage = reason || 'Payment verified by admin.';
-    payment.verifiedAt = new Date();
-    await payment.save();
+    if (payment) {
+      payment.paymentStatus = 'SUCCESS';
+      payment.verificationStatus = 'VERIFIED';
+      payment.verificationMessage = reason || 'Payment verified by admin.';
+      payment.verifiedAt = new Date();
+      await payment.save();
+    }
 
-    const order = await Order.findOne({ orderId: payment.orderId });
     if (order) {
       order.paymentStatus = 'Paid';
       order.orderStage = 'Order Confirmed';
       order.orderStatus = 'CONFIRMED';
+      if (!order.pickupToken) {
+        order.pickupToken = await getNextPickupToken();
+        order.estimatedPrepTime = '15 Minutes';
+      }
       order.auditLogs.push({
         adminName: 'Admin',
         action: 'PAYMENT_APPROVED',
@@ -172,18 +204,22 @@ export const rejectPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Rejection reason is required.' });
     }
 
-    const payment = await Payment.findOne({ $or: [{ _id: id }, { orderId: id }] });
-    if (!payment) {
-      return res.status(404).json({ success: false, message: 'Payment record not found.' });
+    const query = buildIdQuery(id);
+    const payment = await Payment.findOne(query);
+    const order = await Order.findOne(query);
+
+    if (!order && !payment) {
+      return res.status(404).json({ success: false, message: 'Order / Payment record not found.' });
     }
 
-    payment.paymentStatus = 'FAILED';
-    payment.verificationStatus = 'REJECTED';
-    payment.verificationMessage = reason;
-    payment.verifiedAt = new Date();
-    await payment.save();
+    if (payment) {
+      payment.paymentStatus = 'FAILED';
+      payment.verificationStatus = 'REJECTED';
+      payment.verificationMessage = reason;
+      payment.verifiedAt = new Date();
+      await payment.save();
+    }
 
-    const order = await Order.findOne({ orderId: payment.orderId });
     if (order) {
       order.paymentStatus = 'Pending'; // reset back
       order.orderStage = 'Order Placed'; // rollback
@@ -202,6 +238,28 @@ export const rejectPayment = async (req, res) => {
       message: 'Payment rejected successfully!',
       payment,
       order
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// 6. Verify UTR duplicate helper
+export const verifyUtr = async (req, res) => {
+  try {
+    const { utr, orderId } = req.body || req.query;
+    if (!utr) {
+      return res.status(400).json({ success: false, message: 'UTR is required.' });
+    }
+
+    const cleanUtr = utr.trim();
+    const duplicatePayment = await Payment.findOne({ utrNumber: cleanUtr });
+    const duplicateOrder = await Order.findOne({ utrNumber: cleanUtr, orderId: { $ne: orderId } });
+    const exists = !!(duplicatePayment || duplicateOrder);
+
+    return res.status(200).json({
+      exists,
+      message: exists ? 'This Transaction ID has already been submitted.' : 'UTR is unique.'
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
