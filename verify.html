@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Order & Bill | Varevva Family Restaurant</title>
+  <meta name="description" content="Official Bill Verification for Varevva Family Restaurant orders.">
+  <link rel="stylesheet" href="/src/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .verify-card {
+      background: #ffffff;
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+    .verify-status-banner {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px dashed rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .verify-icon-wrapper {
+      font-size: 2.5rem;
+      color: #10b981;
+      margin-bottom: 8px;
+    }
+    .verify-card.failed .verify-icon-wrapper {
+      color: #ef4444;
+    }
+    .badge-verified {
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid rgba(16,185,129,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-block;
+      margin-top: 6px;
+    }
+    .badge-failed {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid rgba(220,38,38,0.2);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      display: inline-block;
+      margin-top: 6px;
+    }
+    .verify-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .meta-item {
+      background: var(--light-bg);
+      padding: 10px 12px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .meta-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .meta-value {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+    }
+    .meta-value.highlight {
+      color: var(--accent-color);
+      font-size: 1.1rem;
+    }
+    .verify-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    .verify-table th, .verify-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    .verify-total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--light-bg);
+      border-radius: 8px;
+      font-weight: 700;
+    }
+    .verify-total-price {
+      font-size: 1.3rem;
+      color: var(--accent-color);
+    }
+    .verify-footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .btn-verify-back {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 18px;
+      background: var(--light-bg);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 8px;
+      color: var(--text-dark);
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+    .btn-verify-back:hover {
+      background: rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body style="background-color: var(--light-bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Simple Header -->
+  <header style="background: #ffffff; padding: 14px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: var(--text-dark); font-weight: 800; font-size: 1.1rem;">V</div>
+      <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.2rem; color: var(--text-dark);">VAREVVA</span>
+    </a>
+    <span style="font-size: 0.8rem; font-weight: 700; color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(16,185,129,0.2);">
+      <i class="fa-solid fa-shield-halved"></i> Official Receipt
+    </span>
+  </header>
+
+  <!-- Main Container -->
+  <main style="flex: 1; max-width: 650px; width: calc(100% - 32px); margin: 24px auto; padding: 0 16px;">
+    <div id="verify-card" class="verify-card">
+      <div style="text-align: center; padding: 40px 0; color: var(--text-muted);">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px; color: var(--primary-color);"></i>
+        <p style="margin: 0; font-weight: 600;">Verifying order details...</p>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="/src/verify.js"></script>
+</body>
+</html>

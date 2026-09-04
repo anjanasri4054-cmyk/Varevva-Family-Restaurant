@@ -23,6 +23,7 @@ export default defineConfig({
         contact: resolve(__dirname, 'contact.html'),
         payment: resolve(__dirname, 'payment.html'),
         track: resolve(__dirname, 'track.html'),
+        verify: resolve(__dirname, 'verify.html'),
       },
     },
   },
