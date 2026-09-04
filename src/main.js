@@ -561,9 +561,7 @@ function openOrderModal() {
         paymentMethod: paymentMethodLabel
       };
 
-      const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:5000/api/orders'
-        : 'https://varevva-family-restaurant.onrender.com/api/orders';
+      const backendUrl = '/api/orders';
 
       const res = await fetch(backendUrl, {
         method: 'POST',
@@ -1073,7 +1071,7 @@ function openAdminLoginModal() {
     const errorDiv = form.querySelector('#admin-login-error');
 
     try {
-      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: user, password: pass })
@@ -1250,7 +1248,7 @@ function openAdminAddItemModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://varevva-family-restaurant.onrender.com/api/upload', true);
+    xhr.open('POST', '/api/upload', true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
     xhr.upload.onprogress = (event) => {
@@ -1314,7 +1312,7 @@ function openAdminAddItemModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu', {
+      const res = await fetch('/api/menu', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -1364,7 +1362,7 @@ async function toggleStockStatus(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
+    const res = await fetch(`/api/menu/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -1402,7 +1400,7 @@ async function deleteMenuItem(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
+    const res = await fetch(`/api/menu/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -1578,7 +1576,7 @@ function openAdminEditItemModal(id) {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://varevva-family-restaurant.onrender.com/api/upload', true);
+    xhr.open('POST', '/api/upload', true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
     xhr.upload.onprogress = (event) => {
@@ -1642,7 +1640,7 @@ function openAdminEditItemModal(id) {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
+      const res = await fetch(`/api/menu/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -1988,7 +1986,7 @@ function openAdminEditImageModal(id, isSpecial) {
     const token = sessionStorage.getItem('varevva_admin_token');
     console.log('Authorization Token:', token ? `Bearer ${token.substring(0, 20)}...` : 'MISSING');
 
-    const requestUrl = 'https://varevva-family-restaurant.onrender.com/api/upload';
+    const requestUrl = '/api/upload';
     console.log('Initiating POST request to:', requestUrl);
 
     const xhr = new XMLHttpRequest();
@@ -2006,7 +2004,7 @@ function openAdminEditImageModal(id, isSpecial) {
     };
 
     xhr.onload = async () => {
-      console.log('POST https://varevva-family-restaurant.onrender.com/api/upload finished. HTTP Status:', xhr.status);
+      console.log('POST /api/upload finished. HTTP Status:', xhr.status);
       console.log('Response content:', xhr.responseText);
 
       if (xhr.status === 200) {
@@ -2029,10 +2027,10 @@ function openAdminEditImageModal(id, isSpecial) {
           uploadPercent.textContent = 'Saving...';
 
           console.log('Initiating PUT request to update MongoDB for item:', id);
-          console.log('PUT URL:', `https://varevva-family-restaurant.onrender.com/api/menu/${id}`);
+          console.log('PUT URL:', `/api/menu/${id}`);
 
           // Trigger immediate MongoDB update using _id
-          const updateRes = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${id}`, {
+          const updateRes = await fetch(`/api/menu/${id}`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -2251,7 +2249,7 @@ function openAdminAddSpecialModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://varevva-family-restaurant.onrender.com/api/upload', true);
+    xhr.open('POST', '/api/upload', true);
     xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 
     xhr.upload.onprogress = (event) => {
@@ -2315,7 +2313,7 @@ function openAdminAddSpecialModal() {
     const token = sessionStorage.getItem('varevva_admin_token');
 
     try {
-      const res = await fetch('https://varevva-family-restaurant.onrender.com/api/menu', {
+      const res = await fetch('/api/menu', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -2364,7 +2362,7 @@ async function deleteSpecialItem(id) {
   const token = sessionStorage.getItem('varevva_admin_token');
 
   try {
-    const res = await fetch(`https://varevva-family-restaurant.onrender.com/api/menu/${item._id}`, {
+    const res = await fetch(`/api/menu/${item._id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -2464,7 +2462,7 @@ async function openAdminFirebaseConfigModal() {
 
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
       try {
-        const response = await fetch('https://varevva-family-restaurant.onrender.com/api/save-firebase-config', {
+        const response = await fetch('/api/save-firebase-config', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -2718,9 +2716,7 @@ export async function openAdminOrdersModal() {
   // Fetch orders from backend API
   const fetchOrders = async () => {
     try {
-      const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:5000/api/orders'
-        : 'https://varevva-family-restaurant.onrender.com/api/orders';
+      const backendUrl = '/api/orders';
 
       const res = await fetch(backendUrl);
       if (res.ok) {

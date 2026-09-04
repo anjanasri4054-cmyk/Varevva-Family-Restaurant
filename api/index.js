@@ -8,10 +8,17 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 
-// Connect to MongoDB
-connectDB();
-
 const app = express();
+
+// Ensure DB is connected for each request in serverless environment
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('Database connection middleware error:', err);
+  }
+  next();
+});
 
 const allowedOrigins = [
   'https://varevva-family-restaurant.vercel.app',

@@ -171,9 +171,7 @@
 
     async function fetchLiveOrderStatus() {
       try {
-        const backendUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-          ? `http://localhost:5000/api/orders/track/${orderId}`
-          : `https://varevva-family-restaurant.onrender.com/api/orders/track/${orderId}`;
+        const backendUrl = `/api/orders/track/${orderId}`;
 
         const response = await fetch(backendUrl);
         if (response.ok) {

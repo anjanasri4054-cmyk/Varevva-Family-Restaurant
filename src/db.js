@@ -23,7 +23,7 @@ function adaptMenuItem(item) {
 // Fetch Menu Data
 export async function fetchMenuData() {
   try {
-    const response = await fetch('https://varevva-family-restaurant.onrender.com/api/menu');
+    const response = await fetch('/api/menu');
     if (response.ok) {
       const items = await response.json();
       if (Array.isArray(items) && items.length > 0) {
@@ -52,7 +52,7 @@ export async function fetchMenuData() {
 // Fetch Specials Data
 export async function fetchSpecialsData() {
   try {
-    const response = await fetch('https://varevva-family-restaurant.onrender.com/api/menu');
+    const response = await fetch('/api/menu');
     if (response.ok) {
       const items = await response.json();
       // Filter for featured specials
