@@ -356,21 +356,41 @@ function getCategoryDisplayName(cat) {
 // --- Cart System (local copy matching main.js) ---
 function getCart() {
   try {
-    const cart = JSON.parse(localStorage.getItem('varevva_cart')) || {};
-    let changed = false;
-    // Sync price with currentMenu to prevent manipulation
-    Object.keys(cart).forEach(name => {
-      const menuItem = currentMenu.find(item => item.name === name);
-      if (menuItem && !menuItem.outOfStock) {
-        cart[name].price = menuItem.price;
-      } else {
-        delete cart[name];
-        changed = true;
-      }
-    });
-    if (changed) {
+    let raw = localStorage.getItem('varevva_cart');
+    let cart = JSON.parse(raw) || {};
+
+    // Normalize: if cart is an Array (legacy format), convert to object
+    if (Array.isArray(cart)) {
+      const obj = {};
+      cart.forEach(item => {
+        if (item && item.name) {
+          obj[item.name] = { name: item.name, price: Number(item.price) || 0, quantity: Number(item.quantity) || 1 };
+        }
+      });
+      cart = obj;
       localStorage.setItem('varevva_cart', JSON.stringify(cart));
     }
+
+    // Only sync prices / remove out-of-stock if menu data has loaded
+    if (currentMenu.length > 0) {
+      let changed = false;
+      Object.keys(cart).forEach(name => {
+        const menuItem = currentMenu.find(item => item.name === name);
+        if (menuItem) {
+          if (menuItem.outOfStock) {
+            delete cart[name];
+            changed = true;
+          } else {
+            cart[name].price = menuItem.price;
+          }
+        }
+        // If not found in menu, it may be a Special — leave it as-is
+      });
+      if (changed) {
+        localStorage.setItem('varevva_cart', JSON.stringify(cart));
+      }
+    }
+
     return cart;
   } catch (e) {
     return {};

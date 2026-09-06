@@ -176,21 +176,43 @@ function getItemImage(item) {
 // --- Cart State Management (localStorage persisted) ---
 function getCart() {
   try {
-    const cart = JSON.parse(localStorage.getItem('varevva_cart')) || {};
-    let changed = false;
-    // Sync price with currentMenu to handle cost changes and prevent user manipulation
-    Object.keys(cart).forEach(name => {
-      const menuItem = currentMenu.find(item => item.name === name);
-      if (menuItem && !menuItem.outOfStock) {
-        cart[name].price = menuItem.price;
-      } else {
-        delete cart[name];
-        changed = true;
-      }
-    });
-    if (changed) {
+    let raw = localStorage.getItem('varevva_cart');
+    let cart = JSON.parse(raw) || {};
+
+    // Normalize: if cart is an Array (legacy format from old migration), convert to object
+    if (Array.isArray(cart)) {
+      const obj = {};
+      cart.forEach(item => {
+        if (item && item.name) {
+          obj[item.name] = { name: item.name, price: Number(item.price) || 0, quantity: Number(item.quantity) || 1 };
+        }
+      });
+      cart = obj;
       localStorage.setItem('varevva_cart', JSON.stringify(cart));
     }
+
+    // Only sync prices / remove out-of-stock if we actually have menu data loaded
+    if (currentMenu.length > 0) {
+      let changed = false;
+      Object.keys(cart).forEach(name => {
+        const menuItem = currentMenu.find(item => item.name === name);
+        if (menuItem) {
+          if (menuItem.outOfStock) {
+            // Item is explicitly marked out of stock — remove it
+            delete cart[name];
+            changed = true;
+          } else {
+            // Sync authoritative price from menu
+            cart[name].price = menuItem.price;
+          }
+        }
+        // If menuItem not found, it could be a Special — leave it in cart as-is
+      });
+      if (changed) {
+        localStorage.setItem('varevva_cart', JSON.stringify(cart));
+      }
+    }
+
     return cart;
   } catch (e) {
     return {};
@@ -211,7 +233,8 @@ function addToCart(name, price) {
     cart[name] = { name, price: Number(price), quantity: 1 };
   }
   saveCart(cart);
-  renderMenu();
+  if (menuGrid) renderMenu();
+  if (specialsGrid) renderSpecials();
 }
 
 function updateQuantity(name, change) {
@@ -223,7 +246,8 @@ function updateQuantity(name, change) {
     delete cart[name];
   }
   saveCart(cart);
-  renderMenu();
+  if (menuGrid) renderMenu();
+  if (specialsGrid) renderSpecials();
 }
 
 function updateFloatingCartBar() {
