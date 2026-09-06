@@ -399,6 +399,7 @@ ul {
   color: var(--accent-color);
   background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -757,6 +758,7 @@ ul {
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
