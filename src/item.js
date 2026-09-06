@@ -463,7 +463,7 @@ function updateFloatingCartBar() {
       <span>${totalQty} Item${totalQty > 1 ? 's' : ''} | ₹${totalPrice}</span>
     </div>
     <button class="cart-btn-order" id="btn-cart-whatsapp-order">
-      <span>Order on WhatsApp</span>
+      <span>View Order & Pay</span>
       <i class="fa-solid fa-arrow-right"></i>
     </button>
   `;
