@@ -38,12 +38,26 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Routes
+// Health check routes
+app.get(['/api', '/api/health', '/health', '/'], (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'Varevva Restaurant API is running!' });
+});
+
+// Routes (supports both /api prefix and stripped prefix)
 app.use('/api/menu', menuRoutes);
+app.use('/menu', menuRoutes);
+
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
+
 app.use('/api/upload', uploadRoutes);
+app.use('/upload', uploadRoutes);
+
 app.use('/api/orders', orderRoutes);
+app.use('/orders', orderRoutes);
+
 app.use('/api/payments', paymentRoutes);
+app.use('/payments', paymentRoutes);
 
 // Error Handler Middleware
 app.use((err, req, res, next) => {
