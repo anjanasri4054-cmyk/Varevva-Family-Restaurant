@@ -569,6 +569,10 @@ function openOrderModal() {
       return { name: cart[k].name, quantity: cart[k].quantity, price: cart[k].price, subtotal: sub };
     });
 
+    // Keep the submitted receipt available while the payment page loads.
+    localStorage.setItem('varevva_last_order_items', JSON.stringify(orderItems));
+    localStorage.setItem('varevva_last_total', String(cartTotal));
+
     let assignedOrderId = `VRV${Math.floor(1001 + Math.random() * 9000)}`;
 
     // Create Order in MongoDB Database
@@ -597,6 +601,9 @@ function openOrderModal() {
         const data = await res.json();
         if (data.order && data.order.orderId) {
           assignedOrderId = data.order.orderId;
+          if (Array.isArray(data.order.items)) {
+            localStorage.setItem('varevva_last_order_items', JSON.stringify(data.order.items));
+          }
           if (data.order.totalAmount !== undefined) {
             localStorage.setItem('varevva_last_total', data.order.totalAmount);
           }

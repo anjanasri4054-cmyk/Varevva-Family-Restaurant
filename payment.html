@@ -593,45 +593,51 @@
         const backendUrl = `/api/orders/track/${orderId}`;
 
         const res = await fetch(backendUrl);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.order) {
-            orderDetails = data.order;
-            orderTotalAmount = parseFloat(orderDetails.totalAmount || 0);
+        const data = await res.json().catch(() => ({}));
 
-            if (!orderTotalAmount || orderTotalAmount <= 0) {
-              paymentItemsList.innerHTML = `
-                <div style="background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; text-align: center; display: flex; flex-direction: column; gap: 8px;">
-                  <span><i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i> Invalid Order Amount (₹${orderTotalAmount || 0}). Payment cannot be processed.</span>
-                </div>
-              `;
-              dropzone.style.opacity = '0.5';
-              dropzone.style.pointerEvents = 'none';
-              return;
-            }
+        if (!res.ok || !data.order) {
+          throw new Error(data.message || `Order lookup failed (${res.status})`);
+        }
 
-            renderOrderItems(orderDetails);
+        orderDetails = data.order;
+        orderTotalAmount = parseFloat(orderDetails.totalAmount || 0);
 
-            // If order already has paymentScreenshot and is COD or Paid, skip checkout or redirect
-            if (orderDetails.paymentStatus === 'Proof Submitted' || orderDetails.paymentStatus === 'Paid') {
-              displaySuccessFlow(orderDetails);
-            }
-          }
+        if (!orderTotalAmount || orderTotalAmount <= 0) {
+          paymentItemsList.innerHTML = `
+            <div style="background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; text-align: center; display: flex; flex-direction: column; gap: 8px;">
+              <span><i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i> Invalid Order Amount (₹${orderTotalAmount || 0}). Payment cannot be processed.</span>
+            </div>
+          `;
+          dropzone.style.opacity = '0.5';
+          dropzone.style.pointerEvents = 'none';
+          return;
+        }
+
+        renderOrderItems(orderDetails);
+
+        // If order already has paymentScreenshot and is COD or Paid, skip checkout or redirect
+        if (orderDetails.paymentStatus === 'Proof Submitted' || orderDetails.paymentStatus === 'Paid') {
+          displaySuccessFlow(orderDetails);
         }
       } catch (err) {
         console.warn('Failed to load order:', err);
         const cachedTotal = localStorage.getItem('varevva_last_total');
         if (cachedTotal && parseFloat(cachedTotal) > 0) {
           orderTotalAmount = parseFloat(cachedTotal);
-          paymentItemsList.innerHTML = `
-            <div class="amount-banner">
-              <span class="amount-banner-title">Total Amount to Pay (Cached)</span>
-              <span class="amount-banner-value">₹${orderTotalAmount}</span>
-            </div>
-            <div style="background: #fffbeb; border: 1px solid #f59e0b40; color: #b45309; padding: 10px; border-radius: 8px; font-size: 0.76rem; margin-top: 8px; font-weight: 600;">
-              <i class="fa-solid fa-triangle-exclamation"></i> Working offline. Using cached order total. Some payment validation features might be restricted.
-            </div>
-          `;
+          let cachedItems = [];
+          try {
+            const savedItems = JSON.parse(localStorage.getItem('varevva_last_order_items') || '[]');
+            cachedItems = Array.isArray(savedItems) ? savedItems.filter(item => item && item.name) : [];
+          } catch (cartError) {
+            console.warn('Failed to load saved order items:', cartError);
+          }
+
+          renderOrderItems({ items: cachedItems, totalAmount: orderTotalAmount });
+          paymentItemsList.insertAdjacentHTML('beforeend', `
+              <div style="background: #fffbeb; border: 1px solid #f59e0b40; color: #b45309; padding: 10px; border-radius: 8px; font-size: 0.76rem; margin-top: 8px; font-weight: 600;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Working offline. Using cached order details. Some payment validation features might be restricted.
+              </div>
+            `);
         } else {
           orderTotalAmount = 0;
           paymentItemsList.innerHTML = `
