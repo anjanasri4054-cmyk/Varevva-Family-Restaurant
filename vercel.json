@@ -1,6 +1,6 @@
 {
   "framework": "vite",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.js" }
+    { "source": "/api/(.*)", "destination": "https://varevva-family-restaurant.onrender.com/api/$1" }
   ]
 }
