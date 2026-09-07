@@ -8,16 +8,20 @@ export const connectDB = async () => {
   }
 
   if (!process.env.MONGODB_URI) {
-    console.error('MONGODB_URI environment variable is missing!');
-    return;
+    throw new Error('MONGODB_URI environment variable is missing.');
   }
 
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI);
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000
+    });
     isConnected = !!conn.connections[0].readyState;
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    return isConnected;
   } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
+    isConnected = false;
+    throw new Error(`Database unavailable: ${error.message}`);
   }
 };
 

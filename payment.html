@@ -1432,7 +1432,7 @@
         }
       } catch (err) {
         console.error('Submit screenshot error:', err);
-        alert('Network connection error. Failed to reach server.');
+        alert('The order service is temporarily unavailable. Please try again in a moment.');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<span>Submit Payment Proof</span><i class="fa-solid fa-arrow-right"></i>';
       }

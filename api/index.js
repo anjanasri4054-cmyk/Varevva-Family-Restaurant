@@ -15,7 +15,10 @@ app.use(async (req, res, next) => {
   try {
     await connectDB();
   } catch (err) {
-    console.error('Database connection middleware error:', err);
+    return res.status(503).json({
+      success: false,
+      message: 'The order service is temporarily unavailable. Please try again in a moment.'
+    });
   }
   next();
 });
