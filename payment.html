@@ -277,7 +277,7 @@
       <!-- Copy UPI ID -->
       <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; width: 100%;">
         <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">UPI ID:</span>
-        <code style="font-family: monospace; font-weight: 700; font-size: 0.88rem; background: var(--primary-light); color: var(--accent-color); padding: 4px 10px; border-radius: 8px;" id="upi-id-text">6302019925@ybl</code>
+        <code style="font-family: monospace; font-weight: 700; font-size: 0.88rem; background: var(--primary-light); color: var(--accent-color); padding: 4px 10px; border-radius: 8px;" id="upi-id-text">7382507237@ybl</code>
         <button type="button" id="btn-copy-upi" style="background: var(--primary-color); border: none; padding: 5px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; transition: var(--transition-smooth);">
           <i class="fa-solid fa-copy"></i> Copy UPI
         </button>
@@ -848,7 +848,7 @@
         const hasSuccess = successKeywords.some(kw => text.includes(kw));
 
         // 2. Recipient / Merchant Check
-        const merchantKeywords = ['varevva', 'restaurant', 'anjanasri', '6302019925', 'family'];
+        const merchantKeywords = ['varevva', 'restaurant', 'anjanasri', '7382507237', 'family'];
         const hasMerchant = merchantKeywords.some(kw => text.includes(kw));
 
         // 3. Transaction ID / UTR Check
@@ -1510,7 +1510,7 @@
       waMessage += `*Verify Bill & Status:*\n${verifyLink}\n\n`;
       waMessage += `Please confirm my payment & order. Thank you!`;
 
-      const waUrl = `https://wa.me/916302019925?text=${encodeURIComponent(waMessage)}`;
+      const waUrl = `https://wa.me/917382507237?text=${encodeURIComponent(waMessage)}`;
       const waBtn = document.getElementById('btn-success-whatsapp');
       if (waBtn) {
         waBtn.href = waUrl;

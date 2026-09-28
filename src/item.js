@@ -143,7 +143,7 @@ function renderItemDetails(item) {
   }
 
   // Pre-fill direct WhatsApp Order link
-  const directWhatsAppUrl = `https://wa.me/916302019925?text=Hi%20Varevva%20Restaurant,%20I%20would%20like%20to%20order%20${encodeURIComponent(item.name)}%20(Price:%20₹${item.price})%20from%20your%20website.`;
+  const directWhatsAppUrl = `https://wa.me/917382507237?text=Hi%20Varevva%20Restaurant,%20I%20would%20like%20to%20order%20${encodeURIComponent(item.name)}%20(Price:%20₹${item.price})%20from%20your%20website.`;
 
 function cleanPath(url, fallback) {
   if (!url || typeof url !== 'string') return fallback;

@@ -641,7 +641,7 @@ function openOrderModal() {
       waMessage += `*Verify Bill & Live Status:*\n${verifyLink}\n\n`;
       waMessage += `Please confirm my order. Thank you!`;
 
-      const waUrl = `https://wa.me/916302019925?text=${encodeURIComponent(waMessage)}`;
+      const waUrl = `https://wa.me/917382507237?text=${encodeURIComponent(waMessage)}`;
       try {
         window.open(waUrl, '_blank');
       } catch (e) {
@@ -766,7 +766,7 @@ function buildWhatsAppUrl({ name, phone, typeLabel, paymentMethodLabel = 'UPI QR
   message += `Please confirm my order. Thank you!`;
 
   const encodedMsg = encodeURIComponent(message);
-  return `https://wa.me/916302019925?text=${encodedMsg}`;
+  return `https://wa.me/917382507237?text=${encodedMsg}`;
 }
 
 function initCartEventListeners() {
@@ -1777,7 +1777,7 @@ function renderSpecials() {
         <p style="margin-bottom: 20px;">${item.description}</p>
         <div class="special-footer">
           <span class="special-tag"><i class="fa-solid ${item.tagIcon || 'fa-fire'}"></i> ${item.tag}</span>
-          <a href="https://wa.me/916302019925?text=Hi%20Varevva%20Restaurant,%20I%20would%20like%20to%20order%20${encodeURIComponent(item.name)}" target="_blank" class="btn-icon-order" title="Order via WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+          <a href="https://wa.me/917382507237?text=Hi%20Varevva%20Restaurant,%20I%20would%20like%20to%20order%20${encodeURIComponent(item.name)}" target="_blank" class="btn-icon-order" title="Order via WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
         </div>
         ${adminActionsHTML}
       </div>
