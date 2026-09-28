@@ -2567,6 +2567,7 @@ export async function openAdminOrdersModal() {
               <th style="padding: 12px; font-weight: 700;">Order ID</th>
               <th style="padding: 12px; font-weight: 700;">Customer</th>
               <th style="padding: 12px; font-weight: 700;">Mobile</th>
+              <th style="padding: 12px; font-weight: 700;">Type / Address</th>
               <th style="padding: 12px; font-weight: 700;">Items</th>
               <th style="padding: 12px; font-weight: 700;">Amount</th>
               <th style="padding: 12px; font-weight: 700;">Payment Method</th>
@@ -2581,7 +2582,7 @@ export async function openAdminOrdersModal() {
           </thead>
           <tbody id="admin-orders-table-body">
             <tr>
-              <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <td colspan="13" style="text-align: center; padding: 40px; color: var(--text-muted);">
                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
                 <p style="margin: 0;">Loading payment records...</p>
               </td>
@@ -2640,7 +2641,7 @@ export async function openAdminOrdersModal() {
     if (list.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="12" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          <td colspan="13" style="text-align: center; padding: 40px; color: var(--text-muted);">
             <i class="fa-solid fa-folder-open" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.5;"></i>
             <p style="margin: 0; font-weight: 600;">No orders found matching this filter.</p>
           </td>
@@ -2721,6 +2722,22 @@ export async function openAdminOrdersModal() {
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark);">${order.orderId}</td>
           <td style="padding: 10px 12px; font-weight: 600;">${order.customerName}</td>
           <td style="padding: 10px 12px; color: var(--text-muted);">${order.customerPhone}</td>
+          <td style="padding: 10px 12px; max-width: 180px;">
+            ${(order.diningPreference || '').toLowerCase().includes('door') || (order.diningPreference || '').toLowerCase().includes('delivery')
+              ? `<div>
+                  <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; padding:2px 7px; border-radius:5px; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; margin-bottom:4px;">
+                    <i class="fa-solid fa-truck-fast"></i> Door Delivery
+                  </span>
+                  ${order.deliveryAddress
+                    ? `<div style="font-size:0.76rem; color:#1e293b; font-weight:600; margin-top:3px; white-space:normal; line-height:1.3;" title="${order.deliveryAddress.replace(/"/g, '&quot;')}">
+                        <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-right:3px;"></i>${order.deliveryAddress}
+                       </div>`
+                    : `<div style="font-size:0.74rem; color:#94a3b8; margin-top:2px;">No address provided</div>`
+                  }
+                </div>`
+              : `<span style="background:var(--light-bg); color:var(--text-dark); padding:2px 7px; border-radius:5px; font-size:0.74rem; font-weight:600;">${order.diningPreference || 'Takeaway'}</span>`
+            }
+          </td>
           <td style="padding: 10px 12px; max-width: 170px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsText}">${itemsText || 'Meal Order'}</td>
           <td style="padding: 10px 12px; font-weight: 700; color: var(--accent-color);">₹${order.totalAmount}</td>
           <td style="padding: 10px 12px;">
