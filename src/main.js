@@ -353,6 +353,7 @@ function openOrderModal() {
             <label for="cust-address">Delivery Address</label>
             <textarea id="cust-address" placeholder="Enter your full address with landmark" rows="2" style="padding: 10px 12px; border-radius: var(--border-radius-sm); border: 1px solid rgba(0,0,0,0.1); outline: none; font-family: var(--font-accent); font-size: 0.95rem; transition: var(--transition-smooth); width: 100%; resize: vertical;"></textarea>
           </div>
+          <input type="hidden" id="gps-coords" value="">
           <div class="form-group">
             <label>Location Verification</label>
             <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
@@ -475,6 +476,7 @@ function openOrderModal() {
 
   const detectBtn = modalOverlay.querySelector('#btn-detect-location');
   const statusSpan = modalOverlay.querySelector('#location-status');
+  const gpsCoordsInput = modalOverlay.querySelector('#gps-coords');
 
   if (detectBtn) {
     detectBtn.addEventListener('click', () => {
@@ -507,12 +509,15 @@ function openOrderModal() {
               verifiedDistance = distance.toFixed(2);
               if (distance <= 4.0) {
                 statusSpan.style.color = '#10b981';
-                statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km)`;
+                statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km) — GPS pinned ✓`;
                 isLocationVerified = true;
+                // Save GPS coords for admin navigation
+                if (gpsCoordsInput) gpsCoordsInput.value = `${lat},${lon}`;
               } else {
                 statusSpan.style.color = '#ef4444';
                 statusSpan.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Delivery not available (${verifiedDistance} km)`;
                 isLocationVerified = false;
+                if (gpsCoordsInput) gpsCoordsInput.value = '';
                 alert(`Delivery address is outside our 4km range (${verifiedDistance} km). Please choose Dine-in or Takeaway.`);
               }
             })
@@ -520,12 +525,15 @@ function openOrderModal() {
               statusSpan.style.color = '#10b981';
               statusSpan.innerHTML = '<i class="fa-solid fa-circle-check"></i> Delivery available';
               isLocationVerified = true;
+              // Still save coords even if OSRM failed
+              if (gpsCoordsInput) gpsCoordsInput.value = `${lat},${lon}`;
             });
         },
         () => {
           statusSpan.style.color = '#d97706';
           statusSpan.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> GPS failed. Manual allowed.';
           isLocationVerified = true;
+          if (gpsCoordsInput) gpsCoordsInput.value = '';
         },
         { enableHighAccuracy: true, timeout: 8000 }
       );
@@ -548,7 +556,12 @@ function openOrderModal() {
     const phone = form.querySelector('#cust-phone').value.trim();
     const typeLabel = orderTypeSelect.options[orderTypeSelect.selectedIndex].text;
     const paymentVal = 'cod';
-    const address = orderTypeSelect.value === 'delivery' ? form.querySelector('#cust-address').value.trim() : '';
+    const rawAddress = orderTypeSelect.value === 'delivery' ? form.querySelector('#cust-address').value.trim() : '';
+    const gpsCoords = form.querySelector('#gps-coords') ? form.querySelector('#gps-coords').value.trim() : '';
+    // Combine text address + GPS coords into one field: "Full text address||GPS:lat,lon"
+    const address = rawAddress
+      ? (gpsCoords ? `${rawAddress}||GPS:${gpsCoords}` : rawAddress)
+      : '';
     const pickupTime = form.querySelector('#cust-pickup-time') ? form.querySelector('#cust-pickup-time').value.trim() : '';
     const specialInstructions = form.querySelector('#cust-instructions') ? form.querySelector('#cust-instructions').value.trim() : '';
 
@@ -577,13 +590,15 @@ function openOrderModal() {
 
     // Create Order in MongoDB Database
     try {
+      // Store clean text address (without GPS part) in payload for WhatsApp/display
+      const displayAddress = rawAddress;
       const orderPayload = {
         customerName: name,
         customerPhone: phone,
         pickupTime,
         specialInstructions,
         diningPreference: typeLabel,
-        deliveryAddress: address,
+        deliveryAddress: address,   // contains "text||GPS:lat,lon" if GPS was captured
         items: orderItems,
         totalAmount: cartTotal,
         paymentMethod: paymentMethodLabel
@@ -630,7 +645,8 @@ function openOrderModal() {
       waMessage += `*Phone:* ${phone}\n`;
       waMessage += `*Option:* ${typeLabel}\n`;
       waMessage += `*Payment Method:* Cash on Delivery\n`;
-      if (address) waMessage += `*Delivery Address:* ${address}\n`;
+      if (rawAddress) waMessage += `*Delivery Address:* ${rawAddress}\n`;
+      if (gpsCoords) waMessage += `*?? GPS Navigation:* https://maps.google.com/?q=${gpsCoords}\n`;
       waMessage += `\n-------------------------\n*Items Ordered:*\n`;
       orderItems.forEach((item, idx) => {
         waMessage += `${idx + 1}. ${item.name} x ${item.quantity} - ₹${item.subtotal}\n`;
@@ -2722,19 +2738,31 @@ export async function openAdminOrdersModal() {
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark);">${order.orderId}</td>
           <td style="padding: 10px 12px; font-weight: 600;">${order.customerName}</td>
           <td style="padding: 10px 12px; color: var(--text-muted);">${order.customerPhone}</td>
-          <td style="padding: 10px 12px; max-width: 180px;">
+          <td style="padding: 10px 12px; max-width: 200px;">
             ${(order.diningPreference || '').toLowerCase().includes('door') || (order.diningPreference || '').toLowerCase().includes('delivery')
-              ? `<div>
-                  <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; padding:2px 7px; border-radius:5px; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; margin-bottom:4px;">
-                    <i class="fa-solid fa-truck-fast"></i> Door Delivery
-                  </span>
-                  ${order.deliveryAddress
-                    ? `<div style="font-size:0.76rem; color:#1e293b; font-weight:600; margin-top:3px; white-space:normal; line-height:1.3;" title="${order.deliveryAddress.replace(/"/g, '&quot;')}">
-                        <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-right:3px;"></i>${order.deliveryAddress}
-                       </div>`
-                    : `<div style="font-size:0.74rem; color:#94a3b8; margin-top:2px;">No address provided</div>`
-                  }
-                </div>`
+              ? (() => {
+                  const raw = order.deliveryAddress || '';
+                  const gpsPart = raw.includes('||GPS:') ? raw.split('||GPS:')[1] : '';
+                  const textAddr = raw.includes('||GPS:') ? raw.split('||GPS:')[0] : raw;
+                  const mapsUrl = gpsPart ? `https://maps.google.com/?q=${gpsPart}` : '';
+                  return `<div>
+                    <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; padding:2px 7px; border-radius:5px; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; margin-bottom:5px;">
+                      <i class="fa-solid fa-truck-fast"></i> Door Delivery
+                    </span>
+                    ${textAddr
+                      ? `<div style="font-size:0.76rem; color:#1e293b; font-weight:600; margin-top:2px; white-space:normal; line-height:1.4;">
+                          <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-right:3px;"></i>${textAddr}
+                         </div>`
+                      : `<div style="font-size:0.74rem; color:#94a3b8; margin-top:2px;">No address text</div>`
+                    }
+                    ${mapsUrl
+                      ? `<a href="${mapsUrl}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:5px; margin-top:6px; background:#1d72b8; color:#fff; padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:700; text-decoration:none; letter-spacing:0.3px;">
+                          <i class="fa-solid fa-diamond-turn-right"></i> Navigate
+                         </a>`
+                      : `<div style="font-size:0.72rem; color:#94a3b8; margin-top:4px; font-style:italic;">No GPS pin (text only)</div>`
+                    }
+                  </div>`;
+                })()
               : `<span style="background:var(--light-bg); color:var(--text-dark); padding:2px 7px; border-radius:5px; font-size:0.74rem; font-weight:600;">${order.diningPreference || 'Takeaway'}</span>`
             }
           </td>
