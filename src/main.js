@@ -351,19 +351,21 @@ function openOrderModal() {
         <div id="delivery-fields" style="display: none; flex-direction: column; gap: 12px; margin-top: 12px; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 12px;">
           <div class="form-group">
             <label for="cust-address">Delivery Address</label>
-            <textarea id="cust-address" placeholder="Enter your full address with landmark" rows="2" style="padding: 10px 12px; border-radius: var(--border-radius-sm); border: 1px solid rgba(0,0,0,0.1); outline: none; font-family: var(--font-accent); font-size: 0.95rem; transition: var(--transition-smooth); width: 100%; resize: vertical;"></textarea>
+            <textarea id="cust-address" placeholder="Enter house no, street, landmark, Yadagirigutta" rows="2" style="padding: 10px 12px; border-radius: var(--border-radius-sm); border: 1px solid rgba(0,0,0,0.1); outline: none; font-family: var(--font-accent); font-size: 0.95rem; transition: var(--transition-smooth); width: 100%; resize: vertical;"></textarea>
           </div>
           <input type="hidden" id="gps-coords" value="">
-          <div class="form-group">
-            <label>Location Verification</label>
-            <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
-              <button type="button" id="btn-detect-location" class="btn-admin-submit" style="padding: 8px 14px; font-size: 0.85rem; width: auto; display: flex; align-items: center; gap: 6px; margin-top: 0;">
-                <i class="fa-solid fa-location-crosshairs"></i> Detect Distance
+          <div class="form-group" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 12px;">
+            <label style="font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px; font-size: 0.88rem;">
+              <i class="fa-solid fa-location-dot"></i> Live GPS Location (For Delivery Navigation)
+            </label>
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 8px; flex-wrap: wrap;">
+              <button type="button" id="btn-detect-location" style="padding: 8px 14px; font-size: 0.84rem; width: auto; display: inline-flex; align-items: center; gap: 6px; margin: 0; background: #16a34a; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 6px rgba(22,163,74,0.3);">
+                <i class="fa-solid fa-crosshairs"></i> Tap to Share Live GPS Location
               </button>
-              <span id="location-status" style="font-size: 0.82rem; font-weight: 500; color: var(--text-muted);">Not verified yet</span>
+              <span id="location-status" style="font-size: 0.82rem; font-weight: 600; color: #4b5563;">Not shared yet</span>
             </div>
-            <p style="font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">
-              Note: Delivery is free within 4km from Varevva. If GPS fails, manual override is allowed.
+            <p style="font-size: 0.74rem; color: #15803d; margin-top: 8px; line-height: 1.35; margin-bottom: 0;">
+              ✨ Sharing your GPS location lets the delivery driver navigate straight to your doorstep on Google Maps!
             </p>
           </div>
         </div>
@@ -482,60 +484,77 @@ function openOrderModal() {
     detectBtn.addEventListener('click', () => {
       if (!navigator.geolocation) {
         statusSpan.style.color = '#ef4444';
-        statusSpan.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> GPS not supported.';
+        statusSpan.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> GPS not supported on this device.';
         isLocationVerified = true;
         return;
       }
 
-      statusSpan.style.color = 'var(--text-dark)';
-      statusSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking GPS...';
+      statusSpan.style.color = '#1e293b';
+      statusSpan.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pinning GPS location...';
 
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lon},${lat};78.9440528,17.5700914?overview=false`;
+      const onLocationFound = (position) => {
+        const lat = position.coords.latitude;
+        const lon = position.coords.longitude;
+        if (gpsCoordsInput) gpsCoordsInput.value = `${lat},${lon}`;
+        isLocationVerified = true;
 
-          fetch(osrmUrl)
-            .then(res => res.json())
+        // Auto-fill address field if currently empty using reverse geocode
+        const addressTextarea = modalOverlay.querySelector('#cust-address');
+        if (addressTextarea && !addressTextarea.value.trim()) {
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+            .then(r => r.json())
             .then(data => {
-              let distance = 0;
-              if (data.code === 'Ok' && data.routes && data.routes[0]) {
-                distance = data.routes[0].distance / 1000;
-              } else {
-                distance = calculateDistance(17.5700914, 78.9440528, lat, lon);
-              }
-
-              verifiedDistance = distance.toFixed(2);
-              if (distance <= 4.0) {
-                statusSpan.style.color = '#10b981';
-                statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> Delivery available (${verifiedDistance} km) — GPS pinned ✓`;
-                isLocationVerified = true;
-                // Save GPS coords for admin navigation
-                if (gpsCoordsInput) gpsCoordsInput.value = `${lat},${lon}`;
-              } else {
-                statusSpan.style.color = '#ef4444';
-                statusSpan.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Delivery not available (${verifiedDistance} km)`;
-                isLocationVerified = false;
-                if (gpsCoordsInput) gpsCoordsInput.value = '';
-                alert(`Delivery address is outside our 4km range (${verifiedDistance} km). Please choose Dine-in or Takeaway.`);
+              if (data && data.display_name && !addressTextarea.value.trim()) {
+                addressTextarea.value = data.display_name;
               }
             })
-            .catch(() => {
-              statusSpan.style.color = '#10b981';
-              statusSpan.innerHTML = '<i class="fa-solid fa-circle-check"></i> Delivery available';
-              isLocationVerified = true;
-              // Still save coords even if OSRM failed
-              if (gpsCoordsInput) gpsCoordsInput.value = `${lat},${lon}`;
-            });
-        },
-        () => {
-          statusSpan.style.color = '#d97706';
-          statusSpan.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> GPS failed. Manual allowed.';
-          isLocationVerified = true;
-          if (gpsCoordsInput) gpsCoordsInput.value = '';
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
+            .catch(() => {});
+        }
+
+        const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${lon},${lat};78.9440528,17.5700914?overview=false`;
+        fetch(osrmUrl)
+          .then(res => res.json())
+          .then(data => {
+            let distance = 0;
+            if (data.code === 'Ok' && data.routes && data.routes[0]) {
+              distance = data.routes[0].distance / 1000;
+            } else {
+              distance = calculateDistance(17.5700914, 78.9440528, lat, lon);
+            }
+
+            verifiedDistance = distance.toFixed(2);
+            if (distance <= 4.0) {
+              statusSpan.style.color = '#16a34a';
+              statusSpan.innerHTML = `<i class="fa-solid fa-circle-check"></i> GPS Pinned (${verifiedDistance} km) ✓`;
+            } else {
+              statusSpan.style.color = '#ef4444';
+              statusSpan.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${verifiedDistance} km (Outside 4km range)`;
+              alert(`Delivery address is outside our 4km range (${verifiedDistance} km). Please choose Dine-in or Takeaway.`);
+            }
+          })
+          .catch(() => {
+            statusSpan.style.color = '#16a34a';
+            statusSpan.innerHTML = '<i class="fa-solid fa-circle-check"></i> Live GPS Pinned ✓';
+          });
+      };
+
+      const onLocationFail = () => {
+        // Fallback retry with low accuracy / longer timeout
+        navigator.geolocation.getCurrentPosition(
+          onLocationFound,
+          () => {
+            statusSpan.style.color = '#d97706';
+            statusSpan.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> GPS timed out. Manual address used.';
+            isLocationVerified = true;
+          },
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 }
+        );
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        onLocationFound,
+        onLocationFail,
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
       );
     });
   }
@@ -558,16 +577,22 @@ function openOrderModal() {
     const paymentVal = 'cod';
     const rawAddress = orderTypeSelect.value === 'delivery' ? form.querySelector('#cust-address').value.trim() : '';
     const gpsCoords = form.querySelector('#gps-coords') ? form.querySelector('#gps-coords').value.trim() : '';
-    // Combine text address + GPS coords into one field: "Full text address||GPS:lat,lon"
-    const address = rawAddress
-      ? (gpsCoords ? `${rawAddress}||GPS:${gpsCoords}` : rawAddress)
-      : '';
-    const pickupTime = form.querySelector('#cust-pickup-time') ? form.querySelector('#cust-pickup-time').value.trim() : '';
-    const specialInstructions = form.querySelector('#cust-instructions') ? form.querySelector('#cust-instructions').value.trim() : '';
-
-    if (orderTypeSelect.value === 'delivery' && !isLocationVerified) {
-      alert("Please verify your location first by clicking 'Detect Distance'.");
+    
+    if (orderTypeSelect.value === 'delivery' && !rawAddress && !gpsCoords) {
+      alert("Please enter your delivery address or share your live GPS location.");
       return;
+    }
+
+    // Combine text address + GPS coords into one field: "Full text address||GPS:lat,lon"
+    let address = '';
+    if (orderTypeSelect.value === 'delivery') {
+      if (rawAddress && gpsCoords) {
+        address = `${rawAddress}||GPS:${gpsCoords}`;
+      } else if (gpsCoords) {
+        address = `Live GPS Location||GPS:${gpsCoords}`;
+      } else {
+        address = rawAddress;
+      }
     }
 
     const paymentChoice = form.querySelector('input[name="payment-method-choice"]:checked').value;
@@ -644,9 +669,12 @@ function openOrderModal() {
       waMessage += `*Customer:* ${name}\n`;
       waMessage += `*Phone:* ${phone}\n`;
       waMessage += `*Option:* ${typeLabel}\n`;
-      waMessage += `*Payment Method:* Cash on Delivery\n`;
       if (rawAddress) waMessage += `*Delivery Address:* ${rawAddress}\n`;
-      if (gpsCoords) waMessage += `*?? GPS Navigation:* https://maps.google.com/?q=${gpsCoords}\n`;
+      const navTarget = gpsCoords ? gpsCoords : (rawAddress ? (rawAddress.toLowerCase().includes('yadagirigutta') ? rawAddress : `${rawAddress}, Yadagirigutta, Telangana`) : '');
+      if (navTarget) {
+        const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(navTarget)}&dir_action=navigate`;
+        waMessage += `*🗺️ Start Google Maps Navigation:*\n${navUrl}\n`;
+      }
       waMessage += `\n-------------------------\n*Items Ordered:*\n`;
       orderItems.forEach((item, idx) => {
         waMessage += `${idx + 1}. ${item.name} x ${item.quantity} - ₹${item.subtotal}\n`;
@@ -2738,28 +2766,52 @@ export async function openAdminOrdersModal() {
           <td style="padding: 10px 12px; font-weight: 700; color: var(--text-dark);">${order.orderId}</td>
           <td style="padding: 10px 12px; font-weight: 600;">${order.customerName}</td>
           <td style="padding: 10px 12px; color: var(--text-muted);">${order.customerPhone}</td>
-          <td style="padding: 10px 12px; max-width: 200px;">
+          <td style="padding: 10px 12px; max-width: 220px;">
             ${(order.diningPreference || '').toLowerCase().includes('door') || (order.diningPreference || '').toLowerCase().includes('delivery')
               ? (() => {
                   const raw = order.deliveryAddress || '';
-                  const gpsPart = raw.includes('||GPS:') ? raw.split('||GPS:')[1] : '';
-                  const textAddr = raw.includes('||GPS:') ? raw.split('||GPS:')[0] : raw;
-                  const mapsUrl = gpsPart ? `https://maps.google.com/?q=${gpsPart}` : '';
-                  return `<div>
-                    <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; padding:2px 7px; border-radius:5px; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; margin-bottom:5px;">
+                  const gpsPart = raw.includes('||GPS:') ? raw.split('||GPS:')[1].trim() : '';
+                  const textAddr = (raw.includes('||GPS:') ? raw.split('||GPS:')[0] : raw).trim();
+                  
+                  let navTarget = '';
+                  if (gpsPart) {
+                    navTarget = gpsPart;
+                  } else if (textAddr) {
+                    navTarget = textAddr.toLowerCase().includes('yadagirigutta')
+                      ? textAddr
+                      : `${textAddr}, Yadagirigutta, Telangana`;
+                  }
+                  
+                  const navUrl = navTarget 
+                    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(navTarget)}&dir_action=navigate`
+                    : '';
+
+                  return `<div style="display: flex; flex-direction: column; gap: 4px;">
+                    <span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; padding:2px 7px; border-radius:5px; font-size:0.72rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; width: fit-content;">
                       <i class="fa-solid fa-truck-fast"></i> Door Delivery
                     </span>
                     ${textAddr
-                      ? `<div style="font-size:0.76rem; color:#1e293b; font-weight:600; margin-top:2px; white-space:normal; line-height:1.4;">
-                          <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-right:3px;"></i>${textAddr}
-                         </div>`
-                      : `<div style="font-size:0.74rem; color:#94a3b8; margin-top:2px;">No address text</div>`
+                      ? (navUrl
+                          ? `<a href="${navUrl}" target="_blank" rel="noopener noreferrer" style="font-size:0.78rem; color:#1e293b; font-weight:600; line-height:1.35; margin-top:2px; text-decoration:none;" title="Click to open Google Maps navigation">
+                              <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-right:3px;"></i>${textAddr}
+                             </a>`
+                          : `<div style="font-size:0.76rem; color:#1e293b; font-weight:600; line-height:1.35; margin-top:2px;">
+                              <i class="fa-solid fa-location-dot" style="color:#ef4444; margin-right:3px;"></i>${textAddr}
+                             </div>`
+                        )
+                      : `<div style="font-size:0.74rem; color:#94a3b8;">No address entered</div>`
                     }
-                    ${mapsUrl
-                      ? `<a href="${mapsUrl}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:5px; margin-top:6px; background:#1d72b8; color:#fff; padding:4px 10px; border-radius:6px; font-size:0.74rem; font-weight:700; text-decoration:none; letter-spacing:0.3px;">
-                          <i class="fa-solid fa-diamond-turn-right"></i> Navigate
+                    ${gpsPart
+                      ? `<div style="font-size:0.69rem; color:#059669; font-weight:700; display:inline-flex; align-items:center; gap:3px;">
+                          <i class="fa-solid fa-satellite-dish"></i> GPS: ${gpsPart}
+                         </div>`
+                      : ''
+                    }
+                    ${navUrl
+                      ? `<a href="${navUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:5px; margin-top:4px; background:#10b981; color:#ffffff; padding:5px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; text-decoration:none; box-shadow:0 1px 3px rgba(16,185,129,0.3); width: fit-content; transition:0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+                          <i class="fa-solid fa-location-arrow"></i> Start Navigation
                          </a>`
-                      : `<div style="font-size:0.72rem; color:#94a3b8; margin-top:4px; font-style:italic;">No GPS pin (text only)</div>`
+                      : `<span style="font-size:0.72rem; color:#94a3b8; font-style:italic;">No location available</span>`
                     }
                   </div>`;
                 })()

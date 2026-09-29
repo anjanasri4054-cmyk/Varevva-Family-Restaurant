@@ -47,10 +47,22 @@ function renderSuccess(container, payload) {
   
   let addressHTML = '';
   if (typeVal === 2 && address) {
+    const gpsPart = address.includes('||GPS:') ? address.split('||GPS:')[1].trim() : '';
+    const textAddr = (address.includes('||GPS:') ? address.split('||GPS:')[0] : address).trim();
+    const navTarget = gpsPart ? gpsPart : (textAddr ? (textAddr.toLowerCase().includes('yadagirigutta') ? textAddr : `${textAddr}, Yadagirigutta, Telangana`) : '');
+    const navUrl = navTarget ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(navTarget)}&dir_action=navigate` : '';
+
     addressHTML = `
       <div class="meta-item full-width" style="grid-column: 1 / -1; margin-top: 10px; border-top: 1px dashed rgba(0, 0, 0, 0.08); padding-top: 10px; width: 100%;">
         <span class="meta-label">Delivery Address</span>
-        <span class="meta-value" style="font-weight: 600; color: var(--text-dark);">${address}</span>
+        <span class="meta-value" style="font-weight: 600; color: var(--text-dark);">${textAddr}</span>
+        ${navUrl ? `
+          <div style="margin-top: 8px;">
+            <a href="${navUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-flex; align-items:center; gap:6px; background:#10b981; color:#fff; padding:6px 12px; border-radius:6px; font-size:0.8rem; font-weight:700; text-decoration:none;">
+              <i class="fa-solid fa-location-arrow"></i> Start Google Maps Navigation
+            </a>
+          </div>
+        ` : ''}
       </div>
     `;
   }

@@ -196,8 +196,20 @@
         msg += `*Order ID:* ${order.orderId}\n`;
         if (order.pickupToken) msg += `*Token:* ${order.pickupToken}\n`;
         msg += `*Customer:* ${order.customerName} (${order.customerPhone})\n`;
+        msg += `*Option:* ${order.diningPreference || 'Takeaway'}\n`;
         msg += `*Status / Stage:* ${order.orderStage || 'Order Placed'}\n`;
         msg += `*Total Amount:* ₹${order.totalAmount}\n`;
+        if (order.deliveryAddress) {
+          const raw = order.deliveryAddress;
+          const gpsPart = raw.includes('||GPS:') ? raw.split('||GPS:')[1].trim() : '';
+          const textAddr = (raw.includes('||GPS:') ? raw.split('||GPS:')[0] : raw).trim();
+          if (textAddr) msg += `*Delivery Address:* ${textAddr}\n`;
+          const navTarget = gpsPart ? gpsPart : (textAddr ? (textAddr.toLowerCase().includes('yadagirigutta') ? textAddr : `${textAddr}, Yadagirigutta, Telangana`) : '');
+          if (navTarget) {
+            const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(navTarget)}&dir_action=navigate`;
+            msg += `*🗺️ Start Google Maps Navigation:*\n${navUrl}\n`;
+          }
+        }
         msg += `\n*Track Live:* ${window.location.href}`;
         waTrackBtn.href = `https://wa.me/917382507237?text=${encodeURIComponent(msg)}`;
       }

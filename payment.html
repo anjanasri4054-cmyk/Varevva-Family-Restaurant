@@ -1498,6 +1498,19 @@
       waMessage += `*Total Amount:* ₹${order.totalAmount}\n`;
       if (order.utrNumber) waMessage += `*Transaction ID / UTR:* ${order.utrNumber}\n`;
       if (order.paymentScreenshot) waMessage += `*Payment Screenshot:* ${order.paymentScreenshot}\n`;
+
+      // Delivery Address & Google Maps Navigation for Door Delivery
+      const rawAddr = order.deliveryAddress || localStorage.getItem('varevva_last_delivery_address') || '';
+      if (rawAddr) {
+        const gpsPart = rawAddr.includes('||GPS:') ? rawAddr.split('||GPS:')[1].trim() : '';
+        const textAddr = (rawAddr.includes('||GPS:') ? rawAddr.split('||GPS:')[0] : rawAddr).trim();
+        if (textAddr) waMessage += `*Delivery Address:* ${textAddr}\n`;
+        const navTarget = gpsPart ? gpsPart : (textAddr ? (textAddr.toLowerCase().includes('yadagirigutta') ? textAddr : `${textAddr}, Yadagirigutta, Telangana`) : '');
+        if (navTarget) {
+          const navUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(navTarget)}&dir_action=navigate`;
+          waMessage += `*🗺️ Start Google Maps Navigation:*\n${navUrl}\n`;
+        }
+      }
       waMessage += `\n-------------------------\n*Items Ordered:*\n`;
       (order.items || []).forEach((item, idx) => {
         const name = item.name || item.title || 'Meal Item';
