@@ -37,8 +37,8 @@ export const createOrder = async (req, res) => {
     const isCod = paymentMethod === 'Cash on Delivery';
     const initialPaymentStatus = isCod ? 'COD' : 'Pending';
     const initialOrderStage = isCod ? 'Preparing Food' : 'Order Placed';
-    const pickupToken = isCod ? await getNextPickupToken() : null;
-    const estPrepTime = isCod ? '15 Minutes' : '';
+    const pickupToken = await getNextPickupToken();
+    const estPrepTime = '15 Minutes';
 
     const newOrder = new Order({
       orderId,

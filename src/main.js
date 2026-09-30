@@ -2589,6 +2589,7 @@ export async function openAdminOrdersModal() {
         <!-- Filter Tabs -->
         <div class="admin-orders-tabs" style="display: flex; gap: 6px; flex-wrap: wrap;">
           <button class="admin-tab-btn active" data-filter="all">All Orders</button>
+          <button class="admin-tab-btn" data-filter="Pending">Pending</button>
           <button class="admin-tab-btn" data-filter="UPI QR Payment">UPI Payments</button>
           <button class="admin-tab-btn" data-filter="Cash on Delivery">Cash on Delivery</button>
           <button class="admin-tab-btn" data-filter="Preparing Food">Preparing</button>
@@ -2729,12 +2730,53 @@ export async function openAdminOrdersModal() {
         ? '<span style="color:#94a3b8">-</span>'
         : `<span style="${badgeStyle} padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">${risk} Risk</span>`;
 
+      const isCancelled = order.orderStatus === 'CANCELLED' || (order.auditLogs || []).some(l => l.action === 'PAYMENT_REJECTED');
+
+      let statusHTML = '';
+      if (isCancelled) {
+        statusHTML = `
+          <span style="background-color: #fef2f2; color: #dc2626; border: 1px solid #ef444440; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-ban"></i> Cancelled
+          </span>
+        `;
+      } else if (order.paymentStatus === 'Pending') {
+        statusHTML = `
+          <span style="background-color: #fffbeb; color: #d97706; border: 1px solid #f59e0b40; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-clock"></i> Pending Payment
+          </span>
+        `;
+      } else if (order.paymentStatus === 'Proof Submitted') {
+        statusHTML = `
+          <span style="background-color: #eff6ff; color: #2563eb; border: 1px solid #3b82f640; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-receipt"></i> Proof Submitted
+          </span>
+        `;
+      } else if (order.paymentMethod === 'Cash on Delivery') {
+        statusHTML = `
+          <span style="background-color: #f8fafc; color: #334155; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-money-bill-wave"></i> COD Confirmed
+          </span>
+        `;
+      } else {
+        statusHTML = `
+          <span style="background-color: #ecfdf5; color: #059669; border: 1px solid #10b98140; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+            <i class="fa-solid fa-circle-check"></i> ${order.paymentStatus || 'Order Confirmed'}
+          </span>
+        `;
+      }
+
       let actionsHTML = '<span style="color:#94a3b8">-</span>';
-      if (order.paymentMethod === 'UPI QR Payment' && order.paymentStatus === 'Proof Submitted') {
+      if (isCancelled) {
+        actionsHTML = `<span style="color: #ef4444; font-weight: 700; font-size: 0.76rem; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-ban"></i> Cancelled</span>`;
+      } else if (order.paymentMethod === 'UPI QR Payment' && (order.paymentStatus === 'Proof Submitted' || order.paymentStatus === 'Pending')) {
         actionsHTML = `
           <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
-            <button class="btn-admin-approve-payment" data-id="${order.orderId}" style="background: #10b981; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap;">Approve</button>
-            <button class="btn-admin-reject-payment" data-id="${order.orderId}" style="background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap;">Reject</button>
+            <button class="btn-admin-approve-payment" data-id="${order.orderId}" style="background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" title="Approve payment & confirm order">
+              <i class="fa-solid fa-check"></i> Approve
+            </button>
+            <button class="btn-admin-reject-payment" data-id="${order.orderId}" style="background: #ef4444; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.74rem; transition: 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;" title="Reject or cancel order">
+              <i class="fa-solid fa-xmark"></i> Reject
+            </button>
           </div>
         `;
       } else if (order.orderStage === 'Order Confirmed') {
@@ -2757,8 +2799,6 @@ export async function openAdminOrdersModal() {
         `;
       } else if (order.orderStage === 'Completed') {
         actionsHTML = `<span style="color: #059669; font-weight: 700; font-size: 0.76rem;"><i class="fa-solid fa-circle-check"></i> Finished</span>`;
-      } else if (order.paymentStatus === 'Pending' && (order.auditLogs || []).some(l => l.action === 'PAYMENT_REJECTED')) {
-        actionsHTML = `<span style="color: #ef4444; font-weight: 700; font-size: 0.76rem;">Rejected</span>`;
       }
 
       return `
@@ -2829,12 +2869,8 @@ export async function openAdminOrdersModal() {
           <td style="padding: 10px 12px;">${matchHTML}</td>
           <td style="padding: 10px 12px;">${riskHTML}</td>
           <td style="padding: 10px 12px; font-size: 0.76rem; color: var(--text-muted);">${submissionTimeStr}</td>
-          <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 2px 8px; border-radius: 6px; font-weight: 800;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
-          <td style="padding: 10px 12px;">
-            <span style="background-color: #ecfdf5; color: #059669; border: 1px solid #10b98140; padding: 3px 8px; border-radius: 12px; font-size: 0.74rem; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-              <i class="fa-solid fa-circle-check"></i> ${statusText}
-            </span>
-          </td>
+          <td style="padding: 10px 12px; text-align: center;">${order.pickupToken ? `<span style="background: #065f46; color: #fff; padding: 3px 9px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.5px;">${order.pickupToken}</span>` : '<span style="color:#94a3b8">-</span>'}</td>
+          <td style="padding: 10px 12px;">${statusHTML}</td>
           <td style="padding: 10px 12px; text-align: center;">${actionsHTML}</td>
         </tr>
       `;
