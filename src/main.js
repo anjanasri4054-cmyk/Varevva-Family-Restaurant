@@ -611,46 +611,61 @@ function openOrderModal() {
     localStorage.setItem('varevva_last_order_items', JSON.stringify(orderItems));
     localStorage.setItem('varevva_last_total', String(cartTotal));
 
-    let assignedOrderId = `VRV${Math.floor(1001 + Math.random() * 9000)}`;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Proceed to Payment';
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Order...';
+    }
 
-    // Create Order in MongoDB Database
-    try {
-      // Store clean text address (without GPS part) in payload for WhatsApp/display
-      const displayAddress = rawAddress;
-      const orderPayload = {
-        customerName: name,
-        customerPhone: phone,
-        pickupTime,
-        specialInstructions,
-        diningPreference: typeLabel,
-        deliveryAddress: address,   // contains "text||GPS:lat,lon" if GPS was captured
-        items: orderItems,
-        totalAmount: cartTotal,
-        paymentMethod: paymentMethodLabel
-      };
+    let assignedOrderId = null;
+    const orderPayload = {
+      customerName: name,
+      customerPhone: phone,
+      pickupTime,
+      specialInstructions,
+      diningPreference: typeLabel,
+      deliveryAddress: address,   // contains "text||GPS:lat,lon" if GPS was captured
+      items: orderItems,
+      totalAmount: cartTotal,
+      paymentMethod: paymentMethodLabel
+    };
 
-      const backendUrl = '/api/orders';
+    // Cache full order payload so payment.html can auto-recover if needed
+    localStorage.setItem('varevva_last_order_payload', JSON.stringify(orderPayload));
 
-      const res = await fetch(backendUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderPayload)
-      });
+    // Create Order in MongoDB Database with automatic retry
+    const backendUrl = '/api/orders';
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const res = await fetch(backendUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload)
+        });
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.order && data.order.orderId) {
-          assignedOrderId = data.order.orderId;
-          if (Array.isArray(data.order.items)) {
-            localStorage.setItem('varevva_last_order_items', JSON.stringify(data.order.items));
-          }
-          if (data.order.totalAmount !== undefined) {
-            localStorage.setItem('varevva_last_total', data.order.totalAmount);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order && data.order.orderId) {
+            assignedOrderId = data.order.orderId;
+            if (Array.isArray(data.order.items)) {
+              localStorage.setItem('varevva_last_order_items', JSON.stringify(data.order.items));
+            }
+            if (data.order.totalAmount !== undefined) {
+              localStorage.setItem('varevva_last_total', String(data.order.totalAmount));
+            }
+            break;
           }
         }
+      } catch (err) {
+        console.warn(`Order creation attempt ${attempt} failed:`, err);
+        if (attempt < 2) await new Promise(r => setTimeout(r, 1000));
       }
-    } catch (err) {
-      console.warn('Order creation API call fallback:', err);
+    }
+
+    if (!assignedOrderId) {
+      // Fallback emergency client ID if backend was totally unreachable
+      assignedOrderId = `VRV${Math.floor(1001 + Math.random() * 9000)}`;
     }
 
     localStorage.setItem('varevva_last_order_id', assignedOrderId);

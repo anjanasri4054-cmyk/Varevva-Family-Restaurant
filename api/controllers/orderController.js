@@ -2,17 +2,28 @@ import mongoose from 'mongoose';
 import Order from '../models/Order.js';
 import Payment from '../models/Payment.js';
 
-// Generate sequential pickup token: find last token, e.g. A101, A102...
+// Generate sequential pickup token: find maximum token number across all orders
 async function getNextPickupToken() {
-  const lastTokenOrder = await Order.findOne({ pickupToken: { $regex: /^A\d+$/ } }).sort({ createdAt: -1 });
-  let nextTokenNumber = 101;
-  if (lastTokenOrder && lastTokenOrder.pickupToken) {
-    const match = lastTokenOrder.pickupToken.match(/^A(\d+)$/);
-    if (match) {
-      nextTokenNumber = parseInt(match[1], 10) + 1;
+  const allTokenOrders = await Order.find({ pickupToken: { $regex: /^A\d+$/ } }, { pickupToken: 1 }).lean();
+  let maxNum = 100;
+  for (const o of allTokenOrders) {
+    if (o.pickupToken) {
+      const match = o.pickupToken.match(/^A(\d+)$/);
+      if (match) {
+        const val = parseInt(match[1], 10);
+        if (val > maxNum) maxNum = val;
+      }
     }
   }
-  return `A${nextTokenNumber}`;
+  return `A${maxNum + 1}`;
+}
+
+function buildIdQuery(id) {
+  const cleanId = (id || '').trim();
+  const regex = new RegExp(`^${cleanId}$`, 'i');
+  return mongoose.Types.ObjectId.isValid(cleanId)
+    ? { $or: [{ _id: cleanId }, { orderId: regex }, { pickupToken: regex }] }
+    : { $or: [{ orderId: regex }, { pickupToken: regex }] };
 }
 
 // 1. Create New Order (Customer Checkout)
@@ -155,7 +166,7 @@ export const submitUtr = async (req, res) => {
 export const getOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
-    const order = await Order.findOne({ orderId });
+    const order = await Order.findOne(buildIdQuery(orderId));
     if (!order) {
       return res.status(404).json({ success: false, message: 'Order not found' });
     }

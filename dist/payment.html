@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pay Online | Varevva Family Restaurant</title>
+  <meta name="description" content="Complete your UPI payment for Varevva Family Restaurant. Scan the QR code and upload a screenshot of your payment proof.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #f59e0b;
+      --primary-light: #fef3c7;
+      --accent-color: #d97706;
+      --text-dark: #1e293b;
+      --text-muted: #64748b;
+      --light-bg: #f8fafc;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.06);
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      background-color: var(--light-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0;
+    }
+
+    .main-wrapper {
+      max-width: 600px;
+      width: calc(100% - 32px);
+      margin: 24px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 20px;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      background-color: #ecfdf5;
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      font-size: 0.74rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.84rem;
+      margin-top: 4px;
+    }
+
+    .receipt-table th {
+      border-bottom: 1.5px solid rgba(0, 0, 0, 0.1);
+      color: var(--text-muted);
+      text-align: left;
+      padding: 6px 0;
+      font-weight: 600;
+    }
+
+    .receipt-table td {
+      padding: 8px 0;
+      border-bottom: 1px dashed rgba(0, 0, 0, 0.06);
+    }
+
+    .amount-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--light-bg);
+      border: 1.5px solid rgba(245, 158, 11, 0.15);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 12px 0;
+    }
+
+    .amount-banner-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .amount-banner-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--accent-color);
+    }
+
+    .upi-pill {
+      background: var(--light-bg);
+      border: 1px solid rgba(0,0,0,0.06);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-action {
+      background: var(--primary-color);
+      border: none;
+      color: var(--text-dark);
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition-smooth);
+      width: 100%;
+    }
+
+    .btn-action:hover {
+      background: var(--accent-color);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .btn-action:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      background: #e2e8f0;
+      color: var(--text-muted);
+    }
+
+    .result-badge {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .result-badge.low {
+      background-color: #ecfdf5;
+      color: #059669;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .result-badge.medium {
+      background-color: #fffbeb;
+      color: #d97706;
+      border: 1px solid rgba(245, 158, 11, 0.2);
+    }
+
+    .result-badge.high {
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+
+    .proof-upload-error-box {
+      display: none;
+      background: #fef2f2 !important;
+      border: 1.5px solid #ef4444 !important;
+      color: #b91c1c !important;
+      padding: 12px 16px !important;
+      border-radius: 10px !important;
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      text-align: left !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin-top: 10px !important;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/payment-BU2q9k8N.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/style-oRVOOfyl.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-DwtBADGE.css">
+</head>
+<body>
+
+  <!-- Simple Header -->
+  <header style="background: #ffffff; padding: 14px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: var(--text-dark); font-weight: 800; font-size: 1.1rem;">V</div>
+        <span style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--text-dark);">VAREVVA</span>
+      </a>
+    </div>
+    <span style="font-size: 0.85rem; font-weight: 700; color: var(--accent-color); background: var(--primary-light); padding: 4px 12px; border-radius: 20px;">
+      <i class="fa-solid fa-shield-halved"></i> Secure UPI Checkout
+    </span>
+  </header>
+
+  <!-- Flow 1: Active Payment & Upload Screen -->
+  <div id="payment-flow-container" class="main-wrapper">
+    
+    <!-- Header Title Info -->
+    <div class="card" style="padding: 16px 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <span style="font-size: 0.72rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Checkout Order</span>
+          <h2 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800;" id="display-order-id">VRVXXXX</h2>
+        </div>
+        <span class="badge" id="order-status-badge">Awaiting Payment</span>
+      </div>
+    </div>
+
+    <!-- Order Items Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-utensils" style="color: var(--primary-color);"></i> Ordered Items</h3>
+      </div>
+      <div id="payment-items-list">
+        <!-- Dynamically populated -->
+        <div style="text-align: center; padding: 20px; color: var(--text-muted);">
+          <i class="fa-solid fa-spinner fa-spin"></i> Loading ordered items...
+        </div>
+      </div>
+    </div>
+
+    <!-- Scan & Pay Details -->
+    <div class="card" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px;">
+      <div style="width: 100%;">
+        <h3 class="card-title" style="justify-content: center; font-size: 1.25rem;"><i class="fa-solid fa-qrcode" style="color: var(--primary-color);"></i> Scan & Pay</h3>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin: 4px 0 0 0;">Please scan the restaurant QR code and complete your payment.</p>
+      </div>
+
+      <!-- Static QR Image -->
+      <div style="background: #ffffff; padding: 12px; border: 2px solid rgba(0, 0, 0, 0.06); border-radius: 16px; margin: 4px 0;">
+        <img src="/assets/upi_qr.png" alt="Varevva UPI QR Code" style="width: 200px; max-width: 100%; height: auto; display: block; margin: 0 auto; border-radius: 8px;">
+      </div>
+
+      <!-- Copy UPI ID -->
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; width: 100%;">
+        <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted);">UPI ID:</span>
+        <code style="font-family: monospace; font-weight: 700; font-size: 0.88rem; background: var(--primary-light); color: var(--accent-color); padding: 4px 10px; border-radius: 8px;" id="upi-id-text">7382507237@ybl</code>
+        <button type="button" id="btn-copy-upi" style="background: var(--primary-color); border: none; padding: 5px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; transition: var(--transition-smooth);">
+          <i class="fa-solid fa-copy"></i> Copy UPI
+        </button>
+      </div>
+
+      <!-- Supported Apps -->
+      <div style="border-top: 1px solid rgba(0,0,0,0.06); padding-top: 12px; width: 100%;">
+        <span style="font-size: 0.74rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Supported Apps</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap; justify-content: center;">
+          <span class="upi-pill"><i class="fa-solid fa-mobile-screen-button" style="color:#5f259f"></i> PhonePe</span>
+          <span class="upi-pill"><i class="fa-solid fa-credit-card" style="color:#2563eb"></i> Google Pay</span>
+          <span class="upi-pill"><i class="fa-solid fa-wallet" style="color:#00baf2"></i> Paytm</span>
+          <span class="upi-pill"><i class="fa-solid fa-building-columns" style="color:#f59e0b"></i> BHIM UPI</span>
+          <span class="upi-pill"><i class="fa-solid fa-ellipsis" style="color:var(--text-muted)"></i> Others</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step-by-Step Payment Instructions -->
+    <div class="card" style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.05);">
+      <h4 style="margin: 0 0 12px 0; font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-list-check" style="color: var(--primary-color);"></i> Payment Steps
+      </h4>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.82rem; line-height: 1.45;">
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">1</span>
+          <span>Scan the Varevva QR code using any UPI app.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">2</span>
+          <span>Pay the exact amount shown above.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">3</span>
+          <span>Complete the payment.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">4</span>
+          <span>Open the successful payment/transaction screen.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">5</span>
+          <span>Take a screenshot showing the payment details.</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+          <span style="background: var(--primary-light); color: var(--accent-color); border-radius: 50%; width: 20px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.7rem; flex-shrink: 0; margin-top: 2px;">6</span>
+          <span>Upload the screenshot below.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload screenshot proof card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary-color);"></i> Upload Payment Screenshot</h3>
+      </div>
+      <p style="font-size: 0.8rem; color: var(--text-muted); margin: -4px 0 16px 0;">Upload a screenshot of your successful UPI payment.</p>
+
+      <form id="screenshot-upload-form" style="display: flex; flex-direction: column; gap: 16px;">
+        <input type="file" id="proof-file-input" accept=".jpg,.jpeg,.png,.webp,image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0; z-index: -1; overflow: hidden;">
+        
+        <!-- Drag & Drop container -->
+        <div id="proof-dropzone" style="border: 2px dashed rgba(0,0,0,0.15); border-radius: 12px; padding: 30px 16px; text-align: center; background: var(--light-bg); cursor: pointer; transition: var(--transition-smooth); display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative;">
+          
+          <!-- Custom scanning spinner overlay -->
+          <div id="proof-loading" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.2rem; color: var(--primary-color);"></i>
+            <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark);" id="proof-loading-text">Verifying payment screenshot...</span>
+          </div>
+
+          <!-- Prompt prompt -->
+          <div id="dropzone-prompt" style="display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; width: 100%;">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--primary-color);"></i>
+            <span style="font-size: 0.88rem; font-weight: 700; color: var(--text-dark);">Drag & drop screenshot here or <span style="color: var(--accent-color); text-decoration: underline;">Browse</span></span>
+            <span style="font-size: 0.74rem; color: var(--text-muted); font-weight: 500;">Supports PNG, JPG, JPEG, WEBP (Max 5MB)</span>
+          </div>
+
+          <!-- Preview & Action Container -->
+          <div id="proof-preview-container" style="display: none; flex-direction: column; align-items: center; gap: 12px; width: 100%;">
+            <img id="proof-img-preview" src="" alt="Payment Screenshot Preview" style="max-height: 180px; max-width: 100%; border-radius: 8px; object-fit: contain; box-shadow: var(--shadow-sm); border: 1px solid rgba(0,0,0,0.08);">
+            
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+              <button type="button" id="btn-change-proof" style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.15); padding: 6px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; color: var(--text-dark); display: flex; align-items: center; gap: 4px; transition: var(--transition-smooth);">
+                <i class="fa-solid fa-arrows-rotate"></i> Replace
+              </button>
+              <button type="button" id="btn-remove-proof" style="background: #fef2f2; border: 1px solid rgba(239,68,68,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.76rem; font-weight: 700; cursor: pointer; color: #ef4444; display: flex; align-items: center; gap: 4px; transition: var(--transition-smooth);">
+                <i class="fa-solid fa-trash-can"></i> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Upload Validation Alert -->
+        <div id="proof-upload-error" class="proof-upload-error-box">
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 1.1rem; color: #b91c1c !important; margin-right: 6px; vertical-align: middle;"></i>
+          <span id="proof-upload-error-text" style="color: #b91c1c !important; vertical-align: middle; line-height: 1.4;">File error details</span>
+        </div>
+
+        <!-- Manual UTR / Transaction ID Input Field -->
+        <div class="form-group" id="utr-input-container" style="display: flex; flex-direction: column; gap: 6px; text-align: left; margin-top: 10px;">
+          <label for="customer-utr-input" style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark);">UPI Transaction ID / UTR Number (12 Digits)</label>
+          <input type="text" id="customer-utr-input" placeholder="e.g. 621935820148" pattern="[a-zA-Z0-9]{12,22}" title="Please enter a valid 12 to 22 digit Transaction ID / UTR" required style="padding: 10px 12px; border-radius: 8px; border: 1.5px solid rgba(0,0,0,0.12); outline: none; font-family: monospace; font-size: 0.95rem; width: 100%; box-sizing: border-box; background: var(--light-bg);">
+          <p style="font-size: 0.74rem; color: var(--text-muted); margin: 0;">
+            Note: Enter the 12-digit transaction ID or UTR from your PhonePe success screen.
+          </p>
+        </div>
+
+        <!-- Automated Verification / Analysis results display -->
+        <div id="proof-analysis-panel" style="display: none; background: var(--light-bg); border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: 16px; flex-direction: column; gap: 10px;">
+          <h4 style="margin: 0; font-size: 0.88rem; font-weight: 800; color: var(--text-dark); border-bottom: 1px solid rgba(0,0,0,0.06); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-shield-check" style="color: var(--primary-color);"></i> Payment Scan Results
+          </h4>
+          <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.82rem; margin-top: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Success Confirmation:</span>
+              <span id="analysis-success-status" style="font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">UTR / Txn ID:</span>
+              <span id="analysis-txn-detected" style="font-family: monospace; font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Recipient Match:</span>
+              <span id="analysis-recipient-match" style="font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Detected Amount:</span>
+              <span id="analysis-detected-amount" style="font-weight: 700; color: var(--text-dark);">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Amount Match:</span>
+              <span id="analysis-amount-match" style="font-weight: 700;">Scanning...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 8px; margin-top: 4px;">
+              <span style="color: var(--text-dark); font-weight: 800; font-size: 0.86rem;">Verification Decision:</span>
+              <span id="analysis-decision" style="font-weight: 800; font-size: 0.86rem;">Analyzing...</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-muted); font-weight: 500;">Fraud Risk Level:</span>
+              <span id="analysis-risk-level" class="result-badge low">Low</span>
+            </div>
+          </div>
+          <p style="font-size: 0.72rem; color: var(--text-muted); margin: 6px 0 0 0; line-height: 1.35; border-top: 1px dashed rgba(0,0,0,0.08); padding-top: 8px;">
+            <i class="fa-solid fa-triangle-exclamation"></i> Note: This automated analysis performs a visual verification check. Screenshot proof does not guarantee restaurant bank clearance.
+          </p>
+        </div>
+
+        <button type="submit" id="btn-submit-payment-proof" class="btn-action" disabled style="opacity: 0.6; cursor: not-allowed; margin-top: 6px;">
+          <span>Submit Payment Proof</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </form>
+    </div>
+
+  </div>
+
+  <!-- Flow 2: Customer Success View & Receipt -->
+  <div id="success-flow-container" class="main-wrapper" style="display: none;">
+    
+    <!-- Success Banner -->
+    <div class="card" style="text-align: center; padding: 30px 20px; border: 2px solid #10b981; background: #f0fdf4;">
+      <div style="width: 54px; height: 54px; border-radius: 50%; background: #10b981; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 12px auto; box-shadow: 0 4px 10px rgba(16,185,129,0.2);">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h2 style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.45rem; color: #065f46; margin: 0 0 6px 0;">✓ Payment Proof Submitted</h2>
+      <p style="font-size: 0.88rem; color: #047857; line-height: 1.4; margin: 0 auto; max-width: 400px;">
+        Your payment screenshot has been submitted successfully.
+      </p>
+    </div>
+
+    <!-- Pickup Token Section -->
+    <div class="card" style="background: var(--light-bg); border: 2.5px solid var(--accent-color); text-align: center; padding: 24px 20px;">
+      <span style="font-size: 0.78rem; font-weight: 800; color: var(--accent-color); letter-spacing: 1px; text-transform: uppercase;">AWAITING VERIFICATION</span>
+      <h3 style="font-size: 0.76rem; color: var(--text-muted); font-weight: 700; margin: 4px 0 0 0;">PICKUP TOKEN (PENDING CONFIRMATION)</h3>
+      <div style="font-family: 'Outfit', sans-serif; font-size: 3.4rem; font-weight: 800; color: var(--text-dark); margin: 6px 0;" id="success-pickup-token">----</div>
+      <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-dark); background: var(--primary-light); padding: 4px 14px; border-radius: 20px; display: inline-block;" id="success-prep-time">Estimated Preparation Time: 15 Minutes</span>
+    </div>
+
+    <!-- Screenshot Summary Panel -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary-color);"></i> Screenshot Analysis Result</h3>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Payment Proof Status</span>
+          <span style="font-weight: 700; color: #059669;"><i class="fa-solid fa-circle-check"></i> Submitted</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Screenshot Analysis</span>
+          <span style="font-weight: 700; color: var(--text-dark);">Completed</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Amount Match</span>
+          <span style="font-weight: 700; color: #059669;" id="success-amount-match">✓ Yes</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Detected Amount</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-detected-amount">₹0</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed rgba(0,0,0,0.06); padding-bottom: 6px;">
+          <span style="color: var(--text-muted);">Detected Txn ID</span>
+          <span style="font-family: monospace; font-weight: 700; color: var(--text-dark);" id="success-detected-txn">-</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+          <span style="color: var(--text-muted);">Image Risk Check</span>
+          <span id="success-risk-badge" class="result-badge low">Low Risk</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Official Items Receipt Card -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title"><i class="fa-solid fa-receipt" style="color: var(--primary-color);"></i> Order Details Receipt</h3>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.84rem; border-bottom: 1.5px solid rgba(0,0,0,0.08); padding-bottom: 12px; margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Order ID</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-order-id">VRVXXXX</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Customer Name</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-customer-name">...</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-muted);">Customer Mobile</span>
+          <span style="font-weight: 700; color: var(--text-dark);" id="success-customer-phone">...</span>
+        </div>
+      </div>
+      
+      <!-- Table of items -->
+      <table class="receipt-table" id="success-receipt-table">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Item</th>
+            <th style="text-align: center;">Qty</th>
+            <th style="text-align: right;">Price</th>
+            <th style="text-align: right;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Dynamically populated -->
+        </tbody>
+      </table>
+
+      <!-- Total banner -->
+      <div class="amount-banner" style="margin-top: 16px; padding: 12px 16px; border-color: rgba(16, 185, 129, 0.15); background: #f9fbf9;">
+        <span class="amount-banner-title" style="color: #047857;">Total Amount Paid</span>
+        <span class="amount-banner-value" style="color: #059669; font-size: 1.45rem;" id="success-total-paid">₹0</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+        <a id="btn-success-whatsapp" href="#" target="_blank" class="btn-action" style="background: #25D366; color: white; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); border: none;">
+          <i class="fa-brands fa-whatsapp" style="font-size: 1.3rem;"></i>
+          <span>Send Order & Proof on WhatsApp</span>
+        </a>
+        <div style="display: flex; gap: 10px;">
+          <a href="index.html" class="btn-action" style="text-decoration: none; flex: 1;">
+            <i class="fa-solid fa-house"></i> Return to Menu
+          </a>
+          <button type="button" id="btn-success-track" class="btn-action" style="background: var(--light-bg); border: 1.5px solid rgba(0,0,0,0.12); color: var(--text-dark); flex: 1;">
+            <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Track Order
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>

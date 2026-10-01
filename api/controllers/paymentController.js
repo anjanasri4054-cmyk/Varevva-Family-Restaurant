@@ -3,23 +3,28 @@ import Payment from '../models/Payment.js';
 import Order from '../models/Order.js';
 import { sendOrderMessage, sendPaymentProof } from '../services/whatsappService.js';
 
-// Sequential pickup token generator
+// Sequential pickup token generator - robust max token detection
 async function getNextPickupToken() {
-  const lastTokenOrder = await Order.findOne({ pickupToken: { $regex: /^A\d+$/ } }).sort({ createdAt: -1 });
-  let nextTokenNumber = 101;
-  if (lastTokenOrder && lastTokenOrder.pickupToken) {
-    const match = lastTokenOrder.pickupToken.match(/^A(\d+)$/);
-    if (match) {
-      nextTokenNumber = parseInt(match[1], 10) + 1;
+  const allTokenOrders = await Order.find({ pickupToken: { $regex: /^A\d+$/ } }, { pickupToken: 1 }).lean();
+  let maxNum = 100;
+  for (const o of allTokenOrders) {
+    if (o.pickupToken) {
+      const match = o.pickupToken.match(/^A(\d+)$/);
+      if (match) {
+        const val = parseInt(match[1], 10);
+        if (val > maxNum) maxNum = val;
+      }
     }
   }
-  return `A${nextTokenNumber}`;
+  return `A${maxNum + 1}`;
 }
 
 function buildIdQuery(id) {
-  return mongoose.Types.ObjectId.isValid(id)
-    ? { $or: [{ _id: id }, { orderId: id }] }
-    : { orderId: id };
+  const cleanId = (id || '').trim();
+  const regex = new RegExp(`^${cleanId}$`, 'i');
+  return mongoose.Types.ObjectId.isValid(cleanId)
+    ? { $or: [{ _id: cleanId }, { orderId: regex }, { pickupToken: regex }] }
+    : { $or: [{ orderId: regex }, { pickupToken: regex }] };
 }
 
 // 1. Get Single Payment details
@@ -45,9 +50,48 @@ export const uploadProof = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Order ID is required.' });
     }
 
-    const order = await Order.findOne({ orderId });
+    const cleanOrderId = (orderId || '').trim();
+    let order = await Order.findOne(buildIdQuery(cleanOrderId));
+
+    // Emergency auto-recovery: If order wasn't found in DB, auto-create it using client payload
     if (!order) {
-      return res.status(404).json({ success: false, message: 'Order not found.' });
+      const customerName = (req.body.customerName || '').trim();
+      const customerPhone = (req.body.customerPhone || '').trim();
+      const totalAmount = Number(req.body.totalAmount) || Number(detectedAmount) || 0;
+      let items = [];
+      try {
+        if (req.body.items) {
+          items = typeof req.body.items === 'string' ? JSON.parse(req.body.items) : req.body.items;
+        }
+      } catch (e) {}
+
+      if (customerName || totalAmount > 0) {
+        const nextToken = await getNextPickupToken();
+        order = new Order({
+          orderId: cleanOrderId.toUpperCase(),
+          customerName: customerName || 'Valued Customer',
+          customerPhone: customerPhone || '',
+          diningPreference: req.body.diningPreference || 'Takeaway',
+          deliveryAddress: req.body.deliveryAddress || '',
+          items: Array.isArray(items) && items.length > 0 ? items : [{ name: 'Meal Order', quantity: 1, price: totalAmount, subtotal: totalAmount }],
+          totalAmount: totalAmount,
+          paymentMethod: 'UPI QR Payment',
+          paymentStatus: 'Pending',
+          orderStage: 'Order Placed',
+          orderStatus: 'PLACED',
+          pickupToken: nextToken,
+          estimatedPrepTime: '15 Minutes',
+          auditLogs: [{
+            adminName: 'System',
+            action: 'ORDER_RECOVERED',
+            time: new Date(),
+            reason: 'Order auto-recovered on payment proof submission.'
+          }]
+        });
+        await order.save();
+      } else {
+        return res.status(404).json({ success: false, message: 'Order not found.' });
+      }
     }
 
     if (!req.file) {
@@ -61,7 +105,7 @@ export const uploadProof = async (req, res) => {
 
     // Duplicate UTR check across Payments and Orders
     const duplicatePayment = await Payment.findOne({ utrNumber: utr });
-    const duplicateOrder = await Order.findOne({ utrNumber: utr, orderId: { $ne: orderId } });
+    const duplicateOrder = await Order.findOne({ utrNumber: utr, orderId: { $ne: order.orderId } });
     if (duplicatePayment || duplicateOrder) {
       return res.status(400).json({
         success: false,
@@ -69,9 +113,9 @@ export const uploadProof = async (req, res) => {
       });
     }
 
-    // Amount match validation
-    const amountVal = Number(detectedAmount) || 0;
-    if (amountVal !== order.totalAmount) {
+    // Amount match validation (default to order.totalAmount if detectedAmount is 0 or omitted)
+    const amountVal = Number(detectedAmount) || order.totalAmount;
+    if (amountVal > 0 && order.totalAmount > 0 && amountVal !== order.totalAmount) {
       return res.status(400).json({
         success: false,
         message: `Payment amount mismatch. Screenshot/Form shows ₹${amountVal}, but order total is ₹${order.totalAmount}.`

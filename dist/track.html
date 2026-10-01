@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Order | Varevva Family Restaurant</title>
+  <meta name="description" content="Live tracking for Varevva Family Restaurant order and payment status.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/assets/track-CZAB9N8P.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/style-oRVOOfyl.js">
+  <link rel="stylesheet" crossorigin href="/assets/style-DwtBADGE.css">
+</head>
+<body style="background-color: var(--light-bg); color: var(--text-dark); min-height: 100vh; display: flex; flex-direction: column;">
+
+  <!-- Simple Header -->
+  <header style="background: #ffffff; padding: 14px 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+      <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: var(--text-dark); font-weight: 800; font-size: 1.1rem;">V</div>
+      <span style="font-family: var(--font-header); font-weight: 800; font-size: 1.2rem; color: var(--text-dark);">VAREVVA</span>
+    </a>
+    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted);">
+      <i class="fa-solid fa-rotate fa-spin" id="refresh-indicator"></i> Live Auto-Refresh (10s)
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main style="flex: 1; max-width: 650px; width: calc(100% - 32px); margin: 24px auto; padding: 0 16px;">
+
+    <!-- Order Track Card -->
+    <div style="background: #ffffff; border: 1px solid rgba(0,0,0,0.08); border-radius: 16px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.06);">
+      
+      <!-- Top Order Details Header -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 16px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Order Reference</span>
+          <h2 style="margin: 2px 0 0; font-family: var(--font-header); font-size: 1.4rem; color: var(--text-dark);" id="track-order-id">VRV1001</h2>
+          <span style="font-size: 0.82rem; color: var(--text-muted);" id="track-customer-name">Customer: ...</span>
+        </div>
+        <div style="text-align: right;">
+          <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Amount</span>
+          <h2 style="margin: 2px 0 0; font-family: var(--font-header); font-size: 1.4rem; color: var(--accent-color);" id="track-total-amount"><i class="fa-solid fa-spinner fa-spin"></i></h2>
+        </div>
+      </div>
+
+      <!-- Rejection Alert Box -->
+      <div id="rejection-alert" style="display: none; background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 14px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; margin-bottom: 20px; flex-direction: column; gap: 8px;">
+        <div>
+          <i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem; vertical-align: middle; margin-right: 6px;"></i>
+          <span style="vertical-align: middle;">Payment Proof Rejected: <span id="rejection-reason" style="font-weight: 500;">-</span></span>
+        </div>
+        <button id="btn-reupload-proof" style="background: #ef4444; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; max-width: 180px; font-size: 0.8rem; margin-top: 4px; transition: 0.2s;">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i> Re-submit Proof
+        </button>
+      </div>
+
+      <!-- Itemized Receipt Section -->
+      <div style="background: var(--light-bg); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+        <h5 style="font-family: var(--font-header); font-weight: 700; font-size: 0.88rem; margin: 0 0 10px; color: var(--text-dark);">
+          <i class="fa-solid fa-receipt" style="color: var(--primary-color);"></i> Order Items Receipt
+        </h5>
+        <div id="track-items-summary" style="font-size: 0.82rem; color: var(--text-dark);">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Pickup Token Card -->
+      <div id="token-card-section" style="display: none; flex-direction: column; background: #ecfdf5; border: 2px solid #10b981; border-radius: 14px; padding: 18px; text-align: center; margin-bottom: 24px;">
+        <span style="font-size: 0.8rem; font-weight: 800; color: #047857; letter-spacing: 1px; text-transform: uppercase;">Order Confirmed & Pickup Token Issued</span>
+        <div style="font-family: var(--font-header); font-size: 2.8rem; font-weight: 800; color: #065f46; margin: 4px 0;" id="display-pickup-token">A101</div>
+        <span style="font-size: 0.88rem; font-weight: 600; color: #047857;" id="display-prep-time">Estimated Preparation Time: 15 Minutes</span>
+      </div>
+
+      <!-- Live Tracking Timeline -->
+      <h4 style="font-family: var(--font-header); font-size: 1rem; font-weight: 700; margin: 0 0 16px; color: var(--text-dark);">
+        <i class="fa-solid fa-route" style="color: var(--primary-color);"></i> Live Order Timeline
+      </h4>
+
+      <div class="tracking-timeline-container" id="tracking-timeline">
+        <!-- Stage 1 -->
+        <div class="timeline-step pending" data-stage="Order Placed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Order Placed</span>
+            <span class="timeline-sub">Customer order details registered</span>
+          </div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="timeline-step pending" data-stage="Payment Proof Submitted">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-receipt"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Payment Proof Submitted</span>
+            <span class="timeline-sub">Proof of payment uploaded & scanned</span>
+          </div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="timeline-step pending" data-stage="Order Confirmed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-check-double"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Order Confirmed</span>
+            <span class="timeline-sub">Order is confirmed and token assigned</span>
+          </div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="timeline-step pending" data-stage="Preparing Food">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-fire-burner"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Preparing Food</span>
+            <span class="timeline-sub">Chef is preparing your meal</span>
+          </div>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="timeline-step pending" data-stage="Ready for Pickup">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-bell-concierge"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Ready for Pickup</span>
+            <span class="timeline-sub">Food is packed and ready at counter</span>
+          </div>
+        </div>
+
+        <!-- Stage 6 -->
+        <div class="timeline-step pending" data-stage="Completed">
+          <div class="timeline-icon-circle"><i class="fa-solid fa-house-flag"></i></div>
+          <div class="timeline-content">
+            <span class="timeline-title">Completed</span>
+            <span class="timeline-sub">Order handed over to customer</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px;">
+      <a id="btn-track-whatsapp" href="https://wa.me/917382507237" target="_blank" style="background: #25D366; color: white; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+        <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i>
+        <span>Send / Share Order on WhatsApp</span>
+      </a>
+      <a href="index.html" style="color: var(--text-dark); font-weight: 600; text-decoration: none; font-size: 0.88rem;">
+        <i class="fa-solid fa-arrow-left"></i> Return to Restaurant Menu
+      </a>
+    </div>
+
+  </main>
+
+</body>
+</html>

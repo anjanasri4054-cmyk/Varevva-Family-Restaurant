@@ -620,7 +620,34 @@
           displaySuccessFlow(orderDetails);
         }
       } catch (err) {
-        console.warn('Failed to load order:', err);
+        console.warn('Failed to load order from server, attempting auto-recovery:', err);
+        // Self-heal: If order was missing from server, re-register it using cached payload
+        const savedPayloadStr = localStorage.getItem('varevva_last_order_payload');
+        if (savedPayloadStr) {
+          try {
+            const payload = JSON.parse(savedPayloadStr);
+            const createRes = await fetch('/api/orders', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            if (createRes.ok) {
+              const createData = await createRes.json();
+              if (createData.order && createData.order.orderId) {
+                orderDetails = createData.order;
+                const newOrderId = createData.order.orderId;
+                displayOrderId.textContent = newOrderId;
+                localStorage.setItem('varevva_last_order_id', newOrderId);
+                orderTotalAmount = parseFloat(orderDetails.totalAmount || 0);
+                renderOrderItems(orderDetails);
+                return;
+              }
+            }
+          } catch (healErr) {
+            console.warn('Order auto-heal failed:', healErr);
+          }
+        }
+
         const cachedTotal = localStorage.getItem('varevva_last_total');
         if (cachedTotal && parseFloat(cachedTotal) > 0) {
           orderTotalAmount = parseFloat(cachedTotal);
@@ -1413,6 +1440,29 @@
       formData.append('detectedTxnId', utrVal);
       formData.append('riskLevel', extractedDetails.riskLevel);
       formData.append('analysisResult', extractedDetails.analysisResult);
+
+      // Pass order metadata for auto-recovery if order is missing on server
+      let custName = (orderDetails && orderDetails.customerName) || '';
+      let custPhone = (orderDetails && orderDetails.customerPhone) || '';
+      let diningPref = (orderDetails && orderDetails.diningPreference) || '';
+      let delivAddr = (orderDetails && orderDetails.deliveryAddress) || '';
+      let itemsList = (orderDetails && orderDetails.items) || [];
+      if (!custName) {
+        try {
+          const savedPayload = JSON.parse(localStorage.getItem('varevva_last_order_payload') || '{}');
+          custName = savedPayload.customerName || '';
+          custPhone = savedPayload.customerPhone || '';
+          diningPref = savedPayload.diningPreference || '';
+          delivAddr = savedPayload.deliveryAddress || '';
+          if (!itemsList || itemsList.length === 0) itemsList = savedPayload.items || [];
+        } catch (e) {}
+      }
+      formData.append('customerName', custName);
+      formData.append('customerPhone', custPhone);
+      formData.append('diningPreference', diningPref);
+      formData.append('deliveryAddress', delivAddr);
+      formData.append('totalAmount', String(orderTotalAmount));
+      formData.append('items', JSON.stringify(itemsList));
 
       try {
         const backendUrl = '/api/payments/upload-proof';
