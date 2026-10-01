@@ -551,7 +551,7 @@
 
   <script type="module">
     const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('orderId') || localStorage.getItem('varevva_last_order_id') || 'VRV1001';
+    let orderId = urlParams.get('orderId') || localStorage.getItem('varevva_last_order_id') || 'VRV1001';
 
     // Dom selectors
     const displayOrderId = document.getElementById('display-order-id');
@@ -1476,6 +1476,47 @@
         if (response.ok && result.success) {
           displaySuccessFlow(result.order);
         } else {
+          // If server reports 'Order not found', instantly register order and retry upload seamlessly
+          if (result.message && result.message.includes('Order not found')) {
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Registering order & verifying...';
+            try {
+              let registerPayload = null;
+              const savedPayloadStr = localStorage.getItem('varevva_last_order_payload');
+              if (savedPayloadStr) {
+                registerPayload = JSON.parse(savedPayloadStr);
+              } else {
+                registerPayload = {
+                  customerName: custName || 'Valued Customer',
+                  customerPhone: custPhone || '',
+                  diningPreference: diningPref || 'Takeaway',
+                  deliveryAddress: delivAddr || '',
+                  items: itemsList && itemsList.length > 0 ? itemsList : [{ name: 'Meal Order', quantity: 1, price: orderTotalAmount, subtotal: orderTotalAmount }],
+                  totalAmount: orderTotalAmount,
+                  paymentMethod: 'UPI QR Payment'
+                };
+              }
+              const regRes = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(registerPayload)
+              });
+              if (regRes.ok) {
+                const regData = await regRes.json();
+                if (regData.order && regData.order.orderId) {
+                  orderId = regData.order.orderId;
+                  formData.set('orderId', orderId);
+                  const retryRes = await fetch(backendUrl, { method: 'POST', body: formData });
+                  const retryResult = await retryRes.json();
+                  if (retryRes.ok && retryResult.success) {
+                    displaySuccessFlow(retryResult.order);
+                    return;
+                  }
+                }
+              }
+            } catch (healErr) {
+              console.warn('Emergency proof upload recovery failed:', healErr);
+            }
+          }
           alert(result.message || 'Failed to submit payment screenshot.');
           submitBtn.disabled = false;
           submitBtn.innerHTML = '<span>Submit Payment Proof</span><i class="fa-solid fa-arrow-right"></i>';
