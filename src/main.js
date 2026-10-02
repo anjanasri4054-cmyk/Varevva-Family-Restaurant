@@ -677,7 +677,7 @@ function openOrderModal() {
 
     // Redirect to proper destination based on choice
     if (paymentChoice === 'online') {
-      window.location.href = `payment.html?orderId=${assignedOrderId}`;
+      window.location.href = `payment.html?orderId=${assignedOrderId}&t=${Date.now()}`;
     } else {
       let waMessage = `*🍽️ VAREVYA TELANGANA RUCHULU - NEW ORDER*\n\n`;
       waMessage += `*Order ID:* ${assignedOrderId}\n`;

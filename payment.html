@@ -620,12 +620,37 @@
           displaySuccessFlow(orderDetails);
         }
       } catch (err) {
-        console.warn('Failed to load order from server, attempting auto-recovery:', err);
-        // Self-heal: If order was missing from server, re-register it using cached payload
+        console.warn('Order not found on server, auto-registering in database now:', err);
+
+        let cachedItems = [];
+        try {
+          const savedItems = JSON.parse(localStorage.getItem('varevva_last_order_items') || '[]');
+          cachedItems = Array.isArray(savedItems) ? savedItems.filter(item => item && item.name) : [];
+        } catch (cartError) {
+          console.warn('Failed to load saved order items:', cartError);
+        }
+
+        const cachedTotal = parseFloat(localStorage.getItem('varevva_last_total') || '0');
+        let payload = null;
         const savedPayloadStr = localStorage.getItem('varevva_last_order_payload');
         if (savedPayloadStr) {
+          try { payload = JSON.parse(savedPayloadStr); } catch (e) {}
+        }
+
+        if (!payload && cachedTotal > 0) {
+          payload = {
+            customerName: 'Valued Customer',
+            customerPhone: '7382507237',
+            diningPreference: 'Takeaway',
+            deliveryAddress: '',
+            items: cachedItems.length > 0 ? cachedItems : [{ name: 'Meal Order', quantity: 1, price: cachedTotal, subtotal: cachedTotal }],
+            totalAmount: cachedTotal,
+            paymentMethod: 'UPI QR Payment'
+          };
+        }
+
+        if (payload) {
           try {
-            const payload = JSON.parse(savedPayloadStr);
             const createRes = await fetch('/api/orders', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -635,44 +660,31 @@
               const createData = await createRes.json();
               if (createData.order && createData.order.orderId) {
                 orderDetails = createData.order;
-                const newOrderId = createData.order.orderId;
-                displayOrderId.textContent = newOrderId;
-                localStorage.setItem('varevva_last_order_id', newOrderId);
+                orderId = createData.order.orderId;
+                displayOrderId.textContent = orderId;
+                localStorage.setItem('varevva_last_order_id', orderId);
+                history.replaceState(null, '', `payment.html?orderId=${orderId}`);
                 orderTotalAmount = parseFloat(orderDetails.totalAmount || 0);
                 renderOrderItems(orderDetails);
                 return;
               }
             }
-          } catch (healErr) {
-            console.warn('Order auto-heal failed:', healErr);
+          } catch (autoErr) {
+            console.warn('Auto-register failed:', autoErr);
           }
         }
 
-        const cachedTotal = localStorage.getItem('varevva_last_total');
-        if (cachedTotal && parseFloat(cachedTotal) > 0) {
-          orderTotalAmount = parseFloat(cachedTotal);
-          let cachedItems = [];
-          try {
-            const savedItems = JSON.parse(localStorage.getItem('varevva_last_order_items') || '[]');
-            cachedItems = Array.isArray(savedItems) ? savedItems.filter(item => item && item.name) : [];
-          } catch (cartError) {
-            console.warn('Failed to load saved order items:', cartError);
-          }
-
+        if (cachedTotal > 0) {
+          orderTotalAmount = cachedTotal;
           renderOrderItems({ items: cachedItems, totalAmount: orderTotalAmount });
-          paymentItemsList.insertAdjacentHTML('beforeend', `
-              <div style="background: #fffbeb; border: 1px solid #f59e0b40; color: #b45309; padding: 10px; border-radius: 8px; font-size: 0.76rem; margin-top: 8px; font-weight: 600;">
-                <i class="fa-solid fa-triangle-exclamation"></i> Working offline. Using cached order details. Some payment validation features might be restricted.
-              </div>
-            `);
         } else {
           orderTotalAmount = 0;
           paymentItemsList.innerHTML = `
-            <div style="background: #fef2f2; border: 1.5px solid #ef4444; color: #b91c1c; padding: 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; text-align: center; display: flex; flex-direction: column; gap: 10px;">
-              <span><i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i> Failed to retrieve order details from the server.</span>
-              <button type="button" onclick="window.location.reload()" style="background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; max-width: 150px; margin: 0 auto; transition: 0.2s;">
-                <i class="fa-solid fa-arrows-rotate"></i> Retry Loading
-              </button>
+            <div style="background: #fffbeb; border: 1.5px solid #f59e0b; color: #92400e; padding: 20px; border-radius: 12px; font-size: 0.88rem; font-weight: 700; text-align: center; display: flex; flex-direction: column; gap: 12px;">
+              <span><i class="fa-solid fa-basket-shopping" style="font-size: 1.4rem; color: var(--primary-color);"></i> No active order found. Please choose items from the menu first.</span>
+              <a href="index.html" style="background: var(--primary-color); color: #000; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; max-width: 200px; margin: 0 auto; display: inline-flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-utensils"></i> Browse Menu
+              </a>
             </div>
           `;
           dropzone.style.opacity = '0.5';
