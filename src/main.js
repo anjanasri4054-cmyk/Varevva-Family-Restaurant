@@ -571,54 +571,58 @@ function openOrderModal() {
   // Form submit
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const name = form.querySelector('#cust-name').value.trim();
-    const phone = form.querySelector('#cust-phone').value.trim();
-    const typeLabel = orderTypeSelect.options[orderTypeSelect.selectedIndex].text;
-    const paymentVal = 'cod';
-    const rawAddress = orderTypeSelect.value === 'delivery' ? form.querySelector('#cust-address').value.trim() : '';
-    const gpsCoords = form.querySelector('#gps-coords') ? form.querySelector('#gps-coords').value.trim() : '';
-    
-    if (orderTypeSelect.value === 'delivery' && !rawAddress && !gpsCoords) {
-      alert("Please enter your delivery address or share your live GPS location.");
-      return;
-    }
-
-    // Combine text address + GPS coords into one field: "Full text address||GPS:lat,lon"
-    let address = '';
-    if (orderTypeSelect.value === 'delivery') {
-      if (rawAddress && gpsCoords) {
-        address = `${rawAddress}||GPS:${gpsCoords}`;
-      } else if (gpsCoords) {
-        address = `Live GPS Location||GPS:${gpsCoords}`;
-      } else {
-        address = rawAddress;
-      }
-    }
-
-    const paymentChoice = form.querySelector('input[name="payment-method-choice"]:checked').value;
-    let paymentMethodLabel = paymentChoice === 'online' ? 'UPI QR Payment' : 'Cash on Delivery';
-
-    // Compute cart items & total
-    const cart = getCart();
-    let cartTotal = 0;
-    const orderItems = Object.keys(cart).map(k => {
-      const sub = cart[k].price * cart[k].quantity;
-      cartTotal += sub;
-      return { name: cart[k].name, quantity: cart[k].quantity, price: cart[k].price, subtotal: sub };
-    });
-
-    // Keep the submitted receipt available while the payment page loads.
-    localStorage.setItem('varevva_last_order_items', JSON.stringify(orderItems));
-    localStorage.setItem('varevva_last_total', String(cartTotal));
-
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Proceed to Payment';
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Order...';
-    }
 
-    let assignedOrderId = null;
+    try {
+      const name = form.querySelector('#cust-name').value.trim();
+      const phone = form.querySelector('#cust-phone').value.trim();
+      const typeLabel = orderTypeSelect.options[orderTypeSelect.selectedIndex].text;
+      const paymentVal = 'cod';
+      const rawAddress = orderTypeSelect.value === 'delivery' ? form.querySelector('#cust-address').value.trim() : '';
+      const gpsCoords = form.querySelector('#gps-coords') ? form.querySelector('#gps-coords').value.trim() : '';
+      const pickupTime = form.querySelector('#cust-pickup-time') ? form.querySelector('#cust-pickup-time').value.trim() : '';
+      const specialInstructions = form.querySelector('#cust-instructions') ? form.querySelector('#cust-instructions').value.trim() : '';
+      
+      if (orderTypeSelect.value === 'delivery' && !rawAddress && !gpsCoords) {
+        alert("Please enter your delivery address or share your live GPS location.");
+        return;
+      }
+
+      // Combine text address + GPS coords into one field: "Full text address||GPS:lat,lon"
+      let address = '';
+      if (orderTypeSelect.value === 'delivery') {
+        if (rawAddress && gpsCoords) {
+          address = `${rawAddress}||GPS:${gpsCoords}`;
+        } else if (gpsCoords) {
+          address = `Live GPS Location||GPS:${gpsCoords}`;
+        } else {
+          address = rawAddress;
+        }
+      }
+
+      const paymentChoice = form.querySelector('input[name="payment-method-choice"]:checked').value;
+      let paymentMethodLabel = paymentChoice === 'online' ? 'UPI QR Payment' : 'Cash on Delivery';
+
+      // Compute cart items & total
+      const cart = getCart();
+      let cartTotal = 0;
+      const orderItems = Object.keys(cart).map(k => {
+        const sub = cart[k].price * cart[k].quantity;
+        cartTotal += sub;
+        return { name: cart[k].name, quantity: cart[k].quantity, price: cart[k].price, subtotal: sub };
+      });
+
+      // Keep the submitted receipt available while the payment page loads.
+      localStorage.setItem('varevva_last_order_items', JSON.stringify(orderItems));
+      localStorage.setItem('varevva_last_total', String(cartTotal));
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Order...';
+      }
+
+      let assignedOrderId = null;
     const orderPayload = {
       customerName: name,
       customerPhone: phone,
@@ -708,6 +712,14 @@ function openOrderModal() {
       }
       window.location.href = `track.html?orderId=${assignedOrderId}`;
     }
+  } catch (err) {
+    console.error('Order submission error:', err);
+    alert('An unexpected error occurred while placing your order. Please try again.');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnText;
+    }
+  }
   });
 }
 
